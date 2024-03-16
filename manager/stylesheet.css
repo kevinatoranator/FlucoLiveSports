@@ -1,0 +1,96 @@
+    a:link{ text-decoration: none;}
+    a:visited{ text-decoration: none;}
+    a:hover{ text-decoration: none;}
+    a:active{ text-decoration: none;}
+    a {color:var(--blue);}
+    body {
+        margin: 8px auto;
+        /*white-space: pre-wrap;*/
+        font-family: Courier, monospace;
+        max-width: 400px;
+        font-size: 13px;
+        --bg: white;
+        --fg: black;
+        --red: red;
+        --blue: #0000cd;
+        --green: green;
+        --gray: gray;
+        --yellow: #f2be02;
+        background-color: var(--bg);
+        color: var(--fg);   
+    }
+    @media (prefers-color-scheme: dark){
+        background-color: black;
+        color: white;
+        --blue: #4f68e8;
+        --yellow: #FFDF00;
+    }
+    .dark-mode {
+        background-color: black;
+        color: white;
+        --blue: #4f68e8;
+        --yellow: #FFDF00;
+    }
+
+    .label{
+        border: none;
+    }
+	
+	input[type="number"]{
+		width: 32px;
+	}
+	td{
+		text-align: center;
+	}
+	
+	.sport{
+		background-color: blue;
+		border: none;
+		color: gold;
+		padding: 8px 16px;
+		text-decoration: none;
+		margin: 2px 25%;
+		cursor: pointer;
+	}
+	
+	.schedule{
+		border: none;
+		outline: none;
+		background: none;
+		cursor: pointer;
+		color: var(--blue);
+		padding: 0;
+		text-decoration: none;
+		font-family: inherit;
+		font-size: inherit;	
+	}
+	
+	table{
+		width: 100%;
+	}
+    .container {width:100%;}
+    .hidden{display:none;}
+    .flex {display:flex;}
+    .flex-1 {flex: 1 1 0px;}
+    .flex-col {flex-direction: column;}
+    .flex-initial{flex: 0 1 initial;}
+    .justify-between{justify-content: space-between;}
+    .items-center{align-items: center;}
+    .items-end {align-items: flex-end;}
+    .items-start{align-items: flex-start;}
+    .left-align-start{margin-left: 15%; margin-right: -15%;}
+    .left-align{text-align: left;}
+    .right-align{text-align: right;}
+    .a-schedule{color:var(--black);}
+    .text-justify{test-align: justify;}
+
+    .width-align{width: 90%;}
+    .width-div{flex-basis: 100%;}
+    .text-center {text-align: center;}
+
+    label.toggle-on, label.toggle-off {cursor: pointer;}
+    input[type="checkbox"]{display:none;}
+    input[type="checkbox"]:checked ~ .toggle-on{display:none;}
+    input[type="checkbox"]:not(:checked) ~ .toggle-off{display:none;}
+    .toggle-on, .toggle-off{color: var(--blue);}
+
