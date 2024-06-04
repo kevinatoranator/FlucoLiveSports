@@ -17,11 +17,11 @@ $fdate = date("l, F d", strtotime("today")); ?>
     <br>
     <div class="flex justify-between">
         <a href ="./teams/index.php">Teams</a>
-        <a href ="/schedule/">Schedule</a>
+        <a href ="../../index.php">Schedule</a>
     </div>
     <br>
     <div class="flex justify-between">
-        <a href ="./standings/index.php">Standings</a><a href ="/schedule/region/{{today}}">Region Schedule</a>
+        <a href ="./standings/index.php">Standings</a><a href ="./schedule/district/index.php">District Schedule</a>
     </div>
 
 <br>
@@ -34,7 +34,7 @@ $fdate = date("l, F d", strtotime("today")); ?>
 <!--Schedule Body-->
 
 <?php
-
+	include './include/database.php';
 
 	$sql = "SELECT s.id AS gameID, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id, s.away_id, s.team_id, t.formattedName, t.urlName AS sport FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id";
 
@@ -99,7 +99,7 @@ $fdate = date("l, F d", strtotime("today")); ?>
 				<?php
 			}else if($sport == "softball" or $sport == "jvsoftball" or $sport == "baseball" or $sport == "jvbaseball"){
 				?>			
-				<a href=".game/ball.php?gameID=<?php echo $gameID?>" class='schedule-game'>
+				<a href="./game/ball.php?gameID=<?php echo $gameID?>" class='schedule-game'>
 				+------------------------------+<br>
 				<div class='schedule-container'>
 				<div>|<b><?php echo $formattedName?></b></div><div>.....|</div>
