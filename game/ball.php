@@ -13,18 +13,6 @@ $fdate = date("l, F d", strtotime("today"));
 
 $gameID = $_GET['gameID'];
 $phpURL = "ball.php?gameID=".$gameID;
-
-
-function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2, $ai3, $ai4, $ai5, $ai6, $ai7, $aex, $hhits, $herrs, $ahits, $aerrs, $gameID, $db){
-		$hTotal = $hi1 + $hi2 + $hi3 + $hi4 + $hi5 + $hi6 + $hi7 + $hex;
-		$aTotal = $ai1 + $ai2 + $ai3 + $ai4 + $ai5 + $ai6 + $ai7 + $aex;
-		
-		$sqls = "UPDATE batball SET home_i1 = '$hi1', home_i2 = '$hi2', home_i3 = '$hi3', home_i4 = '$hi4', home_i5 = '$hi5', home_i6 = '$hi6', home_i7 = '$hi7', home_ex = '$hex', home_total = '$hTotal', away_i1 = '$ai1', away_i2 = '$ai2', away_i3 = '$ai3', away_i4 = '$ai4', away_i5 = '$ai5', away_i6 = '$ai6', away_i7 = '$ai7', away_ex = '$aex', away_total = '$aTotal',  home_hits = '$hhits', home_errors = '$herrs', away_hits = '$ahits', away_errors = '$aerrs' WHERE schedule_id='$gameID'";
-		$query = $db->prepare($sqls);
-		$query->execute();
-
-}
-
 ?>
 
 
@@ -37,7 +25,7 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 <!--Schedule Body-->
 
 <?php
-
+	include '../include/database.php';
 
 	$sport = "";
 	$home = "";
@@ -175,7 +163,7 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 		$text = $row->text;
 		$inn = $row->inning;
 		$pbpText = $inn . " | " . $text;
-		if(str_contains($text, "scored")){
+		if(str_contains($text, "scores") or str_contains($text, "homers")){
 			$pbpText = "<b>$pbpText</b>";
 		}
 		if($inn == "EX"){

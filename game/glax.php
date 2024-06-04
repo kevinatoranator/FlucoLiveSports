@@ -26,7 +26,7 @@ $phpURL = "glaxmanager.php?gameID=".$gameID;
 <!--Schedule Body-->
 
 <?php
-
+	include '../include/database.php';
 
 	$sport = "";
 	$home = "";

@@ -26,6 +26,8 @@ $phpURL = "soccer.php?gameID=".$gameID;
 
 <?php
 
+	include '../include/database.php';
+
 
 	$sport = "";
 	$home = "";
