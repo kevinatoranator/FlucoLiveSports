@@ -12,14 +12,16 @@ $date = date("Y-m-d", strtotime("today" ));
 $fdate = date("l, F d", strtotime("today")); 
 
 $gameID = $_GET['gameID'];
-$phpURL = "blaxmanager.php?gameID=".$gameID;
+$isDistrict = $_GET['district'];
+$phpURL = "blaxmanager.php?gameID=".$gameID."&district=".$isDistrict;
+$schedule = 'schedule';
+$blax = 'blax';
 
-
-function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT, $gameID, $db){
+function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT, $gameID, $db, $blax){
 		$hTotal = $hq1 + $hq2 + + $hq3 + $hq4 + $hOT;
 		$aTotal = $aq1 + $aq2 + $aq3 + $aq4 + $aOT;
 		
-		$sqls = "UPDATE blax SET home_quarter1 = '$hq1', home_quarter2 = '$hq2', home_quarter3 = '$hq3', home_quarter4 = '$hq4', home_ot = '$hOT', home_total = '$hTotal', away_quarter1 = '$aq1', away_quarter2 = '$aq2', away_quarter3 = '$aq3', away_quarter4 = '$aq4', away_ot = '$aOT', away_total = '$aTotal' WHERE schedule_id='$gameID'";
+		$sqls = "UPDATE $blax SET home_quarter1 = '$hq1', home_quarter2 = '$hq2', home_quarter3 = '$hq3', home_quarter4 = '$hq4', home_ot = '$hOT', home_total = '$hTotal', away_quarter1 = '$aq1', away_quarter2 = '$aq2', away_quarter3 = '$aq3', away_quarter4 = '$aq4', away_ot = '$aOT', away_total = '$aTotal' WHERE schedule_id='$gameID'";
 		$query = $db->prepare($sqls);
 		$query->execute();
 
@@ -38,7 +40,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 <!--Schedule Body-->
 
 <?php
-
+	include '../include/database.php';
 
 	$sport = "";
 	$home = "";
@@ -51,8 +53,13 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	$quarter = 1;
 	$homeID = 0;
 	$comp = 0;
+	
+	if($isDistrict=="true"){
+		$schedule = 'schedule_other';
+		$blax = 'blax_other';
+	}
     
-	$sql = "SELECT t.urlName AS sport FROM schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
+	$sql = "SELECT t.urlName AS sport FROM $schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
 	
 	try {
       $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
@@ -74,7 +81,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$aq4 = $_POST['aq4score'];
 		$aOT = $_POST['aOTscore'];
 		
-		updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT, $gameID, $db);
+		updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT, $gameID, $db, $blax);
 	}
 	
 	if($_POST && isset($_POST['pbpRemove'])){
@@ -91,11 +98,11 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	}
 	
 	//Create new game if doesn't exist
-	$sql = "SELECT 1 FROM blax AS bl JOIN schedule AS s ON bl.schedule_id WHERE schedule_id='$gameID'";
+	$sql = "SELECT 1 FROM $blax AS bl JOIN $schedule AS s ON bl.schedule_id WHERE schedule_id='$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	if($query->rowCount() == 0){
-		$sql = "INSERT INTO blax (home_quarter1, home_quarter2, home_quarter3, home_quarter4, home_ot, away_quarter1, away_quarter2, away_quarter3, away_quarter4, away_ot, home_total, away_total, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM schedule WHERE id='$gameID'))";
+		$sql = "INSERT INTO $blax (home_quarter1, home_quarter2, home_quarter3, home_quarter4, home_ot, away_quarter1, away_quarter2, away_quarter3, away_quarter4, away_ot, home_total, away_total, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM $schedule WHERE id='$gameID'))";
 		$query = $db->prepare($sql);
 		$query->execute();
 	}	
@@ -112,7 +119,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	$sqlsport = "SELECT s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id as aNum, s.team_id AS team, t.formattedName, 
 		bl.home_quarter1 AS hq1, bl.home_quarter2 AS hq2, bl.home_quarter3 AS hq3, bl.home_quarter4 AS hq4, bl.home_ot AS hot, bl.home_total AS ht, 
 		bl.away_quarter1 AS aq1, bl.away_quarter2 AS aq2, bl.away_quarter3 AS aq3, bl.away_quarter4 AS aq4, bl.away_ot AS aot, bl.away_total AS at, bl.completed AS cmp
-		FROM blax AS bl JOIN schedule AS s ON bl.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
+		FROM $blax AS bl JOIN $schedule AS s ON bl.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
 	$query = $db->prepare($sqlsport);
 	$query->execute();
 	while($row = $query->fetchObject()){
@@ -173,7 +180,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 			$actionText = $action . $team;
 		}
 		//POST PBP SQL
-		$sql = "INSERT INTO blax_pbp (text, quarter, time, game_id) VALUES ('$actionText', '$quarterText', '$displayTime', (SELECT id FROM schedule where id='$gameID'))";
+		$sql = "INSERT INTO blax_pbp (text, quarter, time, game_id) VALUES ('$actionText', '$quarterText', '$displayTime', (SELECT id FROM $schedule where id='$gameID'))";
 		$query = $db->prepare($sql);
 		$query->execute();
 		
@@ -232,7 +239,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$awayLosses = 0;
 		$awayTies = 0;
 		
-		$sqls = "UPDATE blax SET completed = '$comp' WHERE schedule_id='$gameID'";
+		$sqls = "UPDATE $blax SET completed = '$comp' WHERE schedule_id='$gameID'";
 		$query = $db->prepare($sqls);
 		$query->execute();
 		#select home team standing info
@@ -297,7 +304,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	#########################
 	*/
 	
-	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.quarter AS qrtr, pbp.time AS tme FROM blax_pbp AS pbp JOIN schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
+	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.quarter AS qrtr, pbp.time AS tme FROM blax_pbp AS pbp JOIN $schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	while($row = $query->fetchObject()){

@@ -12,14 +12,17 @@ $date = date("Y-m-d", strtotime("today" ));
 $fdate = date("l, F d", strtotime("today")); 
 
 $gameID = $_GET['gameID'];
-$phpURL = "soccermanager.php?gameID=".$gameID;
+$isDistrict = $_GET['district'];
+$schedule = 'schedule';
+$soccer = 'soccer';
+$phpURL = "soccermanager.php?gameID=".$gameID."&district=".$isDistrict;
 
 
-function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
+function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db, $soccer){
 		$hTotal = $hh1 + $hh2 + $hOT;
 		$aTotal = $ah1 + $ah2 + $aOT;
 		
-		$sqls = "UPDATE soccer SET home_half1 = '$hh1', home_half2 = '$hh2', home_OT = '$hOT', home_total = '$hTotal', away_half1 = '$ah1', away_half2 = '$ah2', away_OT = '$aOT', away_total = '$aTotal' WHERE schedule_id='$gameID'";
+		$sqls = "UPDATE $soccer SET home_half1 = '$hh1', home_half2 = '$hh2', home_OT = '$hOT', home_total = '$hTotal', away_half1 = '$ah1', away_half2 = '$ah2', away_OT = '$aOT', away_total = '$aTotal' WHERE schedule_id='$gameID'";
 		$query = $db->prepare($sqls);
 		$query->execute();
 
@@ -38,7 +41,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 <!--Schedule Body-->
 
 <?php
-
+	include '../include/database.php';
 
 	$sport = "";
 	$home = "";
@@ -51,8 +54,12 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 	$half = 1;
 	$homeID = 0;
 	$comp = 0;
+	if($isDistrict == "true"){
+		$schedule = 'schedule_other';
+		$soccer = 'soccer_other';
+	}
     
-	$sql = "SELECT t.urlName AS sport FROM schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
+	$sql = "SELECT t.urlName AS sport FROM $schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
 	
 	try {
       $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
@@ -70,7 +77,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 		$ah2 = $_POST['ah2score'];
 		$aOT = $_POST['aOTscore'];
 		
-		updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db);
+		updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db, $soccer);
 	}
 	
 	if($_POST && isset($_POST['pbpRemove'])){
@@ -97,18 +104,18 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 	}
 	
 	//Create new game if doesn't exist
-	$sql = "SELECT 1 FROM soccer AS sc JOIN schedule AS s ON sc.schedule_id WHERE schedule_id='$gameID'";
+	$sql = "SELECT 1 FROM $soccer AS sc JOIN $schedule AS s ON sc.schedule_id WHERE schedule_id='$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	if($query->rowCount() == 0){
-		$sql = "INSERT INTO soccer (home_half1, home_half2, home_OT, away_half1, away_half2, away_OT, home_total, away_total, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM schedule WHERE id='$gameID'))";
+		$sql = "INSERT INTO $soccer (home_half1, home_half2, home_OT, away_half1, away_half2, away_OT, home_total, away_total, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM $schedule WHERE id='$gameID'))";
 		$query = $db->prepare($sql);
 		$query->execute();
 	}
 	
 	$sqlsport = "SELECT s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id AS aNum, s.team_id AS team, t.formattedName, 
 		sc.home_half1 AS hh1, sc.home_half2 AS hh2, sc.home_OT AS hot, sc.home_total AS ht, sc.away_half1 AS ah1, sc.away_half2 AS ah2, sc.away_OT AS aot, sc.away_total AS at, sc.completed AS cmp
-		FROM soccer AS sc JOIN schedule AS s ON sc.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
+		FROM $soccer AS sc JOIN $schedule AS s ON sc.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
 	$query = $db->prepare($sqlsport);
 	$query->execute();
 	while($row = $query->fetchObject()){
@@ -146,7 +153,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 		$displayMinutes = floor(($maxMin * 60 - $timePassed) / 60);
 		$displaySeconds = ($maxMin * 60 - $timePassed) % 60;
 		if($halfText == 2){
-			$displayMinutes += 40;
+			$displayMinutes += $maxMin;
 		}
 		if(strlen($displaySeconds) < 2){
 			$displaySeconds = "0" . $displaySeconds;
@@ -167,7 +174,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 			$actionText = $action . $team;
 		}
 		//POST PBP SQL
-		$sql = "INSERT INTO soccer_pbp (text, half, time, game_id) VALUES ('$actionText', '$halfText', '$displayTime', (SELECT id FROM schedule where id='$gameID'))";
+		$sql = "INSERT INTO soccer_pbp (text, half, time, game_id) VALUES ('$actionText', '$halfText', '$displayTime', (SELECT id FROM $schedule where id='$gameID'))";
 		$query = $db->prepare($sql);
 		$query->execute();
 		
@@ -206,7 +213,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 		$awayLosses = 0;
 		$awayTies = 0;
 		
-		$sqls = "UPDATE soccer SET completed = '$comp' WHERE schedule_id='$gameID'";
+		$sqls = "UPDATE $soccer SET completed = '$comp' WHERE schedule_id='$gameID'";
 		$query = $db->prepare($sqls);
 		$query->execute();
 		
@@ -268,7 +275,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 	#########################
 	*/
 	
-	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.half AS half, pbp.time AS tme FROM soccer_pbp AS pbp JOIN schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
+	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.half AS half, pbp.time AS tme FROM soccer_pbp AS pbp JOIN $schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	while($row = $query->fetchObject()){

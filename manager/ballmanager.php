@@ -12,14 +12,16 @@ $date = date("Y-m-d", strtotime("today" ));
 $fdate = date("l, F d", strtotime("today")); 
 
 $gameID = $_GET['gameID'];
-$phpURL = "ballmanager.php?gameID=".$gameID;
+$isDistrict = $_GET['district'];
+$phpURL = "ballmanager.php?gameID=".$gameID."&district=".$isDistrict;
+$schedule = 'schedule';
+$batball = 'batball';
 
-
-function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2, $ai3, $ai4, $ai5, $ai6, $ai7, $aex, $hhits, $herrs, $ahits, $aerrs, $gameID, $db){
+function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2, $ai3, $ai4, $ai5, $ai6, $ai7, $aex, $hhits, $herrs, $ahits, $aerrs, $gameID, $db, $batball){
 		$hTotal = $hi1 + $hi2 + $hi3 + $hi4 + $hi5 + $hi6 + $hi7 + $hex;
 		$aTotal = $ai1 + $ai2 + $ai3 + $ai4 + $ai5 + $ai6 + $ai7 + $aex;
 		
-		$sqls = "UPDATE batball SET home_i1 = '$hi1', home_i2 = '$hi2', home_i3 = '$hi3', home_i4 = '$hi4', home_i5 = '$hi5', home_i6 = '$hi6', home_i7 = '$hi7', home_ex = '$hex', home_total = '$hTotal', away_i1 = '$ai1', away_i2 = '$ai2', away_i3 = '$ai3', away_i4 = '$ai4', away_i5 = '$ai5', away_i6 = '$ai6', away_i7 = '$ai7', away_ex = '$aex', away_total = '$aTotal',  home_hits = '$hhits', home_errors = '$herrs', away_hits = '$ahits', away_errors = '$aerrs' WHERE schedule_id='$gameID'";
+		$sqls = "UPDATE $batball SET home_i1 = '$hi1', home_i2 = '$hi2', home_i3 = '$hi3', home_i4 = '$hi4', home_i5 = '$hi5', home_i6 = '$hi6', home_i7 = '$hi7', home_ex = '$hex', home_total = '$hTotal', away_i1 = '$ai1', away_i2 = '$ai2', away_i3 = '$ai3', away_i4 = '$ai4', away_i5 = '$ai5', away_i6 = '$ai6', away_i7 = '$ai7', away_ex = '$aex', away_total = '$aTotal',  home_hits = '$hhits', home_errors = '$herrs', away_hits = '$ahits', away_errors = '$aerrs' WHERE schedule_id='$gameID'";
 		$query = $db->prepare($sqls);
 		$query->execute();
 
@@ -38,7 +40,7 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 <!--Schedule Body-->
 
 <?php
-
+	include '../include/database.php';
 
 	$sport = "";
 	$home = "";
@@ -49,8 +51,15 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 	$inning = 1;
 	$homeID = 0;
 	$comp = 0;
+	
+	
+	if($isDistrict=="true"){
+		$schedule = 'schedule_other';
+		$batball = 'batball_other';
+	}
+	
     
-	$sql = "SELECT t.urlName AS sport FROM schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
+	$sql = "SELECT t.urlName AS sport FROM $schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
 	
 	try {
       $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
@@ -84,7 +93,7 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 		$ahits = $_POST['ahits'];
 		$aerrs = $_POST['aerr'];
 		
-		updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2, $ai3, $ai4, $ai5, $ai6, $ai7, $aex, $hhits, $herrs, $ahits, $aerrs, $gameID, $db);
+		updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2, $ai3, $ai4, $ai5, $ai6, $ai7, $aex, $hhits, $herrs, $ahits, $aerrs, $gameID, $db, $batball);
 	}
 	
 	if($_POST && isset($_POST['pbpRemove'])){
@@ -101,11 +110,11 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 	}
 	
 	//Create new game if doesn't exist
-	$sql = "SELECT 1 FROM batball AS bat JOIN schedule AS s ON bat.schedule_id WHERE schedule_id='$gameID'";
+	$sql = "SELECT 1 FROM $batball AS bat JOIN $schedule AS s ON bat.schedule_id WHERE schedule_id='$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	if($query->rowCount() == 0){
-		$sql = "INSERT INTO batball (home_total, away_total, home_i1, home_i2, home_i3, home_i4, home_i5, home_i6, home_i7, home_ex, away_i1, away_i2, away_i3, away_i4, away_i5, away_i6, away_i7, away_ex, home_hits, away_hits, home_errors, away_errors, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,(SELECT id FROM schedule WHERE id='$gameID'))";
+		$sql = "INSERT INTO $batball (home_total, away_total, home_i1, home_i2, home_i3, home_i4, home_i5, home_i6, home_i7, home_ex, away_i1, away_i2, away_i3, away_i4, away_i5, away_i6, away_i7, away_ex, home_hits, away_hits, home_errors, away_errors, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,(SELECT id FROM $schedule WHERE id='$gameID'))";
 		$query = $db->prepare($sql);
 		$query->execute();
 	}
@@ -114,7 +123,7 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 		$sqlsport = "SELECT s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id AS aNum, s.team_id AS team, t.formattedName, 
 		bb.home_i1 AS hi1, bb.home_i2 AS hi2, bb.home_i3 AS hi3, bb.home_i4 AS hi4, bb.home_i5 AS hi5, bb.home_i6 AS hi6, bb.home_i7 AS hi7, bb.home_ex AS hex, bb.home_total AS ht, bb.home_hits AS hh, bb.home_errors AS herr,
 		bb.away_i1 AS ai1, bb.away_i2 AS ai2, bb.away_i3 AS ai3, bb.away_i4 AS ai4, bb.away_i5 AS ai5, bb.away_i6 AS ai6, bb.away_i7 AS ai7, bb.away_ex AS aex, bb.away_total AS at, bb.away_hits AS ah, bb.away_errors AS aerr, bb.completed AS cmp
-		FROM batball AS bb JOIN schedule AS s ON bb.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
+		FROM $batball AS bb JOIN $schedule AS s ON bb.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
 	}
 	
 	$query = $db->prepare($sqlsport);
@@ -178,7 +187,7 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 			$actionText = $team . $action;
 		}
 		//POST PBP SQL
-		$sql = "INSERT INTO batball_pbp (text, inning, game_id) VALUES ('$actionText', '$inningText', (SELECT id FROM schedule where id='$gameID'))";
+		$sql = "INSERT INTO batball_pbp (text, inning, game_id) VALUES ('$actionText', '$inningText', (SELECT id FROM $schedule where id='$gameID'))";
 		$query = $db->prepare($sql);
 		$query->execute();
 		
@@ -267,7 +276,7 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 		$awayLosses = 0;
 		$awayTies = 0;
 		
-		$sqls = "UPDATE batball SET completed = '$comp' WHERE schedule_id='$gameID'";
+		$sqls = "UPDATE $batball SET completed = '$comp' WHERE schedule_id='$gameID'";
 		$query = $db->prepare($sqls);
 		$query->execute();
 		
@@ -329,7 +338,7 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 	#########################
 	*/
 	
-	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.inning AS inning FROM batball_pbp AS pbp JOIN schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
+	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.inning AS inning FROM batball_pbp AS pbp JOIN $schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	while($row = $query->fetchObject()){

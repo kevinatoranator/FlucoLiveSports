@@ -12,14 +12,17 @@ $date = date("Y-m-d", strtotime("today" ));
 $fdate = date("l, F d", strtotime("today")); 
 
 $gameID = $_GET['gameID'];
-$phpURL = "glaxmanager.php?gameID=".$gameID;
+$isDistrict = $_GET['district'];
+$schedule = 'schedule';
+$glax = 'glax';
+$phpURL = "glaxmanager.php?gameID=".$gameID."&district=".$isDistrict;
 
 
-function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
+function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db, $glax){
 		$hTotal = $hh1 + $hh2 + $hOT;
 		$aTotal = $ah1 + $ah2 + $aOT;
 		
-		$sqls = "UPDATE glax SET home_half1 = '$hh1', home_half2 = '$hh2', home_ot = '$hOT', home_total = '$hTotal', away_half1 = '$ah1', away_half2 = '$ah2', away_ot = '$aOT', away_total = '$aTotal' WHERE schedule_id='$gameID'";
+		$sqls = "UPDATE $glax SET home_half1 = '$hh1', home_half2 = '$hh2', home_ot = '$hOT', home_total = '$hTotal', away_half1 = '$ah1', away_half2 = '$ah2', away_ot = '$aOT', away_total = '$aTotal' WHERE schedule_id='$gameID'";
 		$query = $db->prepare($sqls);
 		$query->execute();
 
@@ -38,7 +41,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 <!--Schedule Body-->
 
 <?php
-
+	include '../include/database.php';
 
 	$sport = "";
 	$home = "";
@@ -51,8 +54,12 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 	$half = 1;
 	$homeID = 0;
 	$comp = 0;
+	if($isDistrict == "true"){
+		$schedule = 'schedule_other';
+		$glax = 'glax_other';
+	}
     
-	$sql = "SELECT t.urlName AS sport FROM schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
+	$sql = "SELECT t.urlName AS sport FROM $schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
 	
 	try {
       $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
@@ -70,7 +77,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 		$ah2 = $_POST['ah2score'];
 		$aOT = $_POST['aOTscore'];
 		
-		updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db);
+		updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db, $glax);
 	}
 	
 	if($_POST && isset($_POST['pbpRemove'])){
@@ -98,11 +105,11 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 	}
 	
 	//Create new game if doesn't exist
-	$sql = "SELECT 1 FROM glax AS gl JOIN schedule AS s ON gl.schedule_id WHERE schedule_id='$gameID'";
+	$sql = "SELECT 1 FROM $glax AS gl JOIN $schedule AS s ON gl.schedule_id WHERE schedule_id='$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	if($query->rowCount() == 0){
-		$sql = "INSERT INTO glax (home_half1, home_half2, home_ot, away_half1, away_half2, away_ot, home_total, away_total, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM schedule WHERE id='$gameID'))";
+		$sql = "INSERT INTO $glax (home_half1, home_half2, home_ot, away_half1, away_half2, away_ot, home_total, away_total, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM $schedule WHERE id='$gameID'))";
 		$query = $db->prepare($sql);
 		$query->execute();
 	}
@@ -110,7 +117,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 	
 	$sql = "SELECT s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id AS hNum, s.away_id AS aNum, s.team_id AS team, t.formattedName, 
 		gl.home_half1 AS hh1, gl.home_half2 AS hh2, gl.home_ot AS hot, gl.home_total AS ht, gl.away_half1 AS ah1, gl.away_half2 AS ah2, gl.away_ot AS aot, gl.away_total AS at, gl.completed AS cmp
-		FROM glax AS gl JOIN schedule AS s ON gl.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
+		FROM $glax AS gl JOIN $schedule AS s ON gl.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
 		
 	$query = $db->prepare($sql);
 	$query->execute();
@@ -167,7 +174,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 			$actionText = $action . $team;
 		}
 		//POST PBP SQL
-		$sql = "INSERT INTO glax_pbp (text, half, time, game_id) VALUES ('$actionText', '$halfText', '$displayTime', (SELECT id FROM schedule where id='$gameID'))";
+		$sql = "INSERT INTO glax_pbp (text, half, time, game_id) VALUES ('$actionText', '$halfText', '$displayTime', (SELECT id FROM $schedule where id='$gameID'))";
 		$query = $db->prepare($sql);
 		$query->execute();
 		
@@ -206,7 +213,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 		$awayLosses = 0;
 		$awayTies = 0;
 		
-		$sqls = "UPDATE glax SET completed = '$comp' WHERE schedule_id='$gameID'";
+		$sqls = "UPDATE $glax SET completed = '$comp' WHERE schedule_id='$gameID'";
 		$query = $db->prepare($sqls);
 		$query->execute();
 		
@@ -268,7 +275,7 @@ function updateScore($hh1, $hh2, $hOT, $ah1, $ah2, $aOT, $gameID, $db){
 	#########################
 	*/
 	
-	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.half AS half, pbp.time AS tme FROM glax_pbp AS pbp JOIN schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
+	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.half AS half, pbp.time AS tme FROM glax_pbp AS pbp JOIN $schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	while($row = $query->fetchObject()){
