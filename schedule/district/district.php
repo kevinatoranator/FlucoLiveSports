@@ -4,7 +4,7 @@
 	<title>FLS</title>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="../stylesheet.css">
+	<link rel="stylesheet" href="../../stylesheet.css">
 </head>
 <body>
 <?php $fdate = $_GET['fdate'];
@@ -16,16 +16,19 @@ $date = date("l, F d", strtotime($fdate)); ?>
     <br>
     <div class="flex justify-between">
         <a href ="../teams/index.php">Teams</a>
-       <form action='schedule.php' method='get'><input type ='hidden' id='fdate' name='fdate' value='<?php echo date("Y-m-d"); ?>'><input type='submit' class='schedule' value='Schedule'></form>
+       <form action='../schedule.php' method='get'><input type ='hidden' id='fdate' name='fdate' value='<?php echo date("Y-m-d"); ?>'><input type='submit' class='schedule' value='Schedule'></form>
     </div>
     <br>
     <div class="flex justify-between">
-        <a href ="../standings/index.php">Standings</a><a href ="./district/district.php?fdate=<?php echo $fdate ?>">District Schedule</a>
+        <a href ="../../standings/index.php">Standings</a><a href ="./index.php">District Schedule</a>
     </div>
 
 <br>
 <div class="flex justify-between">
-<form action='schedule.php' method='get'><input type ='hidden' id='fdate' name='fdate' value='<?php echo date("Y-m-d", strtotime("-1 days", strtotime($fdate))); ?>'><input type='submit' class='schedule' value='< <?php echo date("M. d", strtotime("-1 days", strtotime($fdate)))?>'></form> <b> <?php echo $date ?></b> <form action='schedule.php' method='get'><input type ='hidden' id='fdate' name='fdate' value='<?php echo date("Y-m-d", strtotime("+1 days", strtotime($fdate))); ?>'><input type='submit' class='schedule' value='<?php echo date("M. d", strtotime("+1 days", strtotime($fdate)))?> >'></form>
+<form action='district.php' method='get'><input type ='hidden' id='fdate' name='fdate' value='<?php echo date("Y-m-d", strtotime("-1 days", strtotime($fdate))); ?>'><input type='submit' class='schedule' value='< <?php echo date("M. d", strtotime("-1 days", strtotime($fdate)))?>'></form> <b> <?php echo $date ?></b> <form action='district.php' method='get'><input type ='hidden' id='fdate' name='fdate' value='<?php echo date("Y-m-d", strtotime("+1 days", strtotime($fdate))); ?>'><input type='submit' class='schedule' value='<?php echo date("M. d", strtotime("+1 days", strtotime($fdate)))?> >'></form>
+</div>
+<div class="flex justify-between">
+<b></b><b> District </b><b></b>
 </div>
 <br>
 
@@ -35,9 +38,9 @@ $date = date("l, F d", strtotime($fdate)); ?>
 <!--Schedule Body-->
 
 <?php
-	include '../include/database.php';
+	include '../../include/database.php';
 
-	$sql = "SELECT s.id AS gameID, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id, s.away_id, s.team_id, t.formattedName, t.urlName AS sport FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id
+	$sql = "SELECT s.id AS gameID, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id, s.away_id, s.team_id, t.formattedName, t.urlName AS sport FROM schedule_other AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id
 	ORDER BY s.time";
 
     try {
@@ -66,7 +69,7 @@ $date = date("l, F d", strtotime($fdate)); ?>
 				<div>|<b><?php echo $formattedName?></b></div><div>.....|</div>
 				</div>
 				<?php
-				$sqlbb = "SELECT * FROM soccer AS sc JOIN schedule AS s ON sc.schedule_id = s.id WHERE s.id='$gameID'";
+				$sqlbb = "SELECT * FROM soccer_other AS sc JOIN schedule_other AS s ON sc.schedule_id = s.id WHERE s.id='$gameID'";
 				$querybb = $db->prepare($sqlbb);
 				$querybb->execute();
 				$rowbb = $querybb->fetch(PDO::FETCH_ASSOC);
@@ -105,7 +108,7 @@ $date = date("l, F d", strtotime($fdate)); ?>
 				<div>|<b><?php echo $formattedName?></b></div><div>.....|</div>
 				</div>
 				<?php
-				$sqlbb = "SELECT * FROM batball AS bb JOIN schedule AS s ON bb.schedule_id = s.id WHERE s.id='$gameID'";
+				$sqlbb = "SELECT * FROM batball_other AS bb JOIN schedule_other AS s ON bb.schedule_id = s.id WHERE s.id='$gameID'";
 				$querybb = $db->prepare($sqlbb);
 				$querybb->execute();
 				$rowbb = $querybb->fetch(PDO::FETCH_ASSOC);
@@ -144,7 +147,7 @@ $date = date("l, F d", strtotime($fdate)); ?>
 				<div>|<b><?php echo $formattedName?></b></div><div>.....|</div>
 				</div>
 				<?php
-				$sqlbb = "SELECT * FROM blax AS bl JOIN schedule AS s ON bl.schedule_id = s.id WHERE s.id='$gameID'";
+				$sqlbb = "SELECT * FROM blax_other AS bl JOIN schedule_other AS s ON bl.schedule_id = s.id WHERE s.id='$gameID'";
 				$querybb = $db->prepare($sqlbb);
 				$querybb->execute();
 				$rowbb = $querybb->fetch(PDO::FETCH_ASSOC);
@@ -183,7 +186,7 @@ $date = date("l, F d", strtotime($fdate)); ?>
 				<div>|<b><?php echo $formattedName?></b></div><div>.....|</div>
 				</div>
 				<?php
-				$sqlbb = "SELECT * FROM glax AS gl JOIN schedule AS s ON gl.schedule_id = s.id WHERE s.id='$gameID'";
+				$sqlbb = "SELECT * FROM glax_other AS gl JOIN schedule_other AS s ON gl.schedule_id = s.id WHERE s.id='$gameID'";
 				$querybb = $db->prepare($sqlbb);
 				$querybb->execute();
 				$rowbb = $querybb->fetch(PDO::FETCH_ASSOC);
@@ -222,7 +225,7 @@ $date = date("l, F d", strtotime($fdate)); ?>
 				<div>|<b><?php echo $formattedName?></b></div><div>.....|</div>
 				</div>
 				<?php
-				$sqlbb = "SELECT * FROM basketball AS bb JOIN schedule AS s ON bb.schedule_id = s.id WHERE s.id='$gameID'";
+				$sqlbb = "SELECT * FROM basketball_other AS bb JOIN schedule_other AS s ON bb.schedule_id = s.id WHERE s.id='$gameID'";
 				$querybb = $db->prepare($sqlbb);
 				$querybb->execute();
 				$rowbb = $querybb->fetch(PDO::FETCH_ASSOC);
