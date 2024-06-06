@@ -7,8 +7,8 @@
 	<link rel="stylesheet" href="../../stylesheet.css">
 </head>
 <body>
-<?php $fdate = $_GET['fdate'];
-$date = date("l, F d", strtotime($fdate)); ?>
+<?php $date = $_GET['date'];
+$fdate = date("l, F d", strtotime($date)); ?>
 
 
 <!--Schedule Header-->
@@ -16,7 +16,7 @@ $date = date("l, F d", strtotime($fdate)); ?>
     <br>
     <div class="flex justify-between">
         <a href ="../teams/index.php">Teams</a>
-       <form action='../schedule.php' method='get'><input type ='hidden' id='fdate' name='fdate' value='<?php echo date("Y-m-d"); ?>'><input type='submit' class='schedule' value='Schedule'></form>
+       <form action='../schedule.php' method='get'><input type ='hidden' id='date' name='date' value='<?php echo date("Y-m-d"); ?>'><input type='submit' class='schedule' value='Schedule'></form>
     </div>
     <br>
     <div class="flex justify-between">
@@ -25,7 +25,7 @@ $date = date("l, F d", strtotime($fdate)); ?>
 
 <br>
 <div class="flex justify-between">
-<form action='district.php' method='get'><input type ='hidden' id='fdate' name='fdate' value='<?php echo date("Y-m-d", strtotime("-1 days", strtotime($fdate))); ?>'><input type='submit' class='schedule' value='< <?php echo date("M. d", strtotime("-1 days", strtotime($fdate)))?>'></form> <b> <?php echo $date ?></b> <form action='district.php' method='get'><input type ='hidden' id='fdate' name='fdate' value='<?php echo date("Y-m-d", strtotime("+1 days", strtotime($fdate))); ?>'><input type='submit' class='schedule' value='<?php echo date("M. d", strtotime("+1 days", strtotime($fdate)))?> >'></form>
+<form action='district.php' method='get'><input type ='hidden' id='date' name='date' value='<?php echo date("Y-m-d", strtotime("-1 days", strtotime($date))); ?>'><input type='submit' class='schedule' value='< <?php echo date("M. d", strtotime("-1 days", strtotime($date)))?>'></form> <b> <?php echo $fdate ?></b> <form action='district.php' method='get'><input type ='hidden' id='date' name='date' value='<?php echo date("Y-m-d", strtotime("+1 days", strtotime($date))); ?>'><input type='submit' class='schedule' value='<?php echo date("M. d", strtotime("+1 days", strtotime($date)))?> >'></form>
 </div>
 <div class="flex justify-between">
 <b></b><b> District </b><b></b>
