@@ -27,6 +27,14 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 
 }
 
+function updateLiveGame($period, $tb, $balls, $strikes, $bases, $player, $gameID, $db){
+
+	$sqls = "UPDATE live_games SET period = '$period', info_1 = '$tb', info_2 = '$balls', info_3 = '$strikes', info_4 = '$bases', info_5 = '$player' WHERE schedule_id='$gameID'";
+	$query = $db->prepare($sqls);
+	$query->execute();
+
+}
+
 ?>
 
 
@@ -119,6 +127,24 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 		$query->execute();
 	}
 	
+	$sql = "SELECT * FROM live_games AS game JOIN $schedule AS s ON game.schedule_id WHERE schedule_id='$gameID'";
+	$query = $db->prepare($sql);
+	$query->execute();
+	$strikes = 0;
+	$balls = 0;
+	$outs = 0;
+	if($query->rowCount() == 0){
+		//period = inning, info1 = top/bottom, info2 = ball, info3 = strike, info4 = base situation
+		$sql = "INSERT INTO live_games (period, game_time, info_1, info_2, info_3, info_4, schedule_id) VALUES (1, 0, 'Top', '0', '0', '---', (SELECT id FROM $schedule WHERE id='$gameID'))";
+		$query = $db->prepare($sql);
+		$query->execute();
+	}else{
+		while($row = $query->fetchObject()){
+			$strikes = $row->info_3;
+			$balls = $row->info_2;
+			$outs = $row->game_time;
+		}
+	}
 	if($sport=="softball" or  $sport=="baseball" or $sport=="jvsoftball" or  $sport=="jvbaseball"){
 		$sqlsport = "SELECT s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id AS aNum, s.team_id AS team, t.formattedName, 
 		bb.home_i1 AS hi1, bb.home_i2 AS hi2, bb.home_i3 AS hi3, bb.home_i4 AS hi4, bb.home_i5 AS hi5, bb.home_i6 AS hi6, bb.home_i7 AS hi7, bb.home_ex AS hex, bb.home_total AS ht, bb.home_hits AS hh, bb.home_errors AS herr,
@@ -175,6 +201,11 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 		$team = $_POST['team'];
 		$inning = $_POST['inning'];
 		$inningText = $inning;
+		$tb = 'Top';
+		
+		if($homeTeam == $_POST['team']){
+			$tb = 'Bot';
+		}
 		
 		$actionText = "";
 		if($inning == 8){
@@ -186,83 +217,104 @@ function updateScore($hi1, $hi2, $hi3, $hi4, $hi5, $hi6, $hi7, $hex, $ai1, $ai2,
 		}else{
 			$actionText = $team . $action;
 		}
-		//POST PBP SQL
-		$sql = "INSERT INTO batball_pbp (text, inning, game_id) VALUES ('$actionText', '$inningText', (SELECT id FROM $schedule where id='$gameID'))";
-		$query = $db->prepare($sql);
-		$query->execute();
 		
-		if($action == " scores" or $action == " homers"){
-			if(($homeID == 1 && $team == "FCHS") or ($homeID != 1 && $team != "FCHS")){
-				switch($inning){
-					case 1:
-						$hi1Score += 1;
-						break;
-					case 2:
-						$hi2Score += 1;
-						break;
-					case 3:
-						$hi3Score += 1;
-						break;
-					case 4:
-						$hi4Score += 1;
-						break;
-					case 5:
-						$hi5Score += 1;
-						break;
-					case 6:
-						$hi6Score += 1;
-						break;
-					case 7:
-						$hi7Score += 1;
-						break;
-					case 8:
-						$hexScore += 1;
-						break;
+		//POST PBP SQL
+		if($action == " strike" or $action == " ball" or $action == " foul"){
+			if($action == " strike"){
+				if($strikes < 3){
+					$strikes += 1;
+				}else{
+					$strikes = 0;
 				}
-			}else{
-				switch($inning){
-					case 1:
-						$ai1Score += 1;
-						break;
-					case 2:
-						$ai2Score += 1;
-						break;
-					case 3:
-						$ai3Score += 1;
-						break;
-					case 4:
-						$ai4Score += 1;
-						break;
-					case 5:
-						$ai5Score += 1;
-						break;
-					case 6:
-						$ai6Score += 1;
-						break;
-					case 7:
-						$ai7Score += 1;
-						break;
-					case 8:
-						$aexScore += 1;
-						break;
+			}else if($action == " ball"){
+				if($balls < 4){
+					$balls += 1;
+				}else{
+					$balls = 0;
+				}
+			}else if($action ==" foul"){
+				if($strikes < 2){
+					$strikes += 1;
 				}
 			}
-		}
-		if($action == " singles" or $action == " doubles" or $action == " triples" or $action == " homers"){
-			if(($homeID == 1 && $team == "FCHS") or ($homeID != 1 && $team != "FCHS")){
-				$hhits += 1;
-			}else{
-				$ahits += 1;
-			}
-		}else if($action == " wild pitch"){
-			if(($homeID == 1 && $team == "FCHS") or ($homeID != 1 && $team != "FCHS")){
-				$herr += 1;
-			}else{
-				$aerr += 1;
-			}
-		}
+		}else{
+			$sql = "INSERT INTO batball_pbp (text, inning, game_id) VALUES ('$actionText', '$inningText', (SELECT id FROM $schedule where id='$gameID'))";
+			$query = $db->prepare($sql);
+			$query->execute();
 			
-		updateScore($hi1Score, $hi2Score, $hi3Score, $hi4Score, $hi5Score, $hi6Score, $hi7Score, $hexScore, $ai1Score, $ai2Score, $ai3Score, $ai4Score, $ai5Score, $ai6Score, $ai7Score, $aexScore, $hhits, $herr, $ahits, $aerr, $gameID, $db);
+			if($action == " scores" or $action == " homers"){
+				if(($homeID == 1 && $team == "FCHS") or ($homeID != 1 && $team != "FCHS")){
+					switch($inning){
+						case 1:
+							$hi1Score += 1;
+							break;
+						case 2:
+							$hi2Score += 1;
+							break;
+						case 3:
+							$hi3Score += 1;
+							break;
+						case 4:
+							$hi4Score += 1;
+							break;
+						case 5:
+							$hi5Score += 1;
+							break;
+						case 6:
+							$hi6Score += 1;
+							break;
+						case 7:
+							$hi7Score += 1;
+							break;
+						case 8:
+							$hexScore += 1;
+							break;
+					}
+				}else{
+					switch($inning){
+						case 1:
+							$ai1Score += 1;
+							break;
+						case 2:
+							$ai2Score += 1;
+							break;
+						case 3:
+							$ai3Score += 1;
+							break;
+						case 4:
+							$ai4Score += 1;
+							break;
+						case 5:
+							$ai5Score += 1;
+							break;
+						case 6:
+							$ai6Score += 1;
+							break;
+						case 7:
+							$ai7Score += 1;
+							break;
+						case 8:
+							$aexScore += 1;
+							break;
+					}
+				}
+			}
+			if($action == " singles" or $action == " doubles" or $action == " triples" or $action == " homers"){
+				if(($homeID == 1 && $team == "FCHS") or ($homeID != 1 && $team != "FCHS")){
+					$hhits += 1;
+				}else{
+					$ahits += 1;
+				}
+			}else if($action == " wild pitch"){
+				if(($homeID == 1 && $team == "FCHS") or ($homeID != 1 && $team != "FCHS")){
+					$herr += 1;
+				}else{
+					$aerr += 1;
+				}
+			}
+			updateScore($hi1Score, $hi2Score, $hi3Score, $hi4Score, $hi5Score, $hi6Score, $hi7Score, $hexScore, $ai1Score, $ai2Score, $ai3Score, $ai4Score, $ai5Score, $ai6Score, $ai7Score, $aexScore, $hhits, $herr, $ahits, $aerr, $gameID, $db, $batball);
+		}
+		updateLiveGame($inningText, $tb, $balls, $strikes, '---', $_POST['player'], $gameID, $db);	
 		$inning = $_POST['inning'];
 		//echo $pbp;
 	}
@@ -432,11 +484,15 @@ if($i == $inning){
 <br><br>
 
 <select name = "action">
+<option value=" strike"> strike</option>
+<option value=" ball"> ball</option>
+<option value=" foul"> foul</option>
 <option value=" strikes out looking"> strikes out looking</option>
 <option value=" strikes out swinging"> strikes out swinging</option>
 <option value=" flies out"> flies out</option>
 <option value=" pops out"> pops out</option>
 <option value=" grounds out"> grounds out</option>
+<option value=" lines out"> lines out</option>
 <option value=" out at first"> out at first</option>
 <option value=" out at second"> out at second</option>
 <option value=" out at third"> out at third</option>
@@ -452,7 +508,6 @@ if($i == $inning){
 <option value=" walks"> walks</option>
 <option value=" hit by pitch"> hit by pitch</option>
 <option value=" wild pitch"> wild pitch</option>
-<!--Add stealing/errors/wild pitch -->
 </select>
 
 
