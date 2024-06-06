@@ -66,7 +66,7 @@
         <div></div><b> <?php echo '<u>' . $sportFormat . '</u>' ?></b><div></div>
     </div>
 	<div class="flex justify-between">
-        <div></div><b> <?php printf("%s-%s-%s", $wins, $losses, $ties); ?></b><div></div>
+        <div></div><a href = "../standings/standings.php?sport=<?php echo $roster?>" class='schedule-game'><b> <?php printf("%s-%s-%s", $wins, $losses, $ties); ?></b></a><div></div>
     </div>
 	
 	
@@ -102,13 +102,16 @@
 	}
 
 	if($gamedb != ""){
-		$sql = "SELECT s.game_date, home_total, away_total, r.urlName AS name, s.game_date, h.formal_name AS home, a.formal_name AS away FROM $gamedb RIGHT JOIN schedule AS s ON $gamedb.schedule_id=s.id INNER JOIN roster_teams AS r ON s.team_id=r.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE r.urlName='$roster' AND (h.formal_name='Fluvanna County' OR a.formal_name='Fluvanna County') AND s.season='2023' ORDER BY s.game_date";
+		$sql = "SELECT s.game_date, home_total, away_total, r.urlName AS name, s.game_date, h.formal_name AS home, a.formal_name AS away, s.id AS id FROM $gamedb RIGHT JOIN schedule AS s ON $gamedb.schedule_id=s.id INNER JOIN roster_teams AS r ON s.team_id=r.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE r.urlName='$roster' AND (h.formal_name='Fluvanna County' OR a.formal_name='Fluvanna County') AND s.season='2023' ORDER BY s.game_date";
 		$query = $db->prepare($sql);
 		$query->execute();
 		while($row = $query->fetchObject()){
 			$hscore = $row->home_total;
 			$ascore = $row->away_total;
+			$id = $row->id;
 			$sdate = date("D m/d", strtotime($row->game_date));
+			?><a href="../game/<?php echo $gamedb?>.php?gameID=<?php echo $id?>" class='schedule-game'>
+			<?php
 			if($hscore > $ascore){
 				printf("%s <b>%s %s</b>-%s %s<br>", $sdate, $row->home, $hscore, $ascore, $row->away);
 			}else if($hscore < $ascore){
@@ -116,6 +119,7 @@
 			}else{
 				printf("%s %s %s-%s %s<br>", $sdate, $row->home, $hscore, $ascore, $row->away);
 			}
+			?></a><?php
 		}
 	}
 ?>
