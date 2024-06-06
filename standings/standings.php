@@ -69,7 +69,11 @@
 	$query = $db->prepare($sql);
 	$query->execute();
 	while($row = $query->fetchObject()){
-		printf("%s-%s-%s %s<br>", $row->wins, $row->losses, $row->ties, $row->formal_name);
+		if($row->short_name == "FCHS"){
+			?><a href = "../teams/roster.php?sport=<?php echo $roster?>" class='schedule-game'> <?php printf("%s-%s-%s %s<br>", $row->wins, $row->losses, $row->ties, $row->formal_name); ?></a><?php
+		}else{
+			printf("%s-%s-%s %s<br>", $row->wins, $row->losses, $row->ties, $row->formal_name);
+		}
 	}
 ?>
 </div>
