@@ -13,15 +13,15 @@ $fdate = date("l, F d", strtotime("today"));
 
 $gameID = $_GET['gameID'];
 $isDistrict = $_GET['district'];
-$phpURL = "blaxmanager.php?gameID=".$gameID."&district=".$isDistrict;
+$phpURL = "fhockeymanager.php?gameID=".$gameID."&district=".$isDistrict;
 $schedule = 'schedule';
-$blax = 'blax';
+$fhockey = 'field_hockey';
 
-function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT, $gameID, $db, $blax){
+function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT, $gameID, $db, $fhockey){
 		$hTotal = $hq1 + $hq2 + + $hq3 + $hq4 + $hOT;
 		$aTotal = $aq1 + $aq2 + $aq3 + $aq4 + $aOT;
 		
-		$sqls = "UPDATE $blax SET home_quarter1 = '$hq1', home_quarter2 = '$hq2', home_quarter3 = '$hq3', home_quarter4 = '$hq4', home_ot = '$hOT', home_total = '$hTotal', away_quarter1 = '$aq1', away_quarter2 = '$aq2', away_quarter3 = '$aq3', away_quarter4 = '$aq4', away_ot = '$aOT', away_total = '$aTotal' WHERE schedule_id='$gameID'";
+		$sqls = "UPDATE $fhockey SET home_q1 = '$hq1', home_q2 = '$hq2', home_q3 = '$hq3', home_q4 = '$hq4', home_ot = '$hOT', home_total = '$hTotal', away_q1 = '$aq1', away_q2 = '$aq2', away_q3 = '$aq3', away_q4 = '$aq4', away_ot = '$aOT', away_total = '$aTotal' WHERE schedule_id='$gameID'";
 		$query = $db->prepare($sqls);
 		$query->execute();
 
@@ -54,9 +54,13 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	$homeID = 0;
 	$comp = 0;
 	
+	//live game vars
+	$game_time = "12:00";
+	$goalie = "";
+	
 	if($isDistrict=="true"){
 		$schedule = 'schedule_other';
-		$blax = 'blax_other';
+		$fhockey = 'field_hockey_other';
 	}
     
 	$sql = "SELECT t.urlName AS sport FROM $schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
@@ -81,12 +85,12 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$aq4 = $_POST['aq4score'];
 		$aOT = $_POST['aOTscore'];
 		
-		updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT, $gameID, $db, $blax);
+		updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT, $gameID, $db, $fhockey);
 	}
 	
 	if($_POST && isset($_POST['pbpRemove'])){
 		$remove = $_POST['pbpRemove'];
-		$sqls = "DELETE FROM blax_pbp WHERE id='$remove'";
+		$sqls = "DELETE FROM field_hockey_pbp WHERE id='$remove'";
 		$query = $db->prepare($sqls);
 		$query->execute();
 	}
@@ -98,28 +102,28 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	}
 	
 	//Create new game if doesn't exist
-	$sql = "SELECT 1 FROM $blax AS bl JOIN $schedule AS s ON bl.schedule_id WHERE schedule_id='$gameID'";
+	$sql = "SELECT 1 FROM $fhockey AS fh JOIN $schedule AS s ON fh.schedule_id WHERE schedule_id='$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	if($query->rowCount() == 0){
-		$sql = "INSERT INTO $blax (home_quarter1, home_quarter2, home_quarter3, home_quarter4, home_ot, away_quarter1, away_quarter2, away_quarter3, away_quarter4, away_ot, home_total, away_total, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM $schedule WHERE id='$gameID'))";
+		$sql = "INSERT INTO $fhockey (home_q1, home_q2, home_q3, home_q4, home_ot, away_q1, away_q2, away_q3, away_q4, away_ot, home_total, away_total, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM $schedule WHERE id='$gameID'))";
 		$query = $db->prepare($sql);
 		$query->execute();
 	}	
-	if($sport=="blax"){
+	if($sport=="fhockey"){
+		$minutes = 15;
+		$seconds = 0;
+		$maxMin = 15;
+	}else if($sport=="jvfhockey"){
 		$minutes = 12;
 		$seconds = 0;
 		$maxMin = 12;
-	}else if($sport=="jvblax"){
-		$minutes = 10;
-		$seconds = 0;
-		$maxMin = 10;
 	}
 	
 	$sqlsport = "SELECT s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id as aNum, s.team_id AS team, t.formattedName, 
-		bl.home_quarter1 AS hq1, bl.home_quarter2 AS hq2, bl.home_quarter3 AS hq3, bl.home_quarter4 AS hq4, bl.home_ot AS hot, bl.home_total AS ht, 
-		bl.away_quarter1 AS aq1, bl.away_quarter2 AS aq2, bl.away_quarter3 AS aq3, bl.away_quarter4 AS aq4, bl.away_ot AS aot, bl.away_total AS at, bl.completed AS cmp
-		FROM $blax AS bl JOIN $schedule AS s ON bl.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
+		fh.home_q1 AS hq1, fh.home_q2 AS hq2, fh.home_q3 AS hq3, fh.home_q4 AS hq4, fh.home_ot AS hot, fh.home_total AS ht, 
+		fh.away_q1 AS aq1, fh.away_q2 AS aq2, fh.away_q3 AS aq3, fh.away_q4 AS aq4, fh.away_ot AS aot, fh.away_total AS at, fh.completed AS cmp
+		FROM $fhockey AS fh JOIN $schedule AS s ON fh.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
 	$query = $db->prepare($sqlsport);
 	$query->execute();
 	while($row = $query->fetchObject()){
@@ -152,6 +156,25 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$comp = $row->cmp;
 	}
 	
+	//Create live game
+	$sql = "SELECT * FROM live_games AS game JOIN $schedule AS s ON game.schedule_id WHERE schedule_id='$gameID'";
+	$query = $db->prepare($sql);
+	$query->execute();
+
+	if($query->rowCount() == 0){
+		//period = quarter, game_time = time, info1 = goalie
+		$sql = "INSERT INTO live_games (period, game_time, info_1, schedule_id) VALUES ('$quarter', '$game_time', '$goalie', (SELECT id FROM $schedule WHERE id='$gameID'))";
+		$query = $db->prepare($sql);
+		$query->execute();
+	}else{
+		while($row = $query->fetchObject()){
+			$quarter = $row->period;
+			$game_time = $row->game_time;
+			$goalie = $row->info_1;
+
+		}
+	}
+	
 	if($_POST && isset($_POST['action'])){
 		$quarterText = $_POST['quarter'];
 		$action = $_POST['action'];
@@ -180,7 +203,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 			$actionText = $action . $team;
 		}
 		//POST PBP SQL
-		$sql = "INSERT INTO blax_pbp (text, quarter, time, game_id) VALUES ('$actionText', '$quarterText', '$displayTime', (SELECT id FROM $schedule where id='$gameID'))";
+		$sql = "INSERT INTO field_hockey_pbp (text, quarter, time, game_id) VALUES ('$actionText', '$quarterText', '$displayTime', (SELECT id FROM $schedule where id='$gameID'))";
 		$query = $db->prepare($sql);
 		$query->execute();
 		
@@ -222,7 +245,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 						break;
 				}
 			}
-			updateScore($hq1Score, $hq2Score, $hq3Score, $hq4Score, $hOTScore, $aq1Score, $aq2Score, $aq3Score, $aq4Score, $aOTScore, $gameID, $db, $blax);
+			updateScore($hq1Score, $hq2Score, $hq3Score, $hq4Score, $hOTScore, $aq1Score, $aq2Score, $aq3Score, $aq4Score, $aOTScore, $gameID, $db, $fhockey);
 		}
 		$minutes = $_POST['minutes'];
 		$seconds = $_POST['seconds'];
@@ -239,7 +262,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$awayLosses = 0;
 		$awayTies = 0;
 		
-		$sqls = "UPDATE $blax SET completed = '$comp' WHERE schedule_id='$gameID'";
+		$sqls = "UPDATE $fhockey SET completed = '$comp' WHERE schedule_id='$gameID'";
 		$query = $db->prepare($sqls);
 		$query->execute();
 		#select home team standing info
@@ -278,6 +301,11 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$query = $db->prepare($sqls);
 		$query->execute();
 		
+		#remove from livegame
+		$sql = "DELETE FROM live_games WHERE schedule_id='$gameID'";
+		$query = $db->prepare($sql);
+		$query->execute();
+		
 	}
 	
 	/*
@@ -304,7 +332,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	#########################
 	*/
 	
-	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.quarter AS qrtr, pbp.time AS tme FROM blax_pbp AS pbp JOIN $schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
+	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.quarter AS qrtr, pbp.time AS tme FROM field_hockey_pbp AS pbp JOIN $schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	while($row = $query->fetchObject()){
@@ -397,13 +425,12 @@ if($i == $seconds){
 <select name = "action">
 <option value="Goal scored by ">Goal scored by </option>
 <option value="Assist by ">Assist by </option>
-<option value="Faceoff won by ">Faceoff won by </option>
+<option value="Penalty corner by ">Penalty corner by </option>
 <option value="Save by ">Save by </option>
 <option value="Shot by ">Shot by </option>
 <option value="Penalty on ">Penalty on </option>
-<option value="Turnover by ">Turnover by </option>
-<option value="Ground ball pickup by ">Ground ball pickup by </option>
-<option value="Clear attempt by ">Clear attempt by </option>
+<option value="Green card on ">Green card on </option>
+<option value="Yellow card on ">Yellow card on </option>
 </select>
 <br><br>
 
