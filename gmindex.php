@@ -48,6 +48,12 @@ $fdate = date("l, F d", strtotime("today")); ?>
 				printf("<form action='./manager/blaxmanager.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type ='hidden' id='district' name='district' value='false'><input type='submit' class='gameID' value='%s\n%s vs. %s'></form><br>", $row->gameID, $row->formattedName, $row->home, $row->away);
 			}else if($sport=="glax" or  $sport=="jvglax"){
 				printf("<form action='./manager/glaxmanager.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type ='hidden' id='district' name='district' value='false'><input type='submit' class='gameID' value='%s\n%s vs. %s'></form><br>", $row->gameID, $row->formattedName, $row->home, $row->away);
+			}else if($sport=="football" or  $sport=="jvfootball"){
+				printf("<form action='./manager/footballmanager.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type ='hidden' id='district' name='district' value='false'><input type='submit' class='gameID' value='%s\n%s vs. %s'></form><br>", $row->gameID, $row->formattedName, $row->home, $row->away);
+			}else if($sport=="vball" or  $sport=="jvvball"){
+				printf("<form action='./manager/vballmanager.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type ='hidden' id='district' name='district' value='false'><input type='submit' class='gameID' value='%s\n%s vs. %s'></form><br>", $row->gameID, $row->formattedName, $row->home, $row->away);
+			}else if($sport=="fhockey" or  $sport=="jvfhockey"){
+				printf("<form action='./manager/fhockeymanager.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type ='hidden' id='district' name='district' value='false'><input type='submit' class='gameID' value='%s\n%s vs. %s'></form><br>", $row->gameID, $row->formattedName, $row->home, $row->away);
 			}
 		}
 	}
