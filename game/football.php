@@ -13,18 +13,6 @@ $fdate = date("l, F d", strtotime("today"));
 
 $gameID = $_GET['gameID'];
 $phpURL = "football.php?gameID=".$gameID;
-
-
-function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT, $gameID, $db){
-		$hTotal = $hq1 + $hq2 + + $hq3 + $hq4 + $hOT;
-		$aTotal = $aq1 + $aq2 + $aq3 + $aq4 + $aOT;
-		
-		$sqls = "UPDATE football SET home_q1 = '$hq1', home_q2 = '$hq2', home_q3 = '$hq3', home_q4 = '$hq4', home_ot = '$hOT', home_total = '$hTotal', away_q1 = '$aq1', away_q2 = '$aq2', away_q3 = '$aq3', away_q4 = '$aq4', away_ot = '$aOT', away_total = '$aTotal' WHERE schedule_id='$gameID'";
-		$query = $db->prepare($sqls);
-		$query->execute();
-
-}
-
 ?>
 
 
@@ -68,10 +56,10 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$sport = $row->sport;
 	}
 	
-	$sqlsport = "SELECT s.notes AS info, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id, s.team_id, t.formattedName,
+	$sqlsport = "SELECT s.notes AS info, s.time, s.game_date, s.season AS season, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id, s.team_id, t.formattedName,
 		h.formal_name AS homeName, a.formal_name AS awayName,
-		fb.home_q1 AS hq1, fb.home_q2 AS hq2, fb.home_q3 AS hq3, fb.home_q4 AS hq4, fb.home_ot AS hot, fb.home_total AS ht, 
-		fb.away_q1 AS aq1, fb.away_q2 AS aq2, fb.away_q3 AS aq3, fb.away_q4 AS aq4, fb.away_ot AS aot, fb.away_total AS at, fb.completed AS cmp
+		fb.home_quarter1 AS hq1, fb.home_quarter2 AS hq2, fb.home_quarter3 AS hq3, fb.home_quarter4 AS hq4, fb.home_ot AS hot, fb.home_total AS ht, 
+		fb.away_quarter1 AS aq1, fb.away_quarter2 AS aq2, fb.away_quarter3 AS aq3, fb.away_quarter4 AS aq4, fb.away_ot AS aot, fb.away_total AS at, fb.completed AS cmp
 		FROM football AS fb JOIN schedule AS s ON fb.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
 	
 	if($sport=="football"){
@@ -92,6 +80,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$homeID = $row->hNum;
 		
 		$info = $row->info;
+		$season = $row->season;
 			
 		$homeTeam = $row->home;
 		$awayTeam = $row->away;
@@ -115,10 +104,66 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$aTotal = $row->at;
 		
 		$comp = $row->cmp;
-		
-		printf("<b>%s vs. %s</b><br>", $homeName, $awayName);
-		printf("<p>%s</p><br>", $info);
 	}
+	
+	$sql = "SELECT rs.formal_name AS name, st.wins AS wins, st.losses AS losses, st.ties AS ties FROM standings AS st JOIN roster_schools AS rs ON st.school_id=rs.id JOIN roster_teams AS rt ON st.sport_id=rt.id WHERE (rs.formal_name ='$homeName' or rs.formal_name='$awayName') and st.season='$season' and rt.urlName='$sport'";
+	$query = $db->prepare($sql);
+	$query->execute();
+	$homeWins = $homeLosses = $homeTies = $awayWins = $awayLosses = $awayTies = 0;
+	while($row = $query->fetchObject()){
+	
+		if($row->name == $homeName){
+			$homeWins = $row->wins;
+			$homeLosses = $row->losses;		
+			$homeTies= $row->ties;
+		}else if($row->name == $awayName){
+			$awayWins = $row->wins;
+			$awayLosses = $row->losses;		
+			$awayTies= $row->ties;
+		}			
+	}
+			
+	/*
+	#########################
+	#						#
+	#		Live Game Info	#
+	#						#
+	#########################
+	*/
+	if($comp != 1){
+		$sql = "SELECT period AS quarter, game_time AS time_, info_1 AS poss, info_2 AS tohome, info_3 AS toaway, info_4 AS sof, info_5 AS yardline, info_6 AS ytg, info_7 AS down FROM live_games AS lg JOIN schedule AS s ON lg.schedule_id=s.id WHERE lg.schedule_id = '$gameID'";
+		$query = $db->prepare($sql);
+		$query->execute();
+		while($row = $query->fetchObject()){
+			$qrtr = $row->quarter;
+			$time = $row->time_;
+			$poss = $row->poss;
+			$tohome = $row->tohome;
+			$toaway = $row->toaway;
+			$sof = $row->sof;
+			$yardline = $row->yardline;
+			$ytg = $row->ytg;
+			$down = $row->down;
+		}
+		
+		//SPORTS INFO HEADER
+		printf('<div class="flex justify-between"><div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Q%s %s</div><div><b>%s</b></div></div>', $sport, $homeName, $qrtr, $time, $awayName);
+		printf('<div class="flex justify-between" ><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div><div>%s - %s</div><div>%s-%s-%s</div></div>', $sport, $homeWins, $homeLosses, $homeTies, $hTotal, $aTotal, $awayWins, $awayLosses, $awayTies);
+		printf("<center>%s</center><br><br><br><br>", $info);
+	}else{
+		printf('<div class="flex justify-between"> <div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div>         <div><b>FINAL</b></div> <div><b>%s</b></div></div>', $sport, $homeName, $awayName);
+		printf('<div class="flex justify-between"> <div><a href="../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div>   <div>%s - %s</div>      <div>%s-%s-%s</div></div>', $sport, $homeWins, $homeLosses, $homeTies, $hTotal, $aTotal, $awayWins, $awayLosses, $awayTies);
+		printf("<center>%s</center><br><br><br><br>", $info);
+	}
+	
+	//SPORTS INFO HEADER
+
+	/*
+	TEAM1 Period/Time TEAM2
+	Standing1 Score Standing2
+	
+			Info
+	*/
 	
 	/*
 	#########################
@@ -134,31 +179,30 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	printf("<tr><td>%s</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td></tr></table><br><br>", $awayTeam, $aq1Score, $aq2Score, $aq3Score, $aq4Score, $aOTScore, $aTotal);
 	
 	
-	/*
-	#########################
-	#						#
-	#		Live Game Info	#
-	#						#
-	#########################
-	*/
+	//LIVE GAME INFO
 	if($comp != 1){
-		$sql = "SELECT period AS quarter, game_time AS time_, info_1 AS poss, info_2 AS tohome, info_3 AS toaway, info_4 AS sof, info_5 AS yardline, info_6 AS ytg FROM live_games AS lg JOIN schedule AS s ON lg.schedule_id=s.id WHERE lg.schedule_id = '$gameID'";
-		$query = $db->prepare($sql);
-		$query->execute();
-		while($row = $query->fetchObject()){
-			$qrtr = $row->quarter;
-			$time = $row->time_;
-			$poss = $row->poss;
-			$tohome = $row->tohome;
-			$toaway = $row->toaway;
-			$sof = $row->sof;
-			$yardline = $row->yardline;
-			$ytg = $row->ytg;
-			printf("Quarter: %s Time: %s Poss: %s<br>", $qrtr, $time, $poss);
-			printf("Home TOs: %s<br>", $tohome);
-			printf("Away TOs: %s<br><br>", $toaway);
+	
+		switch($down){
+			case 1:
+				$down = "1st";
+				break;
+			case 2:
+				$down = "2nd";
+				break;
+			case 3:
+				$down = "3rd";
+				break;
+			case 4:
+				$down = "4th";
+				break;
 		}
+		printf("Poss: %s<br>", $poss);
+		printf("%s & %s @ %s %s<br>", $down, $ytg, $sof, $yardline);
+		printf("Home TOs: %s<br>", $tohome);
+		printf("Away TOs: %s<br><br>", $toaway);
+	
 	}
+	
 	/*
 	#########################
 	#						#
@@ -167,7 +211,7 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	#########################
 	*/
 	
-	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.quarter AS qrtr, pbp.time AS tme FROM blax_pbp AS pbp JOIN schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
+	$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.quarter AS qrtr, pbp.time AS tme FROM football_pbp AS pbp JOIN schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	
@@ -177,41 +221,150 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$text = $row->text;
 		$qrtr = $row->qrtr;
 		$time = $row->tme;
-		$pbpText = $qrtr . " " . $time . " | " . $text;
+		$pbpText = $time . " | " . $text;
 		if(str_contains($text, "Touchdown") or str_contains($text, "Field goal") or str_contains($text, "Safety") or str_contains($text, "Extra point") or str_contains($text, "2-point")){
 			$pbpText = "<b>$pbpText</b>";
 		}
-		switch($qrtr){
-			case "Q1":
-				$qrtr = 0;
-				break;
-			case "Q2":
-				$qrtr = 1;
-				break;
-			case "Q3":
-				$qrtr = 2;
-				break;
-			case "Q4":
-				$qrtr = 3;
-				break;
-			case "OT":
-				$qrtr = 4;
-				break;
-		}
-		$pbpArray[$qrtr][] = $pbpText;
+
+		$pbpArray[$qrtr-1][] = $pbpText;
 	
 	}
 	
-	foreach($pbpArray as $row){
-		foreach($row as $entry){
-			printf($entry . "<br>");
-		}
-		printf("<br>");
-	}
 	
 	if($comp == 1){
+		foreach($pbpArray as $row){
+			foreach($row as $entry){
+				printf($entry . "<br><br>");
+			}
+			printf("<br>");
+		}
 		printf("<br>-END OF GAME-");
+	}else{
+		for($i = count($pbpArray); $i > 0; $i--){
+			if(count($pbpArray[$i-1]) > 1){
+				print($pbpArray[$i-1][0] . "<br><br>");
+				for($j = count($pbpArray[$i-1]); $j > 1; $j--){
+					printf($pbpArray[$i-1][$j-1] . "<br><br>");
+				}
+			}
+		}
 	}
+	
+	/*
+	#########################
+	#						#
+	#		Stats			#
+	#						#
+	#########################
+	*/
+	
+	$sql = "SELECT rp.number AS num, rp.name AS name, fbs.pass_attempts AS patt, fbs.pass_completions AS pcomp, fbs.total_passing_yards AS tpy, fbs.passing_touchdowns AS ptd, fbs.thrown_interceptions AS pint, fbs.sacks_taken AS qbsacks,
+	fbs.carries AS carries, fbs.total_carry_yards AS tcy, fbs.rushing_touchdowns AS rtd, fbs.longest_carry AS lc,
+	fbs.receptions AS rec, fbs.total_reception_yards AS rec_yards, fbs.reception_touchdowns AS rec_tds, fbs.longest_reception AS rec_long, fbs.targets AS targets,
+	fbs.sacks AS sacks, fbs.tackle_for_loss AS tfl, fbs.interceptions AS ints, fbs.forced_fumbles AS ffs
+	FROM football_stats AS fbs JOIN schedule AS s ON fbs.game=s.id JOIN roster_player AS rp ON fbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id WHERE fbs.game = '$gameID' AND t.urlName = '$sport'";
+	$query = $db->prepare($sql);
+	$query->execute();
+	
+	$statArray = array(array(["Passing"], ["", "C/ATT", "YDS", "AVG", "TD", "INT", "SACKS"]), array(["Rushing"], ["" , "", "CAR", "YDS", "AVG", "TD", "LONG"]), array(["Receiving"], ["" , "REC", "YDS", "AVG", "TD", "LONG", "TGTS"]), array(["Defense"], ["" , "", "", "SACKS", "TFL", "INT", "FF"]));
+	printf("STATS<hr>");
+	printf('<table style = "border-spacing: 9px">');
+	while($row = $query->fetchObject()){
+		$name = $row->name;
+		$num = $row->num;
+		
+		$pass_attempts = $row->patt;
+		$pass_completions = $row->pcomp;
+		$total_passing_yards = $row->tpy;
+		$pass_avg = 0;
+		if($pass_attempts > 0){
+			$pass_avg = $total_passing_yards/$pass_attempts;
+		}
+		$passing_touchdowns = $row->ptd;
+		$thrown_interceptions = $row->pint;
+		$sacks_taken = $row->qbsacks;
+		
+		$carries = $row->carries;
+		$total_carry_yards = $row->tcy;
+		$rushing_touchdowns = $row->rtd;
+		$longest_carry = $row->lc;
+		$rushing_avg = 0;
+		if($carries > 0){
+			$rushing_avg = $total_carry_yards/$carries;
+		}
+		
+		$rec = $row->rec;
+		$rec_yards = $row->rec_yards;
+		$rec_avg = 0;
+		if($rec > 0){
+			$rec_avg = $rec_yards/$rec;
+		}
+		$rec_tds = $row->rec_tds;
+		$rec_long = $row->rec_long;
+		$targets = $row->targets;
+		
+		$sacks = $row->sacks;
+		$tfl = $row->tfl;
+		$ints = $row->ints;
+		$ffs = $row->ffs;
+		
+		$name = explode(" ", $name);
+		$name[0] = str_split($name[0])[0] . ".";
+		$name = implode(" ", $name);
+		if($pass_attempts != ''){
+			$statArray[0][] = [$num . ' ' . $name, $pass_completions . "/" . $pass_attempts , $total_passing_yards, number_format($pass_avg, 1), $passing_touchdowns, $thrown_interceptions, $sacks_taken];
+		}
+		if($carries != ''){
+			$statArray[1][] = [$num . ' ' . $name, "", $carries, $total_carry_yards, number_format($rushing_avg, 1), $rushing_touchdowns, $longest_carry];
+		}
+		if($rec != '' or $rec_yards != '' or $targets != ''){
+			$statArray[2][] = [$num . ' ' . $name, $rec, $rec_yards, number_format($rec_avg, 1), $rec_tds, $rec_long, $targets];
+		}
+		if($sacks != '' or $tfl != '' or $ints != '' or $ffs != ''){
+			$statArray[3][] = [$num . ' ' . $name, "", "", $sacks, $tfl, $ints, $ffs];
+		}
+	}
+	
+	//Table format
+	foreach($statArray as $statLine){
+		sort($statLine);
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<tr>');
+			}else{
+				printf('<tr">');
+			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<td style="text-align: left">%s</td>', $statLine[$j][$i]);
+				}else{
+					printf('<td style="text-align: right">%s</td>', $statLine[$j][$i]);
+				}
+			}
+			printf('</tr>');
+		}
+		printf('<tr></tr>');
+	}
+	printf("</table>");
+	
+	//Non-table format
+	/*foreach($statArray as $statLine){
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<div class="flex justify-between">');
+			}else{
+				printf('<div class="flex justify-between">');
+			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<div class="left-align">%s</div><br>', $statLine[$j][$i]);
+				}else{
+					printf('<div class="right-align stat-width">%s</div>', $statLine[$j][$i]);
+				}
+			}
+			printf('</div><br>');
+		}
+	}*/
 ?>
 
 </body>
