@@ -84,13 +84,12 @@
 	
     .container {width:100%;}
 	.schedule-container{
-		display: flex;
-		justify-content: space-between;
+		width: 250px;
 	}
-	.schedule-container > div{
-		width: 100%;
-		height: 100%;
+	.clear{
+		clear:both;
 	}
+
     .hidden{display:none;}
     .flex {display:flex;}
     .flex-1 {flex: 1 1 0px;}
@@ -105,9 +104,8 @@
     .right-align{text-align: right;}
     .a-schedule{color:var(--black);}
     .text-justify{test-align: justify;}
+	.stat-width{length: 50px;}
 	
-	.r2021{display:none;}
-	.g2021{display:none;}
 
     .width-align{width: 90%;}
     .width-div{flex-basis: 100%;}
