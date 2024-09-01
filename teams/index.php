@@ -42,7 +42,7 @@
     }
 
 
-	$sql = "SELECT urlName, formattedName FROM roster_teams WHERE season='Fall' ORDER BY formattedName";
+	$sql = "SELECT urlName, formattedName FROM roster_teams WHERE season='Fall'";
 	echo "<b>Fall</b><br>";
 	$query = $db->prepare($sql);
 	$query->execute();
@@ -50,7 +50,7 @@
 		printf("<form action='./roster.php' method='get'><input type ='hidden' id='sport' name='sport' value='%s'><input type='submit' class='sport' value='%s'></form>", $row->urlName, $row->formattedName);
 	}
 	
-	$sql = "SELECT urlName, formattedName FROM roster_teams WHERE season='Winter' ORDER BY formattedName";
+	$sql = "SELECT urlName, formattedName FROM roster_teams WHERE season='Winter'";
 	echo "<b>Winter</b><br>";
 	$query = $db->prepare($sql);
 	$query->execute();
@@ -58,7 +58,7 @@
 		printf("<form action='./roster.php' method='get'><input type ='hidden' id='sport' name='sport' value='%s'><input type='submit' class='sport' value='%s'></form>", $row->urlName, $row->formattedName);
 	}
 	
-	$sql = "SELECT urlName, formattedName FROM roster_teams WHERE season='Spring' ORDER BY formattedName";
+	$sql = "SELECT urlName, formattedName FROM roster_teams WHERE season='Spring'";
 	echo "<b>Spring</b><br>";
 	$query = $db->prepare($sql);
 	$query->execute();
