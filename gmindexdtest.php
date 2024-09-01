@@ -50,6 +50,8 @@ $fdate = date("l, F d", strtotime("today")); ?>
 				printf("<form action='./manager/glaxmanager.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type ='hidden' id='district' name='district' value='true'><input type='submit' class='gameID' value='%s\n%s vs. %s \n@%s'></form><br>", $row->gameID, $row->formattedName, $row->home, $row->away, $row->date);
 			}else if($sport=="gbball" or  $sport=="jvgbball" or  $sport=="bbball" or  $sport=="jvbbball"){
 				printf("<form action='./manager/bballmanager.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type ='hidden' id='district' name='district' value='true'><input type='submit' class='gameID' value='%s\n%s vs. %s \n@%s'></form><br>", $row->gameID, $row->formattedName, $row->home, $row->away, $row->date);
+			}else{
+				printf("<form action='./manager/manager.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type ='hidden' id='district' name='district' value='true'><input type='submit' class='gameID' value='%s\n%s vs. %s \n@%s'></form><br>", $row->gameID, $row->formattedName, $row->home, $row->away, $row->date);
 			}
 		//}
 	}
