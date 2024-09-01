@@ -10,7 +10,9 @@
 <?php 
 $date = date("Y-m-d", strtotime("today" ));
 $fdate = date("l, F d", strtotime("today")); 
-$baseUrl = './'; ?>
+$baseUrl = './'; 
+$schedule = 'schedule';
+$affix = '';?>
 
 
 <!--Schedule Header-->
@@ -37,7 +39,7 @@ $baseUrl = './'; ?>
 <?php
 	include './include/database.php';
 
-	$sql = "SELECT s.id AS gameID, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id, s.away_id, s.team_id, t.formattedName, t.urlName AS sport FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id";
+	$sql = "SELECT s.id AS gameID, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id, s.away_id, s.team_id, t.formattedName, t.urlName AS sport FROM $schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id";
 
     try {
       $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
