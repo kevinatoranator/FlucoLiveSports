@@ -61,6 +61,24 @@
 
 <!--Standings Body-->
 
+<input type="checkbox" name="2024" id="2024" onclick="rtoggle('2024')"><label for="2024"><b>2024 [+]</b></label>
+<br><br>
+<div class = "2024">
+<?php
+	$sql = "SELECT * FROM standings JOIN roster_teams ON standings.sport_id=roster_teams.id JOIN roster_schools ON standings.school_id=roster_schools.id WHERE roster_teams.urlName='$roster' AND standings.season='2024' ORDER BY standings.wins DESC";
+	$query = $db->prepare($sql);
+	$query->execute();
+	while($row = $query->fetchObject()){
+		if($row->short_name == "FCHS"){
+			?><a href = "../teams/roster.php?sport=<?php echo $roster?>" class='schedule-game'> <?php printf("%s-%s-%s %s<br>", $row->wins, $row->losses, $row->ties, $row->formal_name); ?></a><?php
+		}else{
+			printf("%s-%s-%s %s<br>", $row->wins, $row->losses, $row->ties, $row->formal_name);
+		}
+	}
+?>
+</div>
+<br><br>
+
 <input type="checkbox" name="2023" id="2023" onclick="rtoggle('2023')"><label for="2023"><b>2023 [+]</b></label>
 <br><br>
 <div class = "2023">
