@@ -43,6 +43,5 @@
 	'<option value="-End of Half-">-End of Half-</option>'];
 	//Add throw away, where text = $qb throws away, pass attempts +1 but no player takes a target
 	//Receiving vs running touchdown
-	//fumble by other team forced by?
 	
 ?>
