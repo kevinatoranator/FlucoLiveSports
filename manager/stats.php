@@ -13,6 +13,8 @@ which stat to add
 	
 if($team == "FCHS"){	
 	if($statTable == "football_stats"){
+		
+		
 		$updaters = [$player, $qb];
 		
 		for($i = 0; $i<2; $i++){
@@ -58,7 +60,7 @@ if($team == "FCHS"){
 			$interceptions = 0;
 			$forced_fumbles = 0;
 			
-			if($query->rowCount() == 0){//Create player stats if doesn't exist
+			if($query->rowCount() == 0 and $playerID != null){//Create player stats if doesn't exist
 				$sql = "INSERT INTO football_stats (player, game) VALUES ('$playerID', '$gameID')";
 				$query = $db->prepare($sql);
 				$query->execute();
@@ -90,7 +92,7 @@ if($team == "FCHS"){
 				}
 			}
 			
-			if($i == 0){//Updates player
+			if($i == 0 and $player != "FCHS"){//Updates player
 				if($action == "Reception by " or $action == "Touchdown reception by "){
 					$targets += 1;
 					$receptions += 1;
@@ -284,10 +286,111 @@ if($team == "FCHS"){
 			$query = $db->prepare($sqls);
 			$query->execute();
 		}		
+	}else if($statTable == "basketball_stats"){
+		$stat = '';
+			
+		$playerID =  '';
+			
+		//Get player's id
+		$sqls = "SELECT p.id AS pid FROM roster_player AS p JOIN roster_teams AS sport ON sport.id=p.team_id WHERE name='$player' AND sport.urlName='$sport' AND p.season='$season'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+		while($row = $query->fetchObject()){
+			$playerID = $row->pid;
+		}
+			
+		//Get player's stats
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+		
+		//Stats
+		$field_goals_made = 0;
+		$field_goals_attempted = 0;
+		$threes_made = 0;
+		$threes_attempted = 0;
+		$free_throws_made = 0;
+		$free_throws_attempted = 0;
+		$rebounds = 0;
+		$assists = 0;
+		$steals = 0;
+		$blocks = 0;
+		$turnovers = 0;
+		$fouls = 0;
+		
+		if($query->rowCount() == 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$playerID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}else{//Otherwise pull stats
+			while($row = $query->fetchObject()){
+				$field_goals_made = $row->field_goals_made;
+				$field_goals_attempted = $row->field_goals_attempted;
+				$threes_made = $row->threes_made;
+				$threes_attempted = $row->threes_attempted;
+				$free_throws_made = $row->free_throws_made;
+				$free_throws_attempted = $row->free_throws_attempted;
+				$rebounds = $row->rebounds;
+				$assists = $row->assists;
+				$steals = $row->steals;
+				$blocks = $row->blocks;
+				$turnovers = $row->turnovers;
+				$fouls = $row->fouls;
+			}
+		}
+		
+		if($action == "Jumper by " or $action == "Layup by " or $action == "Dunk by "){
+			$field_goals_made += 1;
+			$field_goals_attempted += 1;
+			$stat = "field_goals_made = '$field_goals_made', field_goals_attempted = '$field_goals_attempted'";
+		}else if($action == "Jumper missed by " or $action == "Layup missed by " or $action == "Dunk missed by "){
+			$field_goals_attempted += 1;
+			$stat = "field_goals_attempted = '$field_goals_attempted'";
+		}else if($action == "3 Pointer by "){
+			$threes_made += 1;
+			$threes_attempted += 1;
+			$stat = "threes_made = '$threes_made', threes_attempted = '$threes_attempted'";
+		}else if($action == "3 Pointer missed by "){
+			$threes_attempted += 1;
+			$stat = "threes_attempted = '$threes_attempted'";
+		}else if($action == "Free throw by "){
+			$free_throws_made += 1;
+			$free_throws_attempted += 1;
+			$stat = "free_throws_made = '$free_throws_made', free_throws_attempted = '$free_throws_attempted'";
+		}else if($action == "Free throw missed by "){
+			$free_throws_attempted += 1;
+			$stat = "free_throws_attempted = '$free_throws_attempted'";
+		}else if($action == "Foul on "){
+			$fouls += 1;
+			$stat = "fouls = '$fouls'";
+		}else if($action == "Turnover by "){
+			$turnovers += 1;
+			$stat = "turnovers = '$turnovers'";
+		}else if($action == "Steal by "){
+			$steals += 1;
+			$stat = "steals = '$steals'";
+		}else if($action == "Assist by "){
+			$assists += 1;
+			$stat = "assists = '$assists'";
+		}else if($action == "Block by "){
+			$blocks += 1;
+			$stat = "blocks = '$blocks'";
+		}else if($action == "Defensive rebound by " or $action == "Offensive rebound by "){
+			$rebounds += 1;
+			$stat = "rebounds = '$rebounds'";
+		}
+		
+		if($stat != ''){
+			$sqls = "UPDATE $statTable SET $stat WHERE game='$gameID' AND player='$playerID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}	
 	}
+	
+#Stats where away team is the main team
 }else{
 	//Sack/interception against QB
-	if($statTable == "football_stats"){
+	if($statTable == "football_stats" and $qb != "FCHS" and $qb != "None"){
 		
 		$stat = '';
 			
@@ -314,6 +417,11 @@ if($team == "FCHS"){
 		$passing_touchdowns = 0;
 		$thrown_interceptions = 0;
 		$sacks_taken = 0;
+		
+		
+		//defense
+		$tackle_for_loss = 0;
+		$forced_fumbles = 0;
 
 			
 		if($query->rowCount() == 0){//Create player stats if doesn't exist
@@ -330,6 +438,10 @@ if($team == "FCHS"){
 				$passing_touchdowns = $row->passing_touchdowns;
 				$thrown_interceptions = $row->thrown_interceptions;
 				$sacks_taken = $row->sacks_taken;
+				
+				//defense
+				$tackle_for_loss = $row->tackle_for_loss;
+				$forced_fumbles = $row->forced_fumbles;
 
 			}
 		}
@@ -341,6 +453,12 @@ if($team == "FCHS"){
 			$thrown_interceptions += 1;
 			$pass_attempts += 1;
 			$stat = "pass_attempts = '$pass_attempts', thrown_interceptions = '$thrown_interceptions'";
+		}else if($yards < 0 and ($action == "Run by " or $action == "Reception by ")){
+			$tackle_for_loss += 1;
+			$stat = "tackle_for_loss = '$tackle_for_loss'";
+		}else if($action == "Fumble by "){
+			$forced_fumbles += 1;
+			$stat = "forced_fumbles = '$forced_fumbles'";
 		}
 		
 		if($stat != ''){
@@ -348,7 +466,140 @@ if($team == "FCHS"){
 			$query = $db->prepare($sqls);
 			$query->execute();
 		}		
+	}else if($statTable == "field_hockey_stats"){//saves/goals against
+		$stat = '';
+			
+		$playerID =  '';
+			
+		//Get player's id
+		$sqls = "SELECT p.id AS pid FROM roster_player AS p JOIN roster_teams AS sport ON sport.id=p.team_id WHERE name='$goalie' AND sport.urlName='$sport' AND p.season='$season'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+		while($row = $query->fetchObject()){
+			$playerID = $row->pid;
+		}
+			
+		//Get player's stats
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+		
+		//Stats
+		$saves = 0;
+		$goals_allowed = 0;
+
+			
+		if($query->rowCount() == 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$playerID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}else{//Otherwise pull stats
+			while($row = $query->fetchObject()){
+				$saves = $row->saves;
+				$goals_allowed = $row->goals_allowed;
+			}
+		}
+			
+		if($action == "Goal scored by "){
+			$goals_allowed += 1;
+			$stat = "goals_allowed = '$goals_allowed'";
+		}else if($action == "Shot on goal by "){
+			$saves += 1;
+			$stat = "saves = '$saves'";
+		}
+
+		if($stat != ''){
+			$sqls = "UPDATE $statTable SET $stat WHERE game='$gameID' AND player='$playerID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}
 	}
 }	
+
+//TEAM STATS
+
+if($statTable == "football_stats"){
+	//Get team's stats
+		$sqls = "SELECT team.id AS teamID FROM roster_schools AS school WHERE team.short_name='$team'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+		while($row = $query->fetchObject()){
+			$teamID = $row->teamID;
+		}
+	
+		$teamTable = $statTable . "_team";
+		$sqls = "SELECT * FROM $teamTable AS teamstat JOIN roster_schools AS team ON teamstat.player=t.id JOIN schedule AS sched ON teamstat.game=sched.id WHERE team.id='$teamID' AND sched.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+		
+		$total_plays = 0;
+		$total_drives = 0;
+		$avg_start = 0;
+		$poss_time = 0;
+		$pass_first_down = 0;
+		$rush_first_down = 0;
+		$pen_first_down = 0;
+		$third_down_att = 0;
+		$fourth_down_att = 0;
+		$third_down_conv = 0;
+		$fourth_down_conv = 0;
+		$total_passing_yards_team = 0;
+		$pass_completions_team = 0;
+		$pass_attempts_team = 0;
+		$thrown_interceptions_team = 0;
+		$sacks_taken_team = 0;
+		$sack_yards_lost = 0;
+		$total_rushing_yards = 0;
+		$carries_team = 0;
+		$red_zone_conv = 0;
+		$penalties = 0;
+		$penalty_yards = 0;
+		$fumbles = 0;
+		$interceptions_team = 0;
+		$defense_tds = 0;
+		
+		$stat = '';
+		
+		if($query->rowCount() == 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO football_stats_team (team, game) VALUES ('$teamID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}else{//Otherwise pull stats
+			while($row = $query->fetchObject()){
+				$total_plays = $row->total_plays;
+				$total_drives = $row->total_drives;
+				$avg_start = $row->avg_start;
+				$poss_time = $row->poss_time;
+				$pass_first_down = $row->pass_first_down;
+				$rush_first_down = $row->rush_first_down;
+				$pen_first_down = $row->pen_first_down;
+				$third_down_att = $row->third_down_att;
+				$fourth_down_att = $row->fourth_down_att;
+				$third_down_conv = $row->third_down_conv;
+				$fourth_down_conv = $row->fourth_down_conv;
+				$total_passing_yards_team = $row->total_passing_yards;
+				$pass_completions_team = $row->pass_completions;
+				$pass_attempts_team = $row->pass_attempts_team;
+				$thrown_interceptions_team = $row->thrown_interceptions;
+				$sacks_taken_team = $row->sacks_taken;
+				$sack_yards_lost = $row->sack_yards_lost;
+				$total_rushing_yards = $row->total_rushing_yards;
+				$carries_team = $row->carries;
+				$red_zone_conv = $row->red_zone_conv;
+				$penalties = $row->penalties;
+				$penalty_yards = $row->penalty_yards;
+				$fumbles = $row->fumbles;
+				$interceptions_team = $row->interceptions;
+				$defense_tds = $row->defense_tds;
+			}
+		}
+		
+		if($stat != ''){
+			$sqls = "UPDATE $teamTable SET $stat WHERE game='$gameID' AND team='$teamID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}	
+
+}
 
 ?>
