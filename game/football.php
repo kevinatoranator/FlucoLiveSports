@@ -15,16 +15,24 @@ $gameID = $_GET['gameID'];
 $phpURL = "football.php?gameID=".$gameID;
 ?>
 
+<script>
+	function rtoggle(id){
+		var checkBox = document.getElementById(id);
+		var displayr = document.getElementsByClassName(id)[0];
+		if(displayr.classList.contains("hidden")){
+			displayr.classList.remove("hidden")
+		}else{
+			displayr.classList.add("hidden")
+		}
+	}
+</script>
 
-<div class="flex justify-between">
-        <a href="../index.php">Return to Schedule</a>
-        <a href='<?php echo $phpURL?>'>Reload</a>
-    </div>
 
 
 <!--Schedule Body-->
 
 <?php
+	include '../include/header.php';
 	include '../include/database.php';
 
 	$sport = "";
@@ -56,8 +64,30 @@ $phpURL = "football.php?gameID=".$gameID;
 		$sport = $row->sport;
 	}
 	
-	$sqlsport = "SELECT s.notes AS info, s.time, s.game_date, s.season AS season, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id, s.team_id, t.formattedName,
-		h.formal_name AS homeName, a.formal_name AS awayName,
+	$sql = "SELECT s.notes AS info, s.time, s.game_date, s.season AS season, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id, s.team_id, t.formattedName,
+		h.formal_name AS homeName, a.formal_name AS awayName
+		FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
+	
+	
+	$query = $db->prepare($sql);
+	$query->execute();
+	
+	while($row = $query->fetchObject()){
+		printf("<center><h3>%s</h3></center><br>", $row->formattedName);
+		
+		$homeID = $row->hNum;
+		
+		$info = $row->info;
+		$season = $row->season;
+			
+		$homeTeam = $row->home;
+		$awayTeam = $row->away;
+		
+		$homeName = $row->homeName;
+		$awayName = $row->awayName;
+	}
+	
+	$sqlsport = "SELECT
 		fb.home_quarter1 AS hq1, fb.home_quarter2 AS hq2, fb.home_quarter3 AS hq3, fb.home_quarter4 AS hq4, fb.home_ot AS hot, fb.home_total AS ht, 
 		fb.away_quarter1 AS aq1, fb.away_quarter2 AS aq2, fb.away_quarter3 AS aq3, fb.away_quarter4 AS aq4, fb.away_ot AS aot, fb.away_total AS at, fb.completed AS cmp
 		FROM football AS fb JOIN schedule AS s ON fb.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
@@ -75,18 +105,6 @@ $phpURL = "football.php?gameID=".$gameID;
 	$query = $db->prepare($sqlsport);
 	$query->execute();
 	while($row = $query->fetchObject()){
-		printf("<h5>%s</h5><br>", $row->formattedName);
-		
-		$homeID = $row->hNum;
-		
-		$info = $row->info;
-		$season = $row->season;
-			
-		$homeTeam = $row->home;
-		$awayTeam = $row->away;
-		
-		$homeName = $row->homeName;
-		$awayName = $row->awayName;
 			
 		$hq1Score = $row->hq1;
 		$hq2Score = $row->hq2;
@@ -147,15 +165,21 @@ $phpURL = "football.php?gameID=".$gameID;
 		}
 		
 		//SPORTS INFO HEADER
-		printf('<div class="flex justify-between"><div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Q%s %s</div><div><b>%s</b></div></div>', $sport, $homeName, $qrtr, $time, $awayName);
-		printf('<div class="flex justify-between" ><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div><div>%s - %s</div><div>%s-%s-%s</div></div>', $sport, $homeWins, $homeLosses, $homeTies, $hTotal, $aTotal, $awayWins, $awayLosses, $awayTies);
-		printf("<center>%s</center><br><br><br><br>", $info);
+		if($homeTeam == "FCHS"){
+			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Q%s %s</div><div><b>%s</b></div></div>', $sport, $homeName, $qrtr, $time, $awayName);
+		}else{
+			printf('<div class="flex justify-between"><div><b>%s</b></div><div class="red">Q%s %s</div><div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeName, $qrtr, $time, $sport, $awayName);
+		}
 	}else{
-		printf('<div class="flex justify-between"> <div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div>         <div><b>FINAL</b></div> <div><b>%s</b></div></div>', $sport, $homeName, $awayName);
-		printf('<div class="flex justify-between"> <div><a href="../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div>   <div>%s - %s</div>      <div>%s-%s-%s</div></div>', $sport, $homeWins, $homeLosses, $homeTies, $hTotal, $aTotal, $awayWins, $awayLosses, $awayTies);
-		printf("<center>%s</center><br><br><br><br>", $info);
+		if($homeTeam == "FCHS"){
+			printf('<div class="flex justify-between"> <div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div>         <div><b>FINAL</b></div> <div><b>%s</b></div></div>', $sport, $homeName, $awayName);
+		}else{
+			printf('<div class="flex justify-between"> <div><b>%s</b></div>         <div><b>FINAL</b></div> <div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeName, $sport, $awayName);
+		}
+		
 	}
-	
+	printf('<div class="flex justify-between" ><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div><div>%s - %s</div><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div></div>', $sport, $homeWins, $homeLosses, $homeTies, $hTotal, $aTotal, $sport, $awayWins, $awayLosses, $awayTies);
+	printf("<center>%s</center><br><br><br><br>", $info);
 	//SPORTS INFO HEADER
 
 	/*
@@ -222,30 +246,51 @@ $phpURL = "football.php?gameID=".$gameID;
 		$qrtr = $row->qrtr;
 		$time = $row->tme;
 		$pbpText = $time . " | " . $text;
+		
+		if(str_contains($pbpText, "Kickoff")){
+			$pbpArray[$qrtr-1][] = "<hr>";
+		}
+		
 		if(str_contains($text, "Touchdown") or str_contains($text, "Field goal") or str_contains($text, "Safety") or str_contains($text, "Extra point") or str_contains($text, "2-point")){
 			$pbpText = "<b>$pbpText</b>";
 		}
 
 		$pbpArray[$qrtr-1][] = $pbpText;
+		
+		if(str_contains($pbpText, "Punt") or str_contains($pbpText, "Interception") or str_contains($pbpText, "Recovered by")){
+			$pbpArray[$qrtr-1][] = "<hr>";
+		}
+		
+		//TODO split previous and current at colon take 2nd, if previous array if XOR off opp team and not then add hr
 	
 	}
 	
 	
 	if($comp == 1){
-		foreach($pbpArray as $row){
-			foreach($row as $entry){
+		for($i = 0; $i<count($pbpArray); $i++){
+			$quarter = $pbpArray[$i][0];
+			?> <input type="checkbox" name="<?php echo $quarter?>" id="<?php echo $quarter?>" onclick="rtoggle('<?php echo $quarter?>')"><label for="<?php echo $quarter?>"><b><?php echo $quarter?> [+]</b></label><br><br>
+			<div class = "<?php echo $quarter?> hidden"><?php
+			foreach($pbpArray[$i] as $entry){
 				printf($entry . "<br><br>");
 			}
+			printf("</div>");
 			printf("<br>");
 		}
-		printf("<br>-END OF GAME-");
+		printf("<br>-END OF GAME-<br><br><br>");
 	}else{
+		$newestQuarter = true;
 		for($i = count($pbpArray); $i > 0; $i--){
-			if(count($pbpArray[$i-1]) > 1){
-				print($pbpArray[$i-1][0] . "<br><br>");
+			if(count($pbpArray[$i-1]) > 1){//Only display if entries
+				$quarter = $pbpArray[$i-1][0];
+				?> <input type="checkbox" name="<?php echo $quarter?>" id="<?php echo $quarter?>" onclick="rtoggle('<?php echo $quarter?>')"><label for="<?php echo $quarter?>"><b><?php echo $quarter?> [+]</b></label><br><br>
+				<?php if(!$newestQuarter){ $quarter = $quarter . " hidden";}?>
+				<div class = "<?php echo $quarter?>"><?php
 				for($j = count($pbpArray[$i-1]); $j > 1; $j--){
 					printf($pbpArray[$i-1][$j-1] . "<br><br>");
 				}
+				printf("</div>");
+				$newestQuarter = false;
 			}
 		}
 	}
@@ -262,7 +307,7 @@ $phpURL = "football.php?gameID=".$gameID;
 	fbs.carries AS carries, fbs.total_carry_yards AS tcy, fbs.rushing_touchdowns AS rtd, fbs.longest_carry AS lc,
 	fbs.receptions AS rec, fbs.total_reception_yards AS rec_yards, fbs.reception_touchdowns AS rec_tds, fbs.longest_reception AS rec_long, fbs.targets AS targets,
 	fbs.sacks AS sacks, fbs.tackle_for_loss AS tfl, fbs.interceptions AS ints, fbs.forced_fumbles AS ffs
-	FROM football_stats AS fbs JOIN schedule AS s ON fbs.game=s.id JOIN roster_player AS rp ON fbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id WHERE fbs.game = '$gameID' AND t.urlName = '$sport'";
+	FROM football_stats AS fbs JOIN schedule AS s ON fbs.game=s.id JOIN roster_player AS rp ON fbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id WHERE fbs.game = '$gameID' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
 	$query = $db->prepare($sql);
 	$query->execute();
 	
@@ -327,7 +372,7 @@ $phpURL = "football.php?gameID=".$gameID;
 	
 	//Table format
 	foreach($statArray as $statLine){
-		sort($statLine);
+		//sort($statLine);
 		for($j = 0; $j < count($statLine); $j++){
 			if($j%2){//alternate colors doesn't work well with table
 				printf('<tr>');
