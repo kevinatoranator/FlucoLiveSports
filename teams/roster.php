@@ -11,10 +11,10 @@
 	function rtoggle(id){
 		var checkBox = document.getElementById(id);
 		var displayr = document.getElementsByClassName(id)[0];
-		if(checkBox.checked == false){
-			displayr.style.display = "block";
+		if(displayr.classList.contains("hidden")){
+			displayr.classList.remove("hidden")
 		}else{
-			displayr.style.display = "none";
+			displayr.classList.add("hidden")
 		}
 	}
 </script>
@@ -23,14 +23,19 @@
 	function getRoster($db, $roster, $year){
 		$returnRoster = [];
 		$sql = "SELECT roster_player.name, roster_player.number, roster_player.season FROM roster_player INNER JOIN roster_teams ON roster_player.team_id=roster_teams.id WHERE roster_teams.urlName='$roster' AND roster_player.season='$year'
-		ORDER BY (CASE WHEN cast(roster_player.number as unsigned) = 0 THEN 999997 ELSE cast(roster_player.number as unsigned) END)";
+		ORDER BY (CASE WHEN roster_player.number = 0 THEN 1 WHEN roster_player.number = 'Head Coach' THEN 999997 WHEN cast(roster_player.number as unsigned) = 0 THEN 999998 ELSE cast(roster_player.number as unsigned) END)";
 		$query = $db->prepare($sql);
 		$query->execute();
+		$staff = [];
 		while($row = $query->fetchObject()){
-			$returnRoster[] = sprintf("%s | %s<br>", $row->number, $row->name);
+			if($row->number != "Head Coach" and $row->number != "Assistant Coach" and $row->number != "Assistant Coaches" and $row->number != "Manager" and $row->number != "Managers"){
+				$returnRoster[] = sprintf("%s | %s", $row->number, $row->name);
+			}else{
+				$staff[] = sprintf("%s | %s", $row->number, $row->name);
+			}
 		}
 		
-		return $returnRoster;
+		return array_merge($returnRoster, $staff);
 	}
 
 	include '../include/database.php';
@@ -67,14 +72,9 @@
 <!--Schedule Header-->
 
     <br>
-    <div class="flex justify-between">
-        <a href ="./index.php">Teams</a>
-        <a href ="../index.php">Schedule</a>
-    </div>
-    <br>
-    <div class="flex justify-between">
-        <a href ="../standings/index.php">Standings</a>  <a href ="/schedule/district/district.php">District Schedule</a><!--BROKEN LINK-->
-    </div>
+    <?php 
+	include '../include/header.php';
+	?>
 	<br>
 	<div class="flex justify-between">
         <div></div><b> <?php echo '<u>' . $sportFormat . '</u>' ?></b><div></div>
@@ -117,7 +117,7 @@
 	}
 
 	if($gamedb != ""){
-		$sql = "SELECT s.game_date, home_total, away_total, r.urlName AS name, s.game_date, h.formal_name AS home, a.formal_name AS away, s.id AS id FROM $gamedb RIGHT JOIN schedule AS s ON $gamedb.schedule_id=s.id INNER JOIN roster_teams AS r ON s.team_id=r.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE r.urlName='$roster' AND (h.formal_name='Fluvanna County' OR a.formal_name='Fluvanna County') AND s.season='2024' ORDER BY s.game_date";
+		$sql = "SELECT s.game_date, home_total, away_total, h.formal_name AS home, a.formal_name AS away, s.id AS id FROM $gamedb RIGHT JOIN schedule AS s ON $gamedb.schedule_id=s.id INNER JOIN roster_teams AS r ON s.team_id=r.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE r.urlName='$roster' AND (h.formal_name='Fluvanna County' OR a.formal_name='Fluvanna County') AND s.season='2024' ORDER BY s.game_date";
 		$query = $db->prepare($sql);
 		$query->execute();
 		while($row = $query->fetchObject()){
@@ -135,6 +135,26 @@
 				printf("%s %s %s-%s %s<br>", $sdate, $row->home, $hscore, $ascore, $row->away);
 			}
 			?></a><?php
+		}
+	}else{//If no game database just pull schedule info
+		$sql = "SELECT s.game_date, h.formal_name AS home, a.formal_name AS away, s.location AS location, s.id AS id FROM schedule AS s INNER JOIN roster_teams AS r ON s.team_id=r.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE r.urlName='$roster' AND (h.formal_name='Fluvanna County' OR a.formal_name='Fluvanna County') AND s.season='2024' ORDER BY s.game_date";
+		$query = $db->prepare($sql);
+		$query->execute();
+		while($row = $query->fetchObject()){
+
+			
+			if($row->home != "Fluvanna County"){
+				$opponent = $row->home;
+			}else{
+				$opponent = $row->away;
+			}
+			
+			$id = $row->id;
+			$location = $row->location;
+			$sdate = date("D m/d", strtotime($row->game_date));
+
+			printf("%s vs. %s @ %s<br>", $sdate, $opponent, $location);
+
 		}
 	}
 ?>
@@ -189,10 +209,10 @@
 		$gamedb = "games_fieldhockey";
 	}else if($roster == "jvfootball" or $roster == "football"){
 		$gamedb = "games_football";
-	}else if($roster == "jvbbball" or $roster == "bbball" or $roster == "jvgbball" or $roster == "gbball"){
-		$gamedb = "games_basketball";
 	}else if($roster == "jvvball" or $roster == "vball"){
 		$gamedb = "games_volleyball";
+	}else{
+		$gamedb = "";
 	}
 
 	if($gamedb != ""){
@@ -227,7 +247,7 @@
 <?php
 	$playerRoster = getRoster($db, $roster, 2024);
 	foreach($playerRoster as $player){
-		printf($player);
+		?><a href="./player.php?player=<? echo explode(" | ", $player)[1]?>" class='schedule-game'><?php printf($player . "<br>");?></a><?php
 	}
 	if(count($playerRoster) == 0){
 		printf("No Roster Available");
@@ -243,7 +263,7 @@
 <?php
 	$playerRoster = getRoster($db, $roster, 2023);
 	foreach($playerRoster as $player){
-		printf($player);
+		printf($player . "<br>");
 	}
 	if(count($playerRoster) == 0){
 		printf("No Roster Available");
@@ -259,7 +279,7 @@
 <?php
 	$playerRoster = getRoster($db, $roster, 2022);
 	foreach($playerRoster as $player){
-		printf($player);
+		printf($player . "<br>");
 	}
 	if(count($playerRoster) == 0){
 		printf("No Roster Available");
@@ -275,7 +295,7 @@
 <?php
 	$playerRoster = getRoster($db, $roster, 2021);
 	foreach($playerRoster as $player){
-		printf($player);
+		printf($player . "<br>");
 	}
 	if(count($playerRoster) == 0){
 		printf("No Roster Available");
