@@ -11,14 +11,15 @@
 	function rtoggle(id){
 		var checkBox = document.getElementById(id);
 		var displayr = document.getElementsByClassName(id)[0];
-		if(checkBox.checked == true){
-			displayr.style.display = "block";
+		if(displayr.classList.contains("hidden")){
+			displayr.classList.remove("hidden")
 		}else{
-			displayr.style.display = "none";
+			displayr.classList.add("hidden")
 		}
 	}
 </script>
 <?php
+	include '../include/header.php';
 	include '../include/database.php';
 	
 	$roster = $_GET['sport'];
@@ -34,20 +35,11 @@
 	$query->execute();
 	$i = $query->fetchObject();
 	$sportFormat = $i->formattedName;
+	
 ?>
 
 
-<!--Schedule Header-->
 
-    <br>
-    <div class="flex justify-between">
-        <a href ="../teams/index.php">Teams</a>
-        <a href ="../index.php">Schedule</a>
-    </div>
-    <br>
-    <div class="flex justify-between">
-        <a href ="index.php">Standings</a>  <a href ="../schedule/district/index.php">District Schedule</a>
-    </div>
 	<br>
 	<div class="flex justify-between">
         <div></div><b> <?php echo $sportFormat ?></b><div></div>
@@ -72,7 +64,7 @@
 		if($row->short_name == "FCHS"){
 			?><a href = "../teams/roster.php?sport=<?php echo $roster?>" class='schedule-game'> <?php printf("%s-%s-%s %s<br>", $row->wins, $row->losses, $row->ties, $row->formal_name); ?></a><?php
 		}else{
-			printf("%s-%s-%s %s<br>", $row->wins, $row->losses, $row->ties, $row->formal_name);
+			?><a href = "../teams/district/roster.php?sport=<?php echo $roster?>&school=<?php echo $row->short_name?>" class='schedule-game'> <?php printf("%s-%s-%s %s<br>", $row->wins, $row->losses, $row->ties, $row->formal_name); ?></a><?php
 		}
 	}
 ?>
@@ -81,7 +73,7 @@
 
 <input type="checkbox" name="2023" id="2023" onclick="rtoggle('2023')"><label for="2023"><b>2023 [+]</b></label>
 <br><br>
-<div class = "2023">
+<div class = "2023 hidden">
 <?php
 	$sql = "SELECT * FROM standings JOIN roster_teams ON standings.sport_id=roster_teams.id JOIN roster_schools ON standings.school_id=roster_schools.id WHERE roster_teams.urlName='$roster' AND standings.season='2023' ORDER BY standings.wins DESC";
 	$query = $db->prepare($sql);
@@ -99,7 +91,7 @@
 
 <input type="checkbox" name="2022" id="2022" onclick="rtoggle('2022')"><label for="2022"><b>2022 [+]</b></label>
 <br><br>
-<div class = "2023">
+<div class = "2022 hidden">
 <?php
 	$sql = "SELECT * FROM standings JOIN roster_teams ON standings.sport_id=roster_teams.id JOIN roster_schools ON standings.school_id=roster_schools.id WHERE roster_teams.urlName='$roster' AND standings.season='2022' ORDER BY standings.wins DESC";
 	$query = $db->prepare($sql);
@@ -113,7 +105,7 @@
 
 <input type="checkbox" name="2021" id="2021" onclick="rtoggle('2021')"><label for="2021"><b>2021 [+]</b></label>
 <br><br>
-<div class = "2021">
+<div class = "2021 hidden">
 <?php
 	$sql = "SELECT * FROM standings JOIN roster_teams ON standings.sport_id=roster_teams.id JOIN roster_schools ON standings.school_id=roster_schools.id WHERE roster_teams.urlName='$roster' AND standings.season='2021' ORDER BY standings.wins DESC";
 	$query = $db->prepare($sql);
