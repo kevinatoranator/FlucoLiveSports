@@ -16,15 +16,9 @@ $affix = ''; ?>
 
 <!--Schedule Header-->
 
-    <br>
-    <div class="flex justify-between">
-        <a href ="../teams/index.php">Teams</a>
-       <form action='schedule.php' method='get'><input type ='hidden' id='date' name='date' value='<?php echo date("Y-m-d"); ?>'><input type='submit' class='schedule' value='Schedule'></form>
-    </div>
-    <br>
-    <div class="flex justify-between">
-        <a href ="../standings/index.php">Standings</a><a href ="./district/district.php?date=<?php echo $date ?>">District Schedule</a>
-    </div>
+    <?php 
+	include '../include/header.php';
+	?>
 
 <br>
 <div class="flex justify-between">
@@ -40,7 +34,7 @@ $affix = ''; ?>
 <?php
 	include '../include/database.php';
 
-	$sql = "SELECT s.id AS gameID, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id, s.away_id, s.team_id, t.formattedName, t.urlName AS sport FROM $schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id
+	$sql = "SELECT s.id AS gameID, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id, s.away_id, s.team_id, t.formattedName, t.urlName AS sport FROM $schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE a.short_name='FCHS' OR h.short_name='FCHS'
 	ORDER BY s.time";
 
     try {
