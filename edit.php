@@ -41,14 +41,6 @@ function updateScheduleGame($game_date, $time, $location, $notes, $season, $away
 	$away = "";
     
 	
-	//Connect to Database
-	try {
-      $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
-    } catch (PDOException $e) {
-      echo "Error!:" . $e->getMessage() . "<br/>";
-      die();
-    }
-	
 	//Get sport and set sport related variables
 	$sql = "SELECT game_date, time, location, notes, season, away_id, home_id, team_id FROM schedule WHERE id='$gameID'";
 	$query = $db->prepare($sql);
@@ -104,7 +96,7 @@ function updateScheduleGame($game_date, $time, $location, $notes, $season, $away
 <form action = "<?php echo $phpURL?>" method="POST">
 
 <label for="game_date">game_date:</label>
-<input type='date' id='game_date' name = 'game_date'><br>
+<input type='date' id='game_date' name = 'game_date' value="<?php echo date('Y-m-d'); ?>"><br>
 <label for="time">time:</label>
 <input type='text' id='time' name = 'time' value='<?php echo $time?>'><br>
 <label for="location">location:</label>
