@@ -29,12 +29,8 @@ function removeGame($gameID, $db){
 	include './include/database.php';
 
 	
-    try {
-      $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
-    } catch (PDOException $e) {
-      echo "Error!:" . $e->getMessage() . "<br/>";
-      die();
-    }
+	printf("<form action='add.php'><input type='submit' value='Add New Game'></form>");
+	
 	if(isset($_POST['gameID'])){
         removeGame($_POST['gameID'], $db);
 	}
@@ -50,9 +46,9 @@ function removeGame($gameID, $db){
 ?>	
 	<form name="filter" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
 	<?php
-	$school = 'FCHS';
+	$school = 'FLUV';
 	
-	$sql = "SELECT s.id AS gameID, s.time, s.game_date AS date, h.short_name AS home, a.short_name AS away, s.location, s.home_id, s.away_id, s.team_id, t.formattedName, t.urlName AS sport FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE (h.short_name='FCHS' or a.short_name = 'FCHS') && s.game_date = '$date'";
+	$sql = "SELECT s.id AS gameID, s.time, s.game_date AS date, h.short_name AS home, a.short_name AS away, s.location, s.home_id, s.away_id, s.team_id, t.formattedName, t.urlName AS sport FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE (h.short_name='FLUV' or a.short_name = 'FLUV') && s.game_date = '$date'";
 
 	if(!empty($_POST)){
 		$school = $_POST['school'];
@@ -87,7 +83,7 @@ function removeGame($gameID, $db){
 	$query = $db->prepare($sql);
 	$query->execute();
 	while($row = $query->fetchObject()){
-		printf("<form action='./manager/manager.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type='submit' class='gameID' value='%s\n%s vs. %s \n@%s'></form>", $row->gameID, $row->formattedName, $row->home, $row->away, $row->date);
+		printf("<form action='./manager/managerjs.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type='submit' class='gameID' value='%s\n%s vs. %s \n@%s'></form>", $row->gameID, $row->formattedName, $row->home, $row->away, $row->date);
 		printf("<form action='edit.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type='submit' class='gameID' value='Edit'></form>", $row->gameID);
 		printf("<form action='gmindex.php' method='post'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type='submit' class='gameID' value='Remove'></form><br>", $row->gameID);	
 	}
