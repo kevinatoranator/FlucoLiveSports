@@ -6,6 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" href="stylesheet.css">
 </head>
+
 <body>
 <?php 
 $date = date("Y-m-d", strtotime("today" ));
@@ -19,11 +20,17 @@ $season = 2024;
 
 
 function createGame($table, $db, $schedule, $gameID){
-	if($table == "football" or $table == "field_hockey" or $table == "basketball"){
+	if($table == "football" or $table == "field_hockey" or $table == "basketball"  or $table == "glax" or $table == "blax"){
 		$sql = "INSERT INTO $table (home_quarter1, home_quarter2, home_quarter3, home_quarter4, home_ot, away_quarter1, away_quarter2, away_quarter3, away_quarter4, away_ot, home_total, away_total, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM $schedule WHERE id='$gameID'))";
 	}
 	else if($table == "volleyball"){
 		$sql = "INSERT INTO $table (home_set1, home_set2, home_set3, home_set4, home_set5, away_set1, away_set2, away_set3, away_set4, away_set5, home_total, away_total, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM $schedule WHERE id='$gameID'))";
+	}
+	else if($table == "soccer"){
+		$sql = "INSERT INTO $table (home_half1, home_half2, home_OT, home_total, away_half1, away_half2, away_OT, away_total, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM $schedule WHERE id='$gameID'))";
+	}
+	else if($table == "batball"){
+		$sql = "INSERT INTO $table (home_i1, home_i2, home_i3, home_i4, home_i5, home_i6, home_i7, home_ex, home_total, away_i1, away_i2, away_i3, away_i4, away_i5, away_i6, away_i7, away_ex, away_total, home_hits, away_hits, home_errors, away_errors, completed, schedule_id) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (SELECT id FROM $schedule WHERE id='$gameID'))";
 	}
 	$query = $db->prepare($sql);
 	$query->execute();
@@ -31,7 +38,7 @@ function createGame($table, $db, $schedule, $gameID){
 
 function updateScoreNew($table, $scoreArray, $gameID, $db){
 
-	if($table == "football" or $table == "field_hockey" or $table == "basketball"){//Sports with quarters 
+	if($table == "football" or $table == "field_hockey" or $table == "basketball" or $table == "glax" or $table == "blax"){//Sports with quarters 
 		$hTotal = $scoreArray[0] + $scoreArray[1] + $scoreArray[2] + $scoreArray[3] + $scoreArray[4];
 		$aTotal = $scoreArray[5] + $scoreArray[6] + $scoreArray[7] + $scoreArray[8] + $scoreArray[9];
 		
@@ -73,16 +80,47 @@ function updateScoreNew($table, $scoreArray, $gameID, $db){
 		away_set1 = '$scoreArray[5]', away_set2 = '$scoreArray[6]', away_set3 = '$scoreArray[7]', away_set4 = '$scoreArray[8]', away_set5 = '$scoreArray[9]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
 		$query = $db->prepare($sqls);
 		$query->execute();
+	}else if($table == "soccer"){//half sports
+		$hTotal = $scoreArray[0] + $scoreArray[1] + $scoreArray[2];
+		$aTotal = $scoreArray[3] + $scoreArray[4] + $scoreArray[5];
+		
+		$sqls = "UPDATE $table SET home_half1 = '$scoreArray[0]', home_half2 = '$scoreArray[1]', home_OT = '$scoreArray[2]', home_total = '$hTotal', 
+			away_half1 = '$scoreArray[3]', away_half2 = '$scoreArray[4]', away_OT = '$scoreArray[5]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+	}else if($table == "batball"){//inning sports
+		
+		$hTotal = $scoreArray[0] + $scoreArray[1] + $scoreArray[2] + $scoreArray[3] + $scoreArray[4] + $scoreArray[5] + $scoreArray[6] + $scoreArray[7];
+		$aTotal = $scoreArray[8] + $scoreArray[9] + $scoreArray[10] + $scoreArray[11] + $scoreArray[12] + $scoreArray[13] + $scoreArray[14]+ $scoreArray[15];
+		
+		$sqls = "UPDATE $table SET home_i1 = '$scoreArray[0]', home_i2 = '$scoreArray[1]', home_i3 = '$scoreArray[2]', home_i4 = '$scoreArray[3]', home_i5 = '$scoreArray[4]', home_i6 = '$scoreArray[5]', home_i7 = '$scoreArray[6]', home_ex = '$scoreArray[7]', home_total = '$hTotal', 
+			away_i1 = '$scoreArray[8]', away_i2 = '$scoreArray[9]', away_i3 = '$scoreArray[10]', away_i4 = '$scoreArray[11]', away_i5 = '$scoreArray[12]', away_i6 = '$scoreArray[13]', away_i7 = '$scoreArray[14]', away_ex = '$scoreArray[15]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
 	}
 
 }
 
-function updateLiveGame($db, $gameID, $period, $time, $info_1 = "", $info_2 = "", $info_3 = "", $info_4 = "", $info_5 = "", $info_6 = "", $info_7 = ""){
-
-	$sqls = "UPDATE live_games SET period = '$period', game_time = '$time', info_1 = '$info_1', info_2 = '$info_2', info_3 = '$info_3', info_4 = '$info_4', info_5 = '$info_5', info_6 = '$info_6', info_7 = '$info_7' WHERE schedule_id='$gameID'";
+function updateLiveGame($db, $gameID, $period, $time, $info_1 = "", $info_2 = "", $info_3 = "", $info_4 = "", $info_5 = "", $info_6 = "", $info_7 = "", $info_8 = "", $info_9 = ""){
+	
+	$sqls = "UPDATE live_games SET period = '$period', game_time = '$time', info_1 = '$info_1', info_2 = '$info_2', info_3 = '$info_3', info_4 = '$info_4', info_5 = '$info_5', info_6 = '$info_6', info_7 = '$info_7', info_8 = '$info_8', info_9 = '$info_9', last_data = NOW() WHERE schedule_id='$gameID'";
 	$query = $db->prepare($sqls);
 	$query->execute();
 
+}
+
+function getPlayerID($db, $team, $player, $sport, $season){
+	
+	$playerID = 0;
+	//echo '<script>console.log('.$team. ", " . $player. ", " . $sport . ", " . $season.');</script>';
+	$sqls = "SELECT roster_player.id AS id FROM roster_player INNER JOIN roster_schools ON roster_player.school=roster_schools.id JOIN roster_teams AS sport ON sport.id=roster_player.team_id WHERE name='$player' AND team_id='$sport' AND roster_player.season='$season' AND roster_schools.short_name ='$team'";
+	$query = $db->prepare($sqls);
+	$query->execute();
+	
+	while($row = $query->fetchObject()){
+		$playerID = $row->id;
+	}
+	return $playerID;
 }
 
 function completeGame($table, $season, $homeID, $awayID, $sportID, $gameID, $db, $hTotal, $aTotal){
@@ -166,7 +204,8 @@ function sumArrayRange($array, $start, $end){
 	$sport = "";
 	$home = "";
 	$away = "";
-	$roster = array();
+	$homeRoster = array();
+	$awayRoster = array();
 	$pbpEntries = array();
 	$homeID = 0;
 	$completed = 0;
@@ -182,28 +221,28 @@ function sumArrayRange($array, $start, $end){
 	$period = 1;
 
 	//temp for test of live info game
-	$startTime = "12:00";
-	$sof = "FCHS";
-	$yardline = 40;
-	$ytg = 10;
-	$poss = "";
-	$down = 1;
+	$game_time = "12:00";
+	$info_1 = "";
+	$info_2 = "";
+	$info_3 = "";
+	$info_4 = "";
+	$info_5 = "";
+	$info_6 = "";
+	$info_7 = "";
+	$info_8 = "";
+	$info_9 = "";
+	
 	
 	//live info volley
 	$set = 1;
 	$serve = "FCHS";
 	//$homeTO = 3;
 	//$awayTO = 3;
-
-    
 	
-	//Connect to Database
-	try {
-      $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
-    } catch (PDOException $e) {
-      echo "Error!:" . $e->getMessage() . "<br/>";
-      die();
-    }
+	$team = "";
+	$player = "";
+	$jsplayer = "";
+    
 	
 	//Get sport and set sport related variables
 	$sql = "SELECT t.urlName AS sport FROM $schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
@@ -218,6 +257,13 @@ function sumArrayRange($array, $start, $end){
 		$minutes = 12;
 		$seconds = 0;
 		$maximumMinutes = 12;
+		$info_1 = ""; //Possession
+		$info_2 = 3; //Home Tos
+		$info_3 = 3; //Away Tos
+		$info_4 = "FCHS"; //Side of field
+		$info_5 = 40; //Starting yard line
+		$info_6 = 10; //yards to go
+		$info_7 = 1; //down
 		$sportType = "quarter";
 		include './football.php'; //Import all football variables
 	}else if($sport == "jvfootball"){
@@ -225,6 +271,13 @@ function sumArrayRange($array, $start, $end){
 		$minutes = 10;
 		$seconds = 0;
 		$maximumMinutes = 10;
+		$info_1 = ""; //Possession
+		$info_2 = 3; //Home Tos
+		$info_3 = 3; //Away Tos
+		$info_4 = "FCHS"; //Side of field
+		$info_5 = 40; //Starting yard line
+		$info_6 = 10; //yards to go
+		$info_7 = 1; //down
 		$sportType = "quarter";
 		include './football.php'; //Import all football variables
 	}else if($sport == "fhockey"){
@@ -252,6 +305,45 @@ function sumArrayRange($array, $start, $end){
 		$maximumMinutes = 12;
 		$sportType = "quarter";
 		include './basketball.php'; //Import all basketball variables
+	}else if($sport == "gsoccer" or $sport == "bsoccer"){
+		$table = "soccer";
+		$minutes = 0;
+		$seconds = 0;
+		$maximumMinutes = 40;
+		$sportType = "half";
+		include './soccer.php'; //Import all soccer variables
+	}else if($sport == "jvgsoccer" or $sport == "jvbsoccer"){
+		$table = "soccer";
+		$minutes = 0;
+		$seconds = 0;
+		$maximumMinutes = 35;
+		$sportType = "half";
+		include './soccer.php'; //Import all soccer variables
+	}else if($sport == "glax" or $sport == "jvglax"){
+		$table = "glax";
+		$minutes = 0;
+		$seconds = 0;
+		$maximumMinutes = 12;
+		$sportType = "quarter";
+		include './glax.php'; //Import all glax variables
+	}else if($sport == "blax" or $sport == "jvblax"){
+		$table = "blax";
+		$minutes = 0;
+		$seconds = 0;
+		$maximumMinutes = 12;
+		$sportType = "quarter";
+		include './blax.php'; //Import all glax variables
+	}else if($sport == "baseball" or $sport == "softball" or $sport == "jvbaseball" or $sport == "jvsoftball"){
+		$table = "batball";
+		$minutes = 0;
+		$seconds = 0;
+		$maximumMinutes = 0;
+		$strikes = 0;
+		$balls = 0;
+		$outs = 0;
+		$sportType = "inning";
+		$game_time = "Top";
+		include './batball.php'; //Import all glax variables
 	}
 	$pbpTable = $table . "_pbp";
 	$statTable = $table . "_stats";
@@ -265,10 +357,20 @@ function sumArrayRange($array, $start, $end){
 	}
 	
 	//Set defaults from database
-	if($sport == "football" or $sport == "jvfootball" or $sport == "fhockey" or $sport == "jvfhockey" or $sport == "bbball" or $sport == "jvbbball" or $sport == "gbball" or $sport == "jvgbball"){//quarter sports
+	if($sport == "football" or $sport == "jvfootball" or $sport == "fhockey" or $sport == "jvfhockey" or $sport == "bbball" or $sport == "jvbbball" or $sport == "gbball" or $sport == "jvgbball" or $sport == "glax" or $sport == "jvglax" or $sport == "blax" or $sport == "jvblax"){//quarter sports
 		$sqlsport = "SELECT s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id as aNum, s.team_id AS team, t.formattedName, 
 			game.home_quarter1 AS hq1, game.home_quarter2 AS hq2, game.home_quarter3 AS hq3, game.home_quarter4 AS hq4, game.home_ot AS hot, game.home_total AS ht, 
 			game.away_quarter1 AS aq1, game.away_quarter2 AS aq2, game.away_quarter3 AS aq3, game.away_quarter4 AS aq4, game.away_ot AS aot, game.away_total AS at, game.completed AS cmp
+			FROM $table AS game JOIN $schedule AS s ON game.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
+	}else if($sport == "gsoccer" or $sport == "bsoccer" or $sport == "jvgsoccer" or $sport == "jvbsoccer"){//half sports
+		$sqlsport = "SELECT s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id as aNum, s.team_id AS team, t.formattedName, 
+			game.home_half1 AS hh1, game.home_half2 AS hh2, game.home_OT AS hot, game.home_total AS ht, 
+			game.away_half1 AS ah1, game.away_half2 AS ah2, game.away_OT AS aot, game.away_total AS at, game.completed AS cmp
+			FROM $table AS game JOIN $schedule AS s ON game.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
+	}else if($sport == "baseball" or $sport == "softball" or $sport == "jvbaseball" or $sport == "jvsoftball"){//inning sports
+		$sqlsport = "SELECT s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id as aNum, s.team_id AS team, t.formattedName, 
+			game.home_i1 AS hi1, game.home_i2 AS hi2, game.home_i3 AS hi3, game.home_i4 AS hi4, game.home_i5 AS hi5, game.home_i6 AS hi6, game.home_i7 AS hi7, game.home_ex AS hex, game.home_total AS ht, game.home_hits AS hh, game.home_errors AS he,
+			game.away_i1 AS ai1, game.away_i2 AS ai2, game.away_i3 AS ai3, game.away_i4 AS ai4, game.away_i5 AS ai5, game.away_i6 AS ai6, game.away_i7 AS ai7, game.away_ex AS aex, game.away_total AS at, game.away_hits AS ah, game.away_errors AS ae, game.completed AS cmp
 			FROM $table AS game JOIN $schedule AS s ON game.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
 	}else{//volleyball
 		$sqlsport = "SELECT s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id AS aNum, s.team_id AS team, t.formattedName, 
@@ -292,8 +394,16 @@ function sumArrayRange($array, $start, $end){
 
 		$scoreArray = [];
 		
-		if($sport == "football" or $sport == "jvfootball" or $sport == "fhockey" or $sport == "jvfhockey" or $sport == "bbball" or $sport == "jvbbball" or $sport == "gbball" or $sport == "jvgbball"){
+		if($sportType == "quarter"){
 			$scoreArray = [$row->hq1, $row->hq2, $row->hq3, $row->hq4, $row->hot, $row->aq1, $row->aq2, $row->aq3, $row->aq4, $row->aot];
+		}else if($sport == "gsoccer" or $sport == "bsoccer" or $sport == "jvgsoccer" or $sport == "jvbsoccer"){
+			$scoreArray = [$row->hh1, $row->hh2, $row->hot, $row->ah1, $row->ah2, $row->aot];
+		}else if($sport == "baseball" or $sport == "softball" or $sport == "jvbaseball" or $sport == "jvsoftball"){
+			$scoreArray = [$row->hi1, $row->hi2,$row->hi3, $row->hi4, $row->hi5, $row->hi6, $row->hi7, $row->hex, $row->ai1, $row->ai2,$row->ai3, $row->ai4, $row->ai5, $row->ai6, $row->ai7, $row->aex];
+			$homeHits = $row->hh;
+			$awayHits = $row->ah;
+			$homeErrors = $row->he;
+			$awayErrors = $row->ae;
 		}else{
 			$scoreArray = [$row->hs1, $row->hs2, $row->hs3, $row->hs4, $row->hs5, $row->as1, $row->as2, $row->as3, $row->as4, $row->as5];
 		}
@@ -307,33 +417,51 @@ function sumArrayRange($array, $start, $end){
 	$sql = "SELECT * FROM live_games AS game JOIN $schedule AS s ON game.schedule_id WHERE schedule_id='$gameID'";
 	$query = $db->prepare($sql);
 	$query->execute();
-
+	
 	if($query->rowCount() == 0 && $completed == 0 && ($homeTeam =="FCHS" or $awayTeam =="FCHS")){//TODO REFACTOR var names
-		//game_time = time, period = qrtr, info1 = poss, info2 = tohome, info3 = toaway, info4 = sof, info5 = yardline, info6 = ytg, info7 = down
-		//football need volleyball and field hockey
-		$sql = "INSERT INTO live_games (period, game_time, info_1, info_2, info_3, info_4, info_5, info_6, info_7, schedule_id) VALUES (1, '$startTime', '$poss', '$homeTimeOuts', '$awayTimeOuts', '$sof', '$yardline', '$ytg', '$down', (SELECT id FROM $schedule WHERE id='$gameID'))";
+		$sql = "INSERT INTO live_games (period, game_time, info_1, info_2, info_3, info_4, info_5, info_6, info_7, info_8, info_9, schedule_id) VALUES (1, '$game_time', '$info_1', '$info_2', '$info_3', '$info_4', '$info_5', '$info_6', '$info_7', '$info_8', '$info_9', (SELECT id FROM $schedule WHERE id='$gameID'))";
 		$query = $db->prepare($sql);
 		$query->execute();
 	}else{
 		while($row = $query->fetchObject()){
 			//just football
-			$period = $row->period;
-			$poss = $row->info_1;
-			$homeTimeOuts = $row->info_2;
-			$awayTimeOuts = $row->info_3;
-			$sof = $row->info_4;
-			$yardline = $row->info_5;
-			$ytg = $row->info_6;
-			$down = $row->info_7;
-			$displayTime = $row->game_time;
+			if($table == "football"){
+				$period = $row->period;
+				$poss = $row->info_1;
+				$homeTimeOuts = $row->info_2;
+				$awayTimeOuts = $row->info_3;
+				$sof = $row->info_4;
+				$yardline = $row->info_5;
+				$ytg = $row->info_6;
+				$down = $row->info_7;
+				$displayTime = $row->game_time;
+			}else{
+				$period = $row->period;
+				$game_time = $row->game_time;
+				$info_1 = $row->info_1;
+				$info_2 = $row->info_2;
+				$info_3 = $row->info_3;
+				$info_4 = $row->info_4;
+				$info_5 = $row->info_5;
+				$info_6 = $row->info_6;
+				$info_7 = $row->info_7;
+				$info_8 = $row->info_8;
+				$info_9 = $row->info_9;
+			}
 		}
 	}
 	
 	if($_POST && isset($_POST['homePeriod1Score'])){
 		
-		if($sport == "football" or $sport == "jvfootball" or $sport == "fhockey" or $sport == "jvfhockey" or $sport == "vball" or $sport == "jvvball" or $sport == "bbball" or $sport == "jvbbball" or $sport == "gbball" or $sport == "jvgbball"){
+		if($sport == "football" or $sport == "jvfootball" or $sport == "fhockey" or $sport == "jvfhockey" or $sport == "vball" or $sport == "jvvball" or $sport == "bbball" or $sport == "jvbbball" or $sport == "gbball" or $sport == "jvgbball" or $sport == "glax" or $sport == "jvglax" or $sport == "blax" or $sport == "jvblax"){
 			$scoreArray = [$_POST['homePeriod1Score'], $_POST['homePeriod2Score'], $_POST['homePeriod3Score'], $_POST['homePeriod4Score'], $_POST['homePeriod5Score'],
 					$_POST['awayPeriod1Score'], $_POST['awayPeriod2Score'], $_POST['awayPeriod3Score'], $_POST['awayPeriod4Score'], $_POST['awayPeriod5Score']];
+		}else if($sport == "gsoccer" or $sport == "bsoccer" or $sport == "jvgsoccer" or $sport == "jvbsoccer"){
+			$scoreArray = [$_POST['homePeriod1Score'], $_POST['homePeriod2Score'], $_POST['homePeriod3Score'],
+					$_POST['awayPeriod1Score'], $_POST['awayPeriod2Score'], $_POST['awayPeriod3Score']];
+		}else if($sport == "baseball" or $sport == "softball" or $sport == "jvbaseball" or $sport == "jvsoftball"){
+			$scoreArray = [$_POST['homePeriod1Score'], $_POST['homePeriod2Score'], $_POST['homePeriod3Score'], $_POST['homePeriod4Score'], $_POST['homePeriod5Score'], $_POST['homePeriod6Score'], $_POST['homePeriod7Score'], $_POST['homePeriod8Score'],
+					$_POST['awayPeriod1Score'], $_POST['awayPeriod2Score'], $_POST['awayPeriod3Score'], $_POST['awayPeriod4Score'], $_POST['awayPeriod5Score'], $_POST['awayPeriod6Score'], $_POST['awayPeriod7Score'], $_POST['awayPeriod8Score']];
 		}
 		
 		updateScoreNew($table, $scoreArray, $gameID, $db);
@@ -374,6 +502,7 @@ function sumArrayRange($array, $start, $end){
 		$team = $_POST['team'];
 		$period = $_POST['period'];
 		$player = $_POST['player'];
+		$jsplayer = $player;
 		
 		if($action != "Penalty on " and $action != "Holding on " and $action != "Offsides on " and $action != "Pass interference on " and $action != "Timeout" and $table != "basketball"){
 			$poss = $team;
@@ -385,12 +514,22 @@ function sumArrayRange($array, $start, $end){
 		
 		if($sport != "vball" and $sport != "jvvball" and $sport != "baseball" and $sport != "jvbaseball" and $sport != "softball" and $sport != "jvsoftball"){//Sports with time
 			$minutes = $_POST['minutes'];
-			$seconds = $_POST['seconds'];
-			if(strlen($seconds) < 2){
-				$seconds = "0" . $seconds;
+			if($sport != "gsoccer" and $sport != "bsoccer" and $sport != "jvgsoccer" and $sport != "jvbsoccer"){
+				$seconds = $_POST['seconds'];
+				if(strlen($seconds) < 2){
+					$seconds = "0" . $seconds;
+				}
+			
+				$displayTime = $minutes . ":" . $seconds;
+			}else{
+				if($period == "1"){
+					$displayTime = $minutes;
+				}else if($period == "2"){
+					$displayTime = $minutes + $maximumMinutes;
+				}else if($period == "3"){
+					$displayTime = $minutes + $maximumMinutes*2;
+				}
 			}
-		
-			$displayTime = $minutes . ":" . $seconds;
 		}
 		if($sport == "football" or $sport == "jvfootball"){//Football specific
 			switch($down){
@@ -494,8 +633,151 @@ function sumArrayRange($array, $start, $end){
 				}
 			}
 			
-		}else if($sport == "fhockey" or $sport =="jvfhockey"){
-			$goalie = $_POST['goalie'];
+		}else if($sport == "fhockey" or $sport =="jvfhockey" or $sport == "gsoccer" or $sport == "bsoccer" or $sport == "jvgsoccer" or $sport == "jvbsoccer" or $sport == "glax" or $sport == "jvglax" or $sport == "blax" or $sport == "jvblax"){
+			$hgoalie = $_POST['hgoalie'];
+			$agoalie = $_POST['agoalie'];
+			$assister = $_POST['assister'];
+			$defense = $_POST['defense'];
+			
+		}else if($sport == "baseball" or $sport == "softball" or $sport == "jvbaseball" or $sport == "jvsoftball"){
+			$hpitcher = $_POST['hpitcher'];
+			$apitcher = $_POST['apitcher'];
+			$game_time = 'Top';
+			$outs = intval($info_2);
+			$strikes = intval($info_3);
+			$balls = intval($info_4);
+			$lob = 0;
+			if($action != " to second" and $action != " to third" and $action != " scores" and $action != " out at first" and $action != " out at second" and $action != " out at third" and $action != " out at home"){
+				$batter = $player;
+			}else{
+				$batter = $info_6;
+			}
+			if($homeTeam == $_POST['team']){
+				$game_time = 'Bot';
+			}
+			if($action == " strike"){
+				if($strikes < 3){
+					$strikes += 1;
+				}
+			}else if($action == " ball"){
+				if($balls < 4){
+					$balls += 1;
+				}
+			}else if($action ==" foul"){
+				if($strikes < 2){
+					$strikes += 1;
+				}
+			}else if($action == " singles"){
+				$info_7 = $player;
+				if($team == $homeTeam){
+					$homeHits += 1;
+				}else{
+					$awayHits += 1;
+				}
+				$strikes = 0;
+				$balls = 0;
+			}else if($action == " doubles"){
+				$info_8 = $player;
+				if($team == $homeTeam){
+					$homeHits += 1;
+				}else{
+					$awayHits += 1;
+				}
+				$strikes = 0;
+				$balls = 0;
+			}else if($action == " triples"){
+				$info_9 = $player;
+				if($team == $homeTeam){
+					$homeHits += 1;
+				}else{
+					$awayHits += 1;
+				}
+				$strikes = 0;
+				$balls = 0;
+			}else if($action == " homers"){
+				$info_7 = "";
+				$info_8 = "";
+				$info_9 = "";
+				if($team == $homeTeam){
+					$homeHits += 1;
+				}else{
+					$awayHits += 1;
+				}
+				$strikes = 0;
+				$balls = 0;
+			}else if($action == " wild pitch"){
+				if($team == $homeTeam){
+					$homeErrors += 1;
+				}else{
+					$awayErrors += 1;
+				}
+				$balls = $info_4;
+				if($balls < 4){
+					$balls += 1;
+				}
+			}else if($action == " strikes out looking" or $action == " strikes out swinging" or $action == " flies out" or $action == " pops out" or $action == " grounds out" or $action == " lines out" 
+			or $action == " sacrifice fly" or $action == " sacrifice bunt" or $action == " out at first" or $action == " out at second" or $action == " out at third" or $action == " out at home"){
+				$outs += 1;
+				if($outs > 2){
+					if($info_7 != ""){
+						$lob += 1;
+					}if($info_8 != ""){
+						$lob += 1;
+					}if($info_9 != ""){
+						$lob += 1;
+					}
+					$info_7 = "";
+					$info_8 = "";
+					$info_9 = "";
+					if($game_time == 'Top'){
+						$game_time = 'Mid';
+					}else if($game_time == 'Bot'){
+						$game_time = 'End';
+					}
+					$outs = 0;
+				}
+				$strikes = 0;
+				$balls = 0;
+			}else if($action == " walks" or $action == " hit by pitch"){
+				if($info_8 != "" and $info_7 != ""){
+					$info_9 = $info_8;
+				}
+				if($info_7 != ""){
+					$info_8 = $info_7;
+				}
+				$info_7 = $player;
+				$strikes = 0;
+				$balls = 0;
+			}else if($action == " to second"){
+				if($player == $info_7){
+					$info_7 = "";
+				}
+				$info_8 = $player;
+			}else if($action == " to third"){
+				if($player == $info_7){
+					$info_7 = "";
+				}if($player == $info_8){
+					$info_8 = "";
+				}
+				$info_9 = $player;
+			}else if($action == " scores"){
+				if($player == $info_7){
+					$info_7 = "";
+				}if($player == $info_8){
+					$info_8 = "";
+				}if($player == $info_9){
+					$info_9 = "";
+				}
+			}
+			if($action == " out at first" or $action == " out at second" or $action == " out at third" or $action == " out at home"){
+				if($player == $info_7){
+					$info_7 = "";
+				}if($player == $info_8){
+					$info_8 = "";
+				}if($player == $info_9){
+					$info_9 = "";
+				}
+			}
 		}
 		
 		$actionText = "";
@@ -516,13 +798,14 @@ function sumArrayRange($array, $start, $end){
 		}else if($sportType =="set"){
 			$periodLabel = "S" . $periodLabel;
 			$sql = "INSERT INTO $pbpTable (text, set_, game_id) VALUES ('$actionText', '$period', (SELECT id FROM $schedule where id='$gameID'))";
+		}else if($sportType =="inning"){
+			//insert top/bot in half column
+			$sql = "INSERT INTO $pbpTable (text, inning, game_id) VALUES ('$actionText', '$period', (SELECT id FROM $schedule where id='$gameID'))";
 		}
 		
-		if($team == "FCHS"){
-			$actionText = $action . $player;
-		}else{
-			$actionText = $action . $team;
-		}
+		
+		$actionText = $team . " " . $action . $player;
+		
 		if($sport == "football" or $sport == "jvfootball"){
 			if($action == "Reception by " and $_POST['team'] == "FCHS"){
 				$actionText = "Pass by " . $qb . " to " . $player . " for " .  $yards . " yards";
@@ -546,8 +829,30 @@ function sumArrayRange($array, $start, $end){
 				$actionText = "Timeout - " . $team;
 			}
 		}else if($sport == "fhockey" or $sport == "jvfhockey"){
-			if($action == "Shot on goal by " && $team != "FCHS"){
-				$actionText = "Shot on goal by " . $team . "(Save by " . $goalie . ")";
+			if($action == "Shot on goal by "){
+				$actionText = "Shot on goal by " . $player . " (Save by " . $goalie . ")";
+			}
+		}else if($sport == "gsoccer" or $sport == "bsoccer" or $sport == "jvgsoccer" or $sport == "jvbsoccer"){
+			if($action == "Shot by " && $defense != ''){
+				$actionText = $team . " Shot by " . $player . " (Block by " . $defense . ")";
+			}else if($action == "Shot by " && $team == $homeTeam){
+				$actionText = $team . " Shot by " . $player . " (Save by " . $agoalie . ")";
+			}else if($action == "Shot by " && $team == $awayTeam){
+				$actionText = $team . " Shot by " . $player . " (Save by " . $hgoalie . ")";
+			}else if($action == "Goal scored by " and $assister != "None" and $assister != ""){
+				$actionText = $team . " Goal scored by " . $player . " (Assisted by " . $assister . ")";
+			}
+		}else if($sport == "glax" or $sport == "jvglax" or $sport == "blax" or $sport == "jvblax"){
+			if($action == "Shot on goal by " && $team == $homeTeam){
+				$actionText = $team . " Shot on goal by " . $player . " (Save by " . $agoalie . ")";
+			}else if($action == "Shot on goal by " && $team == $awayTeam){
+				$actionText = $team . " Shot on goal by " . $player . " (Save by " . $hgoalie . ")";
+			}else if($action == "Goal scored by " and $assister != "None" and $assister != ""){
+				$actionText = $team . " Goal scored by " . $player . " (Assisted by " . $assister . ")";
+			}else if($action == "Turnover by "){
+				$actionText = $team . " Turnover by " . $player . " (Forced by " . $defense . ")";
+			}else if($action == "Faceoff won by "){
+				$actionText = $team . " Faceoff won by " . $player . " vs. " . $defense;
 			}
 		}else if($table == "basketball"){
 			if($action == "Timeout"){
@@ -560,8 +865,9 @@ function sumArrayRange($array, $start, $end){
 					$poss = $homeTeam;
 				}
 			}
+		}else if($table == "batball"){
+			$actionText = $team . " " . $player . $action;
 		}
-		
 		if($sport == "jvvball" or $sport == "vball"){
 			if($action == "Attack error by " or $action == "Service error by "){//error by team so swap
 				if($team == $homeTeam){
@@ -578,7 +884,7 @@ function sumArrayRange($array, $start, $end){
 		
 		//Can this be made more automatic/cleaner?
 		
-		if($action == "Extra point GOOD by " or $action == "Goal scored by " or $action == "Kill by " or $action == "Attack error by " or $action == "Service ace by " or $action == "Service error by " or $action == "Block by " or $action == "Free throw by "){
+		if($action == "Extra point GOOD by " or $action == "Goal scored by " or $action == "Kill by " or $action == "Attack error by " or $action == "Service ace by " or $action == "Service error by " or $action == "Block by " or $action == "Free throw by " or $action == " scores" or $action == " homers"){
 			$scoreAmount = 1;
 		}else if($action == "Safety by " or $action == "Jumper by " or $action == "Layup by " or $action == "Dunk by "){
 			$scoreAmount = 2;
@@ -596,40 +902,59 @@ function sumArrayRange($array, $start, $end){
 
 		
 		if($scoreAmount != 0){
-			if(($homeID == 1 && $team == "FCHS") or ($homeID != 1 && $team != "FCHS")){
-				switch($period){
-					case 1:
-						$scoreArray[0] += $scoreAmount;
-						break;
-					case 2:
-						$scoreArray[1] += $scoreAmount;
-						break;
-					case 3:
-						$scoreArray[2] += $scoreAmount;
-						break;
-					case 4:
-						$scoreArray[3] += $scoreAmount;
-						break;
-					case 5:
-						$scoreArray[4] += $scoreAmount;
-						break;
-				}
+			if($team == $homeTeam){
+				$scoreArray[$period - 1] += $scoreAmount;
 			}else{
 				switch($period){
 					case 1:
-						$scoreArray[5] += $scoreAmount;
+						if($sportType == "half"){
+							$scoreArray[3] += $scoreAmount;
+						}else if($sportType == "inning"){
+							$scoreArray[8] += $scoreAmount;
+						}else{
+							$scoreArray[5] += $scoreAmount;
+						}
 						break;
 					case 2:
-						$scoreArray[6] += $scoreAmount;
+						if($sportType == "half"){
+							$scoreArray[4] += $scoreAmount;
+						}else if($sportType == "inning"){
+							$scoreArray[9] += $scoreAmount;
+						}else{
+							$scoreArray[6] += $scoreAmount;
+						}
 						break;
 					case 3:
-						$scoreArray[7] += $scoreAmount;
+						if($sportType == "half"){
+							$scoreArray[5] += $scoreAmount;
+						}else if($sportType == "inning"){
+							$scoreArray[10] += $scoreAmount;
+						}else{
+							$scoreArray[7] += $scoreAmount;
+						}
 						break;
 					case 4:
-						$scoreArray[8] += $scoreAmount;
+						if($sportType == "inning"){
+							$scoreArray[11] += $scoreAmount;
+						}else{
+							$scoreArray[8] += $scoreAmount;
+						}
 						break;
 					case 5:
-						$scoreArray[9] += $scoreAmount;
+						if($sportType == "inning"){
+							$scoreArray[12] += $scoreAmount;
+						}else{
+							$scoreArray[9] += $scoreAmount;
+						}
+						break;
+					case 6:
+						$scoreArray[13] += $scoreAmount;
+						break;
+					case 7:
+						$scoreArray[14] += $scoreAmount;
+						break;
+					case 8:
+						$scoreArray[15] += $scoreAmount;
 						break;
 				}
 			}
@@ -644,6 +969,8 @@ function sumArrayRange($array, $start, $end){
 		}else if($sportType =="set"){
 			$actionText = $actionText . " | " . $scoreArray[$period-1] . "-" . $scoreArray[$period+4];
 			$sql = "INSERT INTO $pbpTable (text, set_, game_id) VALUES ('$actionText', '$period', (SELECT id FROM $schedule where id='$gameID'))";
+		}else if($sportType =="inning"){
+			$sql = "INSERT INTO $pbpTable (text, inning, game_id) VALUES ('$actionText', '$period', (SELECT id FROM $schedule where id='$gameID'))";
 		}
 		$query = $db->prepare($sql);
 		$query->execute();
@@ -652,6 +979,14 @@ function sumArrayRange($array, $start, $end){
 			updateLiveGame($db, $gameID, $period, $displayTime, $goalie);
 		}else if($table == "basketball"){
 			updateLiveGame($db, $gameID, $period, $displayTime, $poss, $homeTimeOuts, $awayTimeOuts);
+		}else if($table == "batball"){
+			if($team == $homeTeam){
+				$pitcher = $apitcher;
+			}else{
+				$pitcher = $hpitcher;
+			}
+			
+			updateLiveGame($db, $gameID, $period, $game_time, "", $outs, $strikes, $balls, $pitcher, $batter, $info_7, $info_8, $info_9);
 		}else{
 			updateLiveGame($db, $gameID, $period, $displayTime);
 		}
@@ -697,10 +1032,10 @@ function sumArrayRange($array, $start, $end){
 						printf("<td>----</td>");
 						break;
 					case "2":
-						printf("<td>%s</td>", $homeTeam);
+						printf("<td>%s</td>", $awayTeam);
 						break;
 					case "3":
-						printf("<td>%s</td>", $awayTeam);
+						printf("<td>%s</td>", $homeTeam);
 						break;
 				}
 			}else{//Every other colums
@@ -714,7 +1049,7 @@ function sumArrayRange($array, $start, $end){
 					}else if($t == 1){
 						printf("<td>----</td>");
 					}else{//Gets correct score value depending on row $t
-						printf("<td>%s</td>", $scoreArray[$i/2 + (($t - 2) * (count($scoreArray)/2))]);
+						printf("<td>%s</td>", $scoreArray[$i/2 + (abs($t - 3) * (count($scoreArray)/2))]);
 					}
 				}else{//Even columns are dividers
 					if($t == 1){
@@ -730,7 +1065,7 @@ function sumArrayRange($array, $start, $end){
 		}else if($t == 1){
 			printf("<td>-</td><td>----</td>");
 		}else{
-			printf("<td> | </td> <td> %s </td> ", sumArrayRange($scoreArray, ($t - 2) * (count($scoreArray)/2), ($t - 1) * (count($scoreArray)/2)));//Calculates total of scores in that subsection of array
+			printf("<td> | </td> <td> %s </td> ", sumArrayRange($scoreArray, abs($t - 3) * (count($scoreArray)/2), abs($t - 4) * (count($scoreArray)/2)));//Calculates total of scores in that subsection of array
 		}
 		printf("</tr>");
 	}
@@ -744,12 +1079,19 @@ function sumArrayRange($array, $start, $end){
 	#						#
 	#########################
 	*/
+	if($sport == "football"  or $sport == "jvfootball"){
+		printf("Poss: %s<br>", $poss);
+		printf("%s & %s @ %s %s<br>", $down, $ytg, $sof, $yardline);
+		printf("Home TOs: %s<br>", $homeTimeOuts);
+		printf("Away TOs: %s<br><br>", $awayTimeOuts);
+	}else if($table == "batball"){
+		printf("Pitching: %s<br>", $info_5);
+		printf("At Bat: %s %s-%s, %s Outs<br>", $info_6, $balls, $strikes, $outs);
+		printf("1B: %s<br>", $info_7);
+		printf("2B: %s<br>", $info_8);
+		printf("3B: %s<br>", $info_9);
 	
-	printf("Poss: %s<br>", $poss);
-	printf("%s & %s @ %s %s<br>", $down, $ytg, $sof, $yardline);
-	printf("Home TOs: %s<br>", $homeTimeOuts);
-	printf("Away TOs: %s<br><br>", $awayTimeOuts);
-	
+	}
 	
 	if($sportType =="quarter"){
 		$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.quarter AS period, pbp.time AS tme FROM $pbpTable AS pbp JOIN $schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
@@ -757,6 +1099,8 @@ function sumArrayRange($array, $start, $end){
 		$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.half AS period, pbp.time AS tme FROM $pbpTable AS pbp JOIN $schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
 	}else if($sportType =="set"){
 		$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.set_ AS period FROM $pbpTable AS pbp JOIN $schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
+	}else if($sportType =="inning"){
+		$sql = "SELECT pbp.id AS pbpID, pbp.text AS text, pbp.inning AS period FROM $pbpTable AS pbp JOIN $schedule AS s ON pbp.game_id=s.id WHERE pbp.game_id = '$gameID'";
 	}
 	
 	if($homeTeam == "FCHS" or $awayTeam == "FCHS"){
@@ -767,7 +1111,7 @@ function sumArrayRange($array, $start, $end){
 			$text = $row->text;
 			$period = $row->period;
 			$time = "";
-			if($sportType != "set"){
+			if($sportType != "set" and $sportType != "inning"){
 				$time = $row->tme;
 			}
 			$pbpText = $period . " " . $time . " | " . $text;
@@ -804,10 +1148,12 @@ if($completed == 0){
 }
 ?>
 <br>
-<p>
+<div class="flex justify-between">
 <?php
 
-	$sql = "SELECT r.name AS player, r.number AS number FROM roster_player AS r JOIN roster_teams AS t ON r.team_id=t.id WHERE r.season = '$season' AND t.urlName='$sport'
+	printf("<div>-Home Roster- <br>");
+	//Home Roster
+	$sql = "SELECT r.name AS player, r.number AS number FROM roster_player AS r INNER JOIN roster_schools ON r.school=roster_schools.id JOIN roster_teams AS t ON r.team_id=t.id WHERE r.season = '$season' AND t.urlName='$sport' AND roster_schools.short_name ='$homeTeam'
 	ORDER BY (CASE WHEN cast(r.number as unsigned) = 0 THEN 999997 ELSE cast(r.number as unsigned) END)";
 	$query = $db->prepare($sql);
 	$query->execute();
@@ -815,13 +1161,29 @@ if($completed == 0){
 		$player = $row->player;
 		$number = $row->number;
 		if($number != "Head Coach" and $number != "Assistant Coaches" and $number != "Assistant Coach" and $number != "Managers"){
-			array_push($roster, $player);
+			array_push($homeRoster, $player);
 			printf("%s | %s<br>", $row->number, $row->player);
 		}
 	}
-	array_push($roster, "FCHS");
+	array_push($homeRoster, $homeTeam);
+	printf("</div><div>-Away Roster- <br>");
+	//Away Roster
+	$sql = "SELECT r.name AS player, r.number AS number FROM roster_player AS r INNER JOIN roster_schools ON r.school=roster_schools.id JOIN roster_teams AS t ON r.team_id=t.id WHERE r.season = '$season' AND t.urlName='$sport' AND roster_schools.short_name ='$awayTeam'
+	ORDER BY (CASE WHEN cast(r.number as unsigned) = 0 THEN 999997 ELSE cast(r.number as unsigned) END)";
+	$query = $db->prepare($sql);
+	$query->execute();
+	while($row = $query->fetchObject()){
+		$player = $row->player;
+		$number = $row->number;
+		if($number != "Head Coach" and $number != "Assistant Coaches" and $number != "Assistant Coach" and $number != "Managers"){
+			array_push($awayRoster, $player);
+			printf("%s | %s<br>", $row->number, $row->player);
+		}
+	}
+	array_push($awayRoster, $awayTeam);
 ?>
-</p>
+</div>
+</div>
 
 <br>
 <h3>-Automatic-</h3>
@@ -831,8 +1193,8 @@ if($completed == 0){
 <?php
 if($sport == "football" or $sport == "jvfootball"){
 	
-	printf('Quarterback/Def: <select name = "qb">');
-	foreach($roster as $qbs){
+	printf('Quarterback: <select name = "qb">');
+	foreach($homeRoster as $qbs){
 		if($qbs == $qb){
 			echo("<option value = '$qbs' selected>$qbs</option>");
 		}else{
@@ -843,8 +1205,8 @@ if($sport == "football" or $sport == "jvfootball"){
 
 	printf("</select><br>");
 }else if($sport == "fhockey" or $sport == "jvfhockey"){
-	printf('Goalie/Asst: <select name = "goalie">');
-	foreach($roster as $goalies){
+	printf('Goalie/Defense: <select name = "goalie">');
+	foreach($homeRoster as $goalies){
 		if($goalies == $goalie){
 			echo("<option value = '$goalies' selected>$goalies</option>");
 		}else{
@@ -853,23 +1215,113 @@ if($sport == "football" or $sport == "jvfootball"){
 	}
 	echo("<option value = 'None'>None</option>");
 	printf("</select><br>");
-}?>
 
-<!-- Period SELECT -->
-<b>Q </b>
-<select name = "period">
-<?php for($i = 1; $i < 6; $i++){//REFACTOR limit to maximum periods (works for fall)
-if($i == $period){
-	echo("<option value = '$i' selected>$i</option>");
-}else{
-	echo("<option value = '$i'>$i</option>");
-}
-}?>
+
+/*
+	#########################
+	#						#
+	#		Soccer			#
+	#						#
+	#########################
+	*/
+
+
+}else if($sport == "gsoccer" or $sport == "jvgsoccer" or $sport == "bsoccer" or $sport == "jvbsoccer"){
+?>
+	<!-- Period SELECT -->
+	<b>H </b>
+	<select name = "period">
+	<?php for($i = 1; $i < 4; $i++){//REFACTOR limit to maximum periods (works for fall)
+	if($i == $period){
+		echo("<option value = '$i' selected>$i</option>");
+	}else{
+		echo("<option value = '$i'>$i</option>");
+	}
+	}?>
 </select>
-
-<!-- TIME SELECT -->
 <?php
-if($sport != "vball" and $sport != "jvvball" and $sport != "baseball" and $sport != "jvbaseball" and $sport != "softball" and $sport != "jvsoftball"){
+	echo("<select name = 'minutes'>");
+	 for($i = 0; $i < $maximumMinutes+1; $i++){
+		if($i == $minutes){
+			echo("<option value = '$i' selected>$i'</option>");
+		}else{
+			echo("<option value = '$i'>$i'</option>");
+		}
+	}
+	echo("</select>");
+	?>
+	<select name = "action">
+	<?php foreach($actionList as $option){ //REFACTORED ALREADY
+		printf($option);
+	}
+	?>
+	</select>
+	<br><br>
+
+
+	<select name = "team" id ="teamSelect">
+		<option value="" selected = "selected">Select Team</option>
+	</select>
+
+	<select name = "player" id="playerSelect">
+	<option value = "" selected = "selected">Select Player</option>");
+	</select>
+	<br><br>Assist:
+	<select name = "assister" id="assistSelect">
+	<option value = "" selected = "selected">Select Assist</option>");
+	</select>
+	
+	<br><br>Defense:
+	<select name = "defense" id="pitcherSelect">
+	<option value = "" selected = "selected">Select Defense</option>;
+	</select>
+<?php
+
+	printf('<br><br>Home Goalie: <select name = "hgoalie">');
+	foreach($homeRoster as $goalies){
+		if($goalies == $hgoalie){
+			echo("<option value = '$goalies' selected>$goalies</option>");
+		}else{
+			echo("<option value = '$goalies'>$goalies</option>");
+		}
+	}
+	echo("<option value = 'None'>None</option>");
+	printf("</select><br><br>");
+	
+	printf('Away Goalie: <select name = "agoalie">');
+	foreach($awayRoster as $goalies){
+		if($goalies == $agoalie){
+			echo("<option value = '$goalies' selected>$goalies</option>");
+		}else{
+			echo("<option value = '$goalies'>$goalies</option>");
+		}
+	}
+	echo("<option value = 'None'>None</option>");
+	printf("</select><br>");
+	
+	
+	/*
+	#########################
+	#						#
+	#		Lax				#
+	#						#
+	#########################
+	*/
+	
+}else if($sport == "glax" or $sport == "jvglax" or $sport == "blax" or $sport == "jvblax"){
+?>
+	<!-- Period SELECT -->
+	<b>Q </b>
+	<select name = "period">
+	<?php for($i = 1; $i < 6; $i++){//REFACTOR limit to maximum periods (works for fall)
+	if($i == $period){
+		echo("<option value = '$i' selected>$i</option>");
+	}else{
+		echo("<option value = '$i'>$i</option>");
+	}
+	}?>
+</select>
+<?php
 	echo("<select name = 'minutes'>");
 	 for($i = 0; $i < $maximumMinutes+1; $i++){
 		if($i == $minutes){
@@ -879,7 +1331,7 @@ if($sport != "vball" and $sport != "jvvball" and $sport != "baseball" and $sport
 		}
 	}
 	echo('</select>:<select name = "seconds">');
-	 for($i = 0; $i < 60; $i++){
+	for($i = 0; $i < 60; $i++){
 		if($i == $seconds){
 			echo("<option value = '$i' selected>$i</option>");
 		}else{
@@ -887,44 +1339,199 @@ if($sport != "vball" and $sport != "jvvball" and $sport != "baseball" and $sport
 		}
 	}
 	echo("</select>");
- }?>
-
-
-<select name = "action">
-<?php foreach($actionList as $option){ //REFACTORED ALREADY
-	printf($option);
-}
-?>
-</select>
-<br><br>
-
-
-<select name = "team">
-	<?php if ($team == $homeTeam){
 	?>
-	<option value='<?php echo $homeTeam?>' selected><?php echo $homeTeam?></option>
-	<option value='<?php echo $awayTeam?>'><?php echo $awayTeam?></option>
-	<?php
-	}else{
-	?>
-	<option value='<?php echo $homeTeam?>'><?php echo $homeTeam?></option>
-	<option value='<?php echo $awayTeam?>' selected><?php echo $awayTeam?></option>
-	<?php
+	<select name = "action">
+	<?php foreach($actionList as $option){ //REFACTORED ALREADY
+		printf($option);
 	}
 	?>
-</select>
+	</select>
+	<br><br>
 
-<select name = "player">
-<?php foreach($roster as $opt){
-	if($opt == $_POST['player']){
-		echo("<option value = '$opt' selected>$opt</option>");
-	}else{
-		echo("<option value = '$opt'>$opt</option>");
+
+	<select name = "team" id ="teamSelect">
+		<option value="" selected = "selected">Select Team</option>
+	</select>
+
+	<select name = "player" id="playerSelect">
+	<option value = "" selected = "selected">Select Player</option>");
+	</select>
+	<br><br>Assist:
+	<select name = "assister" id="assistSelect">
+	<option value = "" selected = "selected">Select Assist</option>");
+	</select>
+	
+	<br><br>Defense:
+	<select name = "defense" id="pitcherSelect">
+	<option value = "" selected = "selected">Select Defense</option>;
+	</select>
+<?php
+
+	printf('<br><br>Home Goalie: <select name = "hgoalie">');
+	foreach($homeRoster as $goalies){
+		if($goalies == $hgoalie){
+			echo("<option value = '$goalies' selected>$goalies</option>");
+		}else{
+			echo("<option value = '$goalies'>$goalies</option>");
+		}
 	}
-}
+	echo("<option value = 'None'>None</option>");
+	printf("</select><br><br>");
+	
+	printf('Away Goalie: <select name = "agoalie">');
+	foreach($awayRoster as $goalies){
+		if($goalies == $agoalie){
+			echo("<option value = '$goalies' selected>$goalies</option>");
+		}else{
+			echo("<option value = '$goalies'>$goalies</option>");
+		}
+	}
+	echo("<option value = 'None'>None</option>");
+	printf("</select><br>");
+	
+	
+	/*
+	#########################
+	#						#
+	#		Batball			#
+	#						#
+	#########################
+	*/
+	
+	
+	
+}else if($sport == "baseball" or $sport == "jvbaseball" or $sport == "softball" or $sport == "jvsoftball"){
 ?>
-</select>
-<?php if($sport == "football" or $sport == "jvfootball"){
+	<!-- Period SELECT -->
+	<b>I </b>
+	<select name = "period">
+	<?php for($i = 1; $i < 9; $i++){//REFACTOR limit to maximum periods (works for fall)
+	if($i == $period){
+		echo("<option value = '$i' selected>$i</option>");
+	}else{
+		echo("<option value = '$i'>$i</option>");
+	}
+	}?>
+	</select>
+	<br><br>
+
+	<select name = "team" id ="teamSelect">
+		<option value="" selected = "selected">Select Team</option>
+	</select>
+
+	<select name = "player" id="playerSelect">
+	<option value = "" selected = "selected">Select Player</option>;
+	</select>
+	<select name = "action">
+	<?php foreach($actionList as $option){ //REFACTORED ALREADY
+		printf($option);
+	}
+	?>
+	</select>
+
+	<?php
+	printf('<br><br>Home Pitcher: <select name = "hpitcher">');
+	foreach($homeRoster as $pitchers){
+		if($pitchers == $hpitcher){
+			echo("<option value = '$pitchers' selected>$pitchers</option>");
+		}else{
+			echo("<option value = '$pitchers'>$pitchers</option>");
+		}
+	}
+	echo("<option value = 'None'>None</option>");
+	printf("</select><br><br>");
+	
+	printf('Away Pitcher: <select name = "apitcher">');
+	foreach($awayRoster as $pitchers){
+		if($pitchers == $apitcher){
+			echo("<option value = '$pitchers' selected>$pitchers</option>");
+		}else{
+			echo("<option value = '$pitchers'>$pitchers</option>");
+		}
+	}
+	echo("<option value = 'None'>None</option>");
+	printf("</select><br>");
+
+
+	
+
+}else{?>
+
+<!-- Period SELECT -->
+	<b>Q </b>
+	<select name = "period">
+	<?php 
+	for($i = 1; $i < 6; $i++){//REFACTOR limit to maximum periods (works for fall)
+		if($i == $period){
+			echo("<option value = '$i' selected>$i</option>");
+		}else{
+			echo("<option value = '$i'>$i</option>");
+		}
+	}?>
+	</select>
+
+<!-- TIME SELECT -->
+<?php
+	if($sport != "vball" and $sport != "jvvball" and $sport != "baseball" and $sport != "jvbaseball" and $sport != "softball" and $sport != "jvsoftball"){
+		echo("<select name = 'minutes'>");
+		 for($i = 0; $i < $maximumMinutes+1; $i++){
+			if($i == $minutes){
+				echo("<option value = '$i' selected>$i</option>");
+			}else{
+				echo("<option value = '$i'>$i</option>");
+			}
+		}
+		echo('</select>:<select name = "seconds">');
+		 for($i = 0; $i < 60; $i++){
+			if($i == $seconds){
+				echo("<option value = '$i' selected>$i</option>");
+			}else{
+				echo("<option value = '$i'>$i</option>");
+			}
+		}
+		echo("</select>");
+	 }?>
+
+
+	<select name = "action">
+	<?php 
+	foreach($actionList as $option){ //REFACTORED ALREADY
+		printf($option);
+	}
+	?>
+	</select>
+	<br><br>
+
+
+	<select name = "team">
+		<?php if ($team == $homeTeam){
+		?>
+		<option value='<?php echo $homeTeam?>' selected><?php echo $homeTeam?></option>
+		<option value='<?php echo $awayTeam?>'><?php echo $awayTeam?></option>
+		<?php
+		}else{
+		?>
+		<option value='<?php echo $homeTeam?>'><?php echo $homeTeam?></option>
+		<option value='<?php echo $awayTeam?>' selected><?php echo $awayTeam?></option>
+		<?php
+		}
+		?>
+	</select>
+
+	<select name = "player">
+	<?php 
+	foreach($homeRoster as $opt){
+		if($opt == $_POST['player']){
+			echo("<option value = '$opt' selected>$opt</option>");
+		}else{
+			echo("<option value = '$opt'>$opt</option>");
+		}
+	}
+	?>
+	</select>
+<?php 
+}
+if($sport == "football" or $sport == "jvfootball"){
 	
 	printf('for <select name = "yards">');
 	 
@@ -1014,16 +1621,16 @@ echo("<option value = '$rmvID'>$rmvText</option>");
 						printf("<td>----</td>");
 						break;
 					case "2":
-						printf("<td>%s</td>", $homeTeam);
+						printf("<td>%s</td>", $awayTeam);
 						break;
 					case "3":
-						printf("<td>%s</td>", $awayTeam);
+						printf("<td>%s</td>", $homeTeam);
 						break;
 				}
 			}else{//Every other colums
 				if($i % 2){ //Odd columns are info
 					if($t == 0){
-						if($i == 9){//Replace last label as OT rather than #
+						if($i == 9 && $table != "batball"){//Replace last label as OT rather than #
 							printf("<td> OT </td>");
 						}else{
 							printf("<td>Qrtr %s</td>", ($i + 1) /2 );
@@ -1031,11 +1638,11 @@ echo("<option value = '$rmvID'>$rmvText</option>");
 					}else if($t == 1){
 						printf("<td>----</td>");
 					}else if($t == 2){
-						$idName = 'homePeriod' . ($i + 1)/2 . 'Score';
-						printf("<td><input type='number' id='%s' name = '%s' min = '0' max = '99' value ='%s'></td>", $idName, $idName, $scoreArray[$i/2 + (($t - 2) * (count($scoreArray)/2))]);
-					}else{
 						$idName = 'awayPeriod' . ($i + 1)/2 . 'Score';
-						printf("<td><input type='number' id='%s' name = '%s' min = '0' max = '99' value ='%s'></td>", $idName, $idName, $scoreArray[$i/2 + (($t - 2) * (count($scoreArray)/2))]);
+						printf("<td><input type='number' id='%s' name = '%s' min = '0' max = '99' value ='%s'></td>", $idName, $idName, $scoreArray[$i/2 + (abs($t - 3) * (count($scoreArray)/2))]);
+					}else{
+						$idName = 'homePeriod' . ($i + 1)/2 . 'Score';
+						printf("<td><input type='number' id='%s' name = '%s' min = '0' max = '99' value ='%s'></td>", $idName, $idName, $scoreArray[$i/2 + (abs($t - 3) * (count($scoreArray)/2))]);
 					}
 				}else{//Even columns are dividers
 					if($t == 1){
@@ -1051,7 +1658,7 @@ echo("<option value = '$rmvID'>$rmvText</option>");
 		}else if($t == 1){
 			printf("<td>-</td><td>----</td>");
 		}else{
-			printf("<td> | </td> <td> %s </td> ", sumArrayRange($scoreArray, ($t - 2) * (count($scoreArray)/2), ($t - 1) * (count($scoreArray)/2)));//Calculates total of scores in that subsection of array
+			printf("<td> | </td> <td> %s </td> ", sumArrayRange($scoreArray, abs($t - 3) * (count($scoreArray)/2), abs($t - 4) * (count($scoreArray)/2)));//Calculates total of scores in that subsection of array
 		}
 		printf("</tr>");
 	}
@@ -1062,3 +1669,52 @@ echo("<option value = '$rmvID'>$rmvText</option>");
 </form>
 
 </body>
+
+
+<script>
+var playerList = {"<?php echo $homeTeam?>": <?php echo json_encode($homeRoster)?>, "<?php echo $awayTeam?>":  <?php echo json_encode($awayRoster)?>};
+window.onload = function(){
+	var teamSelect = document.getElementById("teamSelect");
+	var playerSelect = document.getElementById("playerSelect");
+	if("<?php echo $table?>" != "batball"){
+		var assistSelect = document.getElementById("assistSelect");
+	}
+	if("<?php echo $table?>" == "glax" || "<?php echo $table?>" == "blax" || "<?php echo $table?>" == "soccer"){
+		var pitcherSelect = document.getElementById("pitcherSelect");
+	}
+	for(var x in playerList){
+		teamSelect.options[teamSelect.options.length] = new Option(x, x);
+	}
+	teamSelect.onchange = function(){
+		playerSelect.length = 1;
+		var z = playerList[teamSelect.value];
+		var opp = "<?php echo $homeTeam?>";
+		if(teamSelect.value == "<?php echo $homeTeam?>"){
+			opp = "<?php echo $awayTeam?>";
+		}
+		var y = playerList[opp];
+		
+		for(var i = 0; i < z.length; i++){
+			playerSelect.options[playerSelect.options.length] = new Option(playerList[teamSelect.value][i], playerList[teamSelect.value][i]);
+			if("<?php echo $table?>" != "batball"){
+				assistSelect.options[assistSelect.options.length] = new Option(playerList[teamSelect.value][i], playerList[teamSelect.value][i]);
+			}
+		}
+		if("<?php echo $table?>" == "glax" || "<?php echo $table?>" == "blax" || "<?php echo $table?>" == "soccer"){
+			for(var i = 0; i < y.length; i++){
+				pitcherSelect.options[pitcherSelect.options.length] = new Option(playerList[opp][i], playerList[opp][i]);
+			}
+		}
+	}
+	
+	if("<?php echo $table?>" == "batball" && "<?php echo $team?>" != "" && "<?php echo $jsplayer?>" != ""){
+		teamSelect.value = '<?php echo $team?>';
+		var z = playerList[teamSelect.value];
+		for(var i = 0; i < z.length; i++){
+			playerSelect.options[playerSelect.options.length] = new Option(playerList[teamSelect.value][i], playerList[teamSelect.value][i]);
+		}
+		playerSelect.value = '<?php echo $jsplayer?>';
+	}
+}
+
+</script>
