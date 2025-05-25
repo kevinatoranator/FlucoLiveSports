@@ -44,8 +44,25 @@
 	}
 	
 	</script>
+	
+	<?php 
+		$last_data = "-";
+		if(isset($gameID)){
+			$sql = "SELECT LOWER(DATE_FORMAT(last_data,'%h:%i:%s%p')) AS last_data FROM live_games AS lg JOIN schedule AS s ON lg.schedule_id=s.id WHERE lg.schedule_id = '$gameID'";
+			$query = $db->prepare($sql);
+			$query->execute();
+			
+			while($row = $query->fetchObject()){
+				$last_data = $row->last_data;
+			}
+		}
+	?>
+
+        <div>Page Loaded: <?php echo date("h:i:sa")?></div>
+        <div>Data Updated: <?php echo $last_data?></div>
+
  
- 
+	<br>
 	<div class="flex justify-between">
         <a href ="#" onclick="return toggleDarkMode();">Dark Mode</a>
         <a href ="<?php echo $phpURL?>">Reload</a>
