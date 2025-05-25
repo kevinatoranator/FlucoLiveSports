@@ -15,17 +15,25 @@ $gameID = $_GET['gameID'];
 $phpURL = "batball.php?gameID=".$gameID;
 ?>
 
+<script>
+	function rtoggle(id){
+		var checkBox = document.getElementById(id);
+		var displayr = document.getElementsByClassName(id)[0];
+		if(displayr.classList.contains("hidden")){
+			displayr.classList.remove("hidden")
+		}else{
+			displayr.classList.add("hidden")
+		}
+	}
+</script>
 
-<div class="flex justify-between">
-        <a href="../index.php">Return to Schedule</a>
-        <a href='<?php echo $phpURL?>'>Reload</a>
-    </div>
 
 
 <!--Schedule Body-->
 
 <?php
 	include '../include/database.php';
+	include '../include/header.php';
 
 	$sport = "";
 	$home = "";
@@ -34,6 +42,7 @@ $phpURL = "batball.php?gameID=".$gameID;
 	$pbpEntries = array();
 	$maxMin = 7;
 	$inning = 1;
+	$side = "Top";
 	$homeID = 0;
 	$comp = 0;
 	
@@ -71,37 +80,27 @@ $phpURL = "batball.php?gameID=".$gameID;
 	
 	$sql = "SELECT t.urlName AS sport FROM schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
 	
-	try {
-      $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
-    } catch (PDOException $e) {
-      echo "Error!:" . $e->getMessage() . "<br/>";
-      die();
-    }
-	
 	$query = $db->prepare($sql);
 	$query->execute();
 	while($row = $query->fetchObject()){
 		$sport = $row->sport;
 	}
 	
-	$sqlsport = "";
 	
-	if($sport=="softball" or  $sport=="baseball" or $sport=="jvsoftball" or  $sport=="jvbaseball"){
-		$sqlsport = "SELECT s.notes AS info, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id, s.team_id, t.formattedName,
-		h.formal_name AS homeName, a.formal_name AS awayName,
-		bb.home_i1 AS hi1, bb.home_i2 AS hi2, bb.home_i3 AS hi3, bb.home_i4 AS hi4, bb.home_i5 AS hi5, bb.home_i6 AS hi6, bb.home_i7 AS hi7, bb.home_ex AS hex, bb.home_total AS ht, bb.home_hits AS hh, bb.home_errors AS herr,
-		bb.away_i1 AS ai1, bb.away_i2 AS ai2, bb.away_i3 AS ai3, bb.away_i4 AS ai4, bb.away_i5 AS ai5, bb.away_i6 AS ai6, bb.away_i7 AS ai7, bb.away_ex AS aex, bb.away_total AS at, bb.away_hits AS ah, bb.away_errors AS aerr, bb.completed AS cmp
-		FROM batball AS bb JOIN schedule AS s ON bb.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
-	}
+	$sql = "SELECT s.notes AS info, s.time, s.game_date, s.season AS season, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id, s.team_id, t.formattedName,
+		h.formal_name AS homeName, a.formal_name AS awayName, s.time AS startTime
+		FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
 	
-	$query = $db->prepare($sqlsport);
+	$query = $db->prepare($sql);
 	$query->execute();
 	while($row = $query->fetchObject()){
-		printf("<h5>%s</h5><br>", $row->formattedName);
+		printf("<center><h3>%s</h3></center><br>", $row->formattedName);
 		
 		$homeID = $row->hNum;
 		
 		$info = $row->info;
+		$season = $row->season;
+		$startTime = $row->startTime;
 			
 		$homeTeam = $row->home;
 		$awayTeam = $row->away;
@@ -109,6 +108,16 @@ $phpURL = "batball.php?gameID=".$gameID;
 		$homeName = $row->homeName;
 		$awayName = $row->awayName;
 		
+	}
+	
+	$sqlsport = "SELECT
+		bb.home_i1 AS hi1, bb.home_i2 AS hi2, bb.home_i3 AS hi3, bb.home_i4 AS hi4, bb.home_i5 AS hi5, bb.home_i6 AS hi6, bb.home_i7 AS hi7, bb.home_ex AS hex, bb.home_total AS ht, bb.home_hits AS hh, bb.home_errors AS herr,
+		bb.away_i1 AS ai1, bb.away_i2 AS ai2, bb.away_i3 AS ai3, bb.away_i4 AS ai4, bb.away_i5 AS ai5, bb.away_i6 AS ai6, bb.away_i7 AS ai7, bb.away_ex AS aex, bb.away_total AS at, bb.away_hits AS ah, bb.away_errors AS aerr, bb.completed AS cmp
+		FROM batball AS bb JOIN schedule AS s ON bb.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
+	$query = $db->prepare($sqlsport);
+	$query->execute();
+	while($row = $query->fetchObject()){
+			
 		$hi1Score = $row->hi1;
 		$hi2Score = $row->hi2;
 		$hi3Score = $row->hi3;
@@ -137,11 +146,75 @@ $phpURL = "batball.php?gameID=".$gameID;
 		$aTotal = $row->at;
 		
 		$comp = $row->cmp;
-		
-		printf("<b>%s vs. %s</b><br>", $homeName, $awayName);
-		printf("<p>%s</p><br>", $info);
+	
 	}
 	
+	$sql = "SELECT rs.formal_name AS name, st.wins AS wins, st.losses AS losses, st.ties AS ties FROM standings AS st JOIN roster_schools AS rs ON st.school_id=rs.id JOIN roster_teams AS rt ON st.sport_id=rt.id WHERE (rs.formal_name =\"$homeName\" or rs.formal_name=\"$awayName\") and st.season='$season' and rt.urlName='$sport'";
+	$query = $db->prepare($sql);
+	$query->execute();
+	$homeWins = $homeLosses = $homeTies = $awayWins = $awayLosses = $awayTies = 0;
+	while($row = $query->fetchObject()){
+	
+		if($row->name == $homeName){
+			$homeWins = $row->wins;
+			$homeLosses = $row->losses;		
+			$homeTies= $row->ties;
+		}else if($row->name == $awayName){
+			$awayWins = $row->wins;
+			$awayLosses = $row->losses;		
+			$awayTies= $row->ties;
+		}			
+	}
+	
+	/*
+	#########################
+	#						#
+	#		Live Game Info	#
+	#						#
+	#########################
+	*/
+	
+	if($comp != 1){
+		$live = false;
+		$sql = "SELECT period AS inning, game_time AS side, info_1 AS x, info_2 AS outs, info_3 AS strikes, info_4 AS balls, info_5 AS pitching, info_6 AS atBat, info_7 AS first, info_8 AS second, info_9 AS third FROM live_games AS lg JOIN schedule AS s ON lg.schedule_id=s.id WHERE lg.schedule_id = '$gameID'";
+		$query = $db->prepare($sql);
+		$query->execute();
+		while($row = $query->fetchObject()){// time tb outs strikes balls atbat 1st 2nd 3rd 
+			$inning = $row->inning;
+			$side = $row->side; //top bottom
+			$outs = $row->outs;
+			$strikes = $row->strikes;
+			$balls = $row->balls;
+			$pitching = $row->pitching;
+			$atBat = $row->atBat; //palyer
+			$first = $row->first; //palyer
+			$second = $row->second; //palyer
+			$third = $row->third; //palyer
+			
+			$live = true;
+			
+		}
+		
+		//SPORTS INFO HEADER
+		if($live == true){
+			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">%s %s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $side, $inning, $awayTeam, $sport, $awayName);
+		}else{
+			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div>%s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $startTime, $awayTeam, $sport, $awayName);
+		}
+	}else{
+		printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div><b>FINAL</b></div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $awayTeam, $sport, $awayName);
+	}
+	printf('<div class="flex justify-between" ><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div><div>%s - %s</div><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div></div>', $sport, $homeWins, $homeLosses, $homeTies, $hTotal, $aTotal, $sport, $awayWins, $awayLosses, $awayTies);
+	printf("<center>%s</center><br><br><br><br>", $info);
+	//SPORTS INFO HEADER
+
+	/*
+	TEAM1 Period/Time TEAM2
+	Standing1 Score Standing2
+	
+			Info
+	*/
+		
 	
 	/*
 	#########################
@@ -156,28 +229,12 @@ $phpURL = "batball.php?gameID=".$gameID;
 	printf("<tr><td>%s</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> </td> <td>%d</td> <td> | </td> <td>%d</td> <td> || </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td></tr>", $awayTeam, $ai1Score, $ai2Score, $ai3Score, $ai4Score, $ai5Score, $ai6Score, $ai7Score, $aexScore, $aTotal, $ahits, $aerr);
 	printf("<tr><td>%s</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> </td> <td>%d</td> <td> | </td> <td>%d</td> <td> || </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td></tr></table><br><br>", $homeTeam, $hi1Score, $hi2Score, $hi3Score, $hi4Score, $hi5Score, $hi6Score, $hi7Score, $hexScore, $hTotal, $hhits, $herr);
 	
-	
-	/*
-	#########################
-	#						#
-	#		Live Game Info	#
-	#						#
-	#########################
-	*/
-	if($comp != 1){
-		$sql = "SELECT game_time AS outs, info_2 AS balls, info_3 AS strikes, info_4 AS bases, info_5 AS atBat FROM live_games AS lg JOIN schedule AS s ON lg.schedule_id=s.id WHERE lg.schedule_id = '$gameID'";
-		$query = $db->prepare($sql);
-		$query->execute();
-		while($row = $query->fetchObject()){
-			$atBat = $row->atBat;
-			$balls = $row->balls;
-			$strikes = $row->strikes;
-			$bases = $row->bases;
-			$outs = $row->outs;
-			printf("At Bat: %s %s-%s<br>", $atBat, $balls, $strikes);
-			printf("Outs: %s<br>", $outs);
-			printf("Bases: %s<br><br>", $bases);
-		}
+	if($comp != 1 && $live == true){
+		printf("Pitching: %s<br>", $pitching);
+		printf("At Bat: %s %s-%s, %s Outs<br>", $atBat, $balls, $strikes, $outs);
+		printf("1B: %s<br>", $first);
+		printf("2B: %s<br>", $second);
+		printf("3B: %s<br>", $third);
 	}
 	/*
 	#########################
@@ -207,18 +264,179 @@ $phpURL = "batball.php?gameID=".$gameID;
 	
 	}
 	
-	foreach($pbpArray as $row){
-		foreach($row as $entry){
-			printf($entry . "<br>");
-		}
-		printf("<br>");
-	}
 	
 	
 	if($comp == 1){
-		printf("<br>-END OF GAME-");
+		for($i = 0; $i<count($pbpArray); $i++){
+				$quarter = $pbpArray[$i][0];
+				?> <input type="checkbox" name="<?php echo $quarter?>" id="<?php echo $quarter?>" onclick="rtoggle('<?php echo $quarter?>')"><label for="<?php echo $quarter?>"><b><?php echo $quarter?> [+]</b></label><br><br>
+				<div class = "<?php echo $quarter?> hidden"><?php
+				foreach($pbpArray[$i] as $entry){
+					printf($entry . "<br><br>");
+				}
+				printf("</div>");
+				printf("<br>");
+			}
+		printf("<br>-END OF GAME-<br><br><br>");
+	}else{
+		$newestQuarter = true;
+		for($i = count($pbpArray); $i > 0; $i--){
+			if(count($pbpArray[$i-1]) > 1){//Only display if entries
+				$quarter = $pbpArray[$i-1][0];
+				?> <input type="checkbox" name="<?php echo $quarter?>" id="<?php echo $quarter?>" onclick="rtoggle('<?php echo $quarter?>')"><label for="<?php echo $quarter?>"><b><?php echo $quarter?> [+]</b></label><br><br>
+				<?php if(!$newestQuarter){ $quarter = $quarter . " hidden";}?>
+				<div class = "<?php echo $quarter?>"><?php
+				for($j = count($pbpArray[$i-1]); $j > 1; $j--){
+					printf($pbpArray[$i-1][$j-1] . "<br><br>");
+				}
+				printf("</div>");
+				$newestQuarter = false;
+			}
+		}
 	}
 	
+	
+	/*
+	#########################
+	#						#
+	#		Stats			#
+	#						#
+	#########################
+	*/
+	
+	$sql = "SELECT rp.number AS num, rp.name AS name, bbs.hits AS hits, bbs.at_bats AS at_bats, bbs.runs AS runs, bbs.runs_batted_in AS runs_batted_in, bbs.base_on_balls AS base_on_balls, bbs.strikeouts AS strikeouts, bbs.left_on_base AS left_on_base,
+	bbs.doubles AS doubles, bbs.triples AS triples, bbs.homeruns AS homeruns,
+	bbs.innings_pitched AS innings_pitched, bbs.hits_allowed AS hits_allowed, bbs.pitches AS pitches, bbs.runs_allowed AS runs_allowed, bbs.earned_runs_allowed AS earned_runs_allowed, bbs.base_on_balls_allowed AS base_on_balls_allowed, bbs.strikeouts_given AS strikeouts_given, bbs.homeruns_allowed AS homeruns_allowed 
+	FROM batball_stats AS bbs JOIN schedule AS s ON bbs.game=s.id JOIN roster_player AS rp ON bbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
+	WHERE bbs.game = '$gameID' AND h.short_name = '$homeTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	$query = $db->prepare($sql);
+	$query->execute();
+	//Doesn't pull doubles, triples, homeruns, errors, bases_stolen
+	
+	
+	$statArray = array(array(["Batting"], ["", "", "H", "AB", "R", "RBI", "BB", "K", "2B", "3B", "HR"]), array(["Pitching"], ["" , "", "IP", "H", "R", "ER", "BB", "K", "HR", "P"]));
+	printf("STATS<hr>");
+	printf("<br>$homeTeam<br>");
+	printf('<table style = "border-spacing: 9px">');
+	while($row = $query->fetchObject()){
+		$name = $row->name;
+		$num = $row->num;
+		$hits = $row->hits;
+		$at_bats = $row->at_bats;
+		$runs = $row->runs;
+		$runs_batted_in = $row->runs_batted_in;
+		$base_on_balls = $row->base_on_balls;
+		$strikeouts = $row->strikeouts;
+		$left_on_base = $row->left_on_base;
+		$doubles = $row->doubles;
+		$triples = $row->triples;
+		$homeruns = $row->homeruns;
+		$hits_allowed = $row->hits_allowed;
+		$innings_pitched = $row->innings_pitched;
+		$pitches = $row->pitches;
+		$runs_allowed = $row->runs_allowed;
+		$earned_runs_allowed = $row->earned_runs_allowed;
+		$base_on_balls_allowed = $row->base_on_balls_allowed;
+		$strikeouts_given = $row->strikeouts_given;
+		$homeruns_allowed = $row->homeruns_allowed;
+		$name = explode(" ", $name);
+		$name[0] = str_split($name[0])[0] . ".";
+		$name = implode(" ", $name);
+		if($at_bats != 0 or $runs != 0){
+			$statArray[0][] = [$num . ' ' . $name, "",$hits, $at_bats, $runs, $runs_batted_in, $base_on_balls, $strikeouts, $doubles, $triples, $homeruns];
+		}
+		if($pitches != 0){
+			$statArray[1][] = [$num . ' ' . $name, "",$innings_pitched, $hits_allowed, $runs_allowed, $earned_runs_allowed, $base_on_balls_allowed, $strikeouts_given, $homeruns_allowed, $pitches];
+		}
+	}
+	
+	//Table format
+	foreach($statArray as $statLine){
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<tr>');
+			}else{
+				printf('<tr">');
+			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<td style="text-align: left">%s</td>', $statLine[$j][$i]);
+				}else{
+					printf('<td style="text-align: right">%s</td>', $statLine[$j][$i]);
+				}
+			}
+			printf('</tr>');
+		}
+		printf('<tr></tr>');
+	}
+	printf("</table>");
+	
+	$sql = "SELECT rp.number AS num, rp.name AS name, bbs.hits AS hits, bbs.at_bats AS at_bats, bbs.runs AS runs, bbs.runs_batted_in AS runs_batted_in, bbs.base_on_balls AS base_on_balls, bbs.strikeouts AS strikeouts, bbs.left_on_base AS left_on_base,
+	bbs.doubles AS doubles, bbs.triples AS triples, bbs.homeruns AS homeruns,
+	bbs.innings_pitched AS innings_pitched, bbs.hits_allowed AS hits_allowed, bbs.pitches AS pitches, bbs.runs_allowed AS runs_allowed, bbs.earned_runs_allowed AS earned_runs_allowed, bbs.base_on_balls_allowed AS base_on_balls_allowed, bbs.strikeouts_given AS strikeouts_given, bbs.homeruns_allowed AS homeruns_allowed 
+	FROM batball_stats AS bbs JOIN schedule AS s ON bbs.game=s.id JOIN roster_player AS rp ON bbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
+	WHERE bbs.game = '$gameID' AND h.short_name = '$awayTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	$query = $db->prepare($sql);
+	$query->execute();
+	//Doesn't pull doubles, triples, homeruns, errors, bases_stolen
+	
+	
+	$statArray = array(array(["Batting"], ["", "", "H", "AB", "R", "RBI", "BB", "K", "2B", "3B", "HR"]), array(["Pitching"], ["" , "", "IP", "H", "R", "ER", "BB", "K", "HR", "P"]));
+	printf("STATS<hr>");
+	printf("<br>$awayTeam<br>");
+	printf('<table style = "border-spacing: 9px">');
+	while($row = $query->fetchObject()){
+		$name = $row->name;
+		$num = $row->num;
+		$hits = $row->hits;
+		$at_bats = $row->at_bats;
+		$runs = $row->runs;
+		$runs_batted_in = $row->runs_batted_in;
+		$base_on_balls = $row->base_on_balls;
+		$strikeouts = $row->strikeouts;
+		$left_on_base = $row->left_on_base;
+		$doubles = $row->doubles;
+		$triples = $row->triples;
+		$homeruns = $row->homeruns;
+		$hits_allowed = $row->hits_allowed;
+		$innings_pitched = $row->innings_pitched;
+		$pitches = $row->pitches;
+		$runs_allowed = $row->runs_allowed;
+		$earned_runs_allowed = $row->earned_runs_allowed;
+		$base_on_balls_allowed = $row->base_on_balls_allowed;
+		$strikeouts_given = $row->strikeouts_given;
+		$homeruns_allowed = $row->homeruns_allowed;
+		$name = explode(" ", $name);
+		$name[0] = str_split($name[0])[0] . ".";
+		$name = implode(" ", $name);
+		if($at_bats != 0 or $runs != 0){
+			$statArray[0][] = [$num . ' ' . $name, "",$hits, $at_bats, $runs, $runs_batted_in, $base_on_balls, $strikeouts, $doubles, $triples, $homeruns];
+		}
+		if($pitches != 0){
+			$statArray[1][] = [$num . ' ' . $name, "", $innings_pitched, $hits_allowed, $runs_allowed, $earned_runs_allowed, $base_on_balls_allowed, $strikeouts_given, $homeruns_allowed, $pitches];
+		}
+	}
+	
+	//Table format
+	foreach($statArray as $statLine){
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<tr>');
+			}else{
+				printf('<tr">');
+			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<td style="text-align: left">%s</td>', $statLine[$j][$i]);
+				}else{
+					printf('<td style="text-align: right">%s</td>', $statLine[$j][$i]);
+				}
+			}
+			printf('</tr>');
+		}
+		printf('<tr></tr>');
+	}
+	printf("</table>");
 
 ?>
 

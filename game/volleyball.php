@@ -30,9 +30,9 @@ $phpURL = "volleyball.php?gameID=".$gameID;
 <!--Schedule Body-->
 
 <?php
+	include '../include/database.php';
 	include '../include/header.php';
 
-	include '../include/database.php';
 
 	$sport = "";
 	$home = "";
@@ -65,20 +65,13 @@ $phpURL = "volleyball.php?gameID=".$gameID;
 	
 	$sql = "SELECT t.urlName AS sport FROM schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
 	
-	try {
-      $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
-    } catch (PDOException $e) {
-      echo "Error!:" . $e->getMessage() . "<br/>";
-      die();
-    }
-	
 	$query = $db->prepare($sql);
 	$query->execute();
 	while($row = $query->fetchObject()){
 		$sport = $row->sport;
 	}
 	
-	$sql = "SELECT s.notes AS info, s.time, s.game_date, s.season AS season, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id, s.team_id, t.formattedName,
+	$sql = "SELECT s.notes AS info, s.time AS startTime, s.game_date, s.season AS season, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id, s.team_id, t.formattedName,
 	h.formal_name AS homeName, a.formal_name AS awayName
 	FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
 
@@ -99,6 +92,8 @@ $phpURL = "volleyball.php?gameID=".$gameID;
 		
 		$homeName = $row->homeName;
 		$awayName = $row->awayName;
+		
+		$startTime = $row->startTime;
 		
 	}
 
@@ -155,25 +150,25 @@ $phpURL = "volleyball.php?gameID=".$gameID;
 	#########################
 	*/
 	if($comp != 1){
+		$live = false;
 		$sql = "SELECT period AS set_, game_time AS serving FROM live_games AS lg JOIN schedule AS s ON lg.schedule_id=s.id WHERE lg.schedule_id = '$gameID'";
 		$query = $db->prepare($sql);
 		$query->execute();
 		while($row = $query->fetchObject()){
 			$set = $row->set_;
+			
+			$live = true;
 		}
 		
 		//SPORTS INFO HEADER
-		if($homeTeam == "FCHS"){
-			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Set %s</div><div><b>%s</b></div></div>', $sport, $homeName, $set, $awayName);
+		if($live == true){
+			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Set %s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $set, $awayTeam, $sport, $awayName);
 		}else{
-			printf('<div class="flex justify-between"><div><b>%s</b></div><div class="red">Set %s</div><div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeName, $set, $sport, $awayName);
+			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div>%s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $startTime, $awayTeam, $sport, $awayName);
 		}
 	}else{
-		if($homeTeam == "FCHS"){
-			printf('<div class="flex justify-between"> <div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div>         <div><b>FINAL</b></div> <div><b>%s</b></div></div>', $sport, $homeName, $awayName);
-		}else{
-			printf('<div class="flex justify-between"> <div><b>%s</b></div>         <div><b>FINAL</b></div> <div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeName, $sport, $awayName);
-		}
+
+		printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div><b>FINAL</b></div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $awayTeam, $sport, $awayName);
 		
 	}
 	printf('<div class="flex justify-between" ><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div><div>%s - %s</div><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div></div>', $sport, $homeWins, $homeLosses, $homeTies, $hTotal, $aTotal, $sport, $awayWins, $awayLosses, $awayTies);
@@ -198,9 +193,8 @@ $phpURL = "volleyball.php?gameID=".$gameID;
 	
 	printf("<table><tr>	<td>Team</td> <td> | </td> <td>1</td> <td> | </td> <td>2</td> <td> | </td> <td>3</td> <td> | </td> <td>4</td> <td> | </td> <td>5</td> <td> || </td> <td> T </td><td></tr>");
 	printf("<tr>	<td>----</td> <td>-</td> <td>----</td> <td>-</td> <td>----</td> <td>-</td> <td>----</td> <td>-</td> <td>----</td> <td>-</td> <td>----</td> <td>-</td> <td>----</td></tr>");
-	printf("<tr><td>%s</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> </td> <td>%d</td> <td> | </td> <td>%d</td> <td> || </td> <td>%d</td> </tr>", $homeTeam, $hs1Score, $hs2Score, $hs3Score, $hs4Score, $hs5Score, $hTotal);
-	printf("<tr><td>%s</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> </td> <td>%d</td> <td> | </td> <td>%d</td> <td> || </td> <td>%d</td> </tr></table><br><br>", $awayTeam, $as1Score, $as2Score, $as3Score, $as4Score, $as5Score, $aTotal);
-	
+	printf("<tr><td>%s</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> </td> <td>%d</td> <td> | </td> <td>%d</td> <td> || </td> <td>%d</td> </tr>", $awayTeam, $as1Score, $as2Score, $as3Score, $as4Score, $as5Score, $aTotal);
+	printf("<tr><td>%s</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> </td> <td>%d</td> <td> | </td> <td>%d</td> <td> || </td> <td>%d</td> </tr></table><br><br>", $homeTeam, $hs1Score, $hs2Score, $hs3Score, $hs4Score, $hs5Score, $hTotal);
 	
 	/*
 	#########################

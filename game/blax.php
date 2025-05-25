@@ -13,31 +13,25 @@ $fdate = date("l, F d", strtotime("today"));
 
 $gameID = $_GET['gameID'];
 $phpURL = "blax.php?gameID=".$gameID;
-
-
-function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT, $gameID, $db){
-		$hTotal = $hq1 + $hq2 + + $hq3 + $hq4 + $hOT;
-		$aTotal = $aq1 + $aq2 + $aq3 + $aq4 + $aOT;
-		
-		$sqls = "UPDATE blax SET home_quarter1 = '$hq1', home_quarter2 = '$hq2', home_quarter3 = '$hq3', home_quarter4 = '$hq4', home_ot = '$hOT', home_total = '$hTotal', away_quarter1 = '$aq1', away_quarter2 = '$aq2', away_quarter3 = '$aq3', away_quarter4 = '$aq4', away_ot = '$aOT', away_total = '$aTotal' WHERE schedule_id='$gameID'";
-		$query = $db->prepare($sqls);
-		$query->execute();
-
-}
-
 ?>
 
-
-<div class="flex justify-between">
-        <a href="../index.php">Return to Schedule</a>
-        <a href='<?php echo $phpURL?>'>Reload</a>
-    </div>
-
+<script>
+	function rtoggle(id){
+		var checkBox = document.getElementById(id);
+		var displayr = document.getElementsByClassName(id)[0];
+		if(displayr.classList.contains("hidden")){
+			displayr.classList.remove("hidden")
+		}else{
+			displayr.classList.add("hidden")
+		}
+	}
+</script>
 
 <!--Schedule Body-->
 
 <?php
 	include '../include/database.php';
+	include '../include/header.php';
 
 	$sport = "";
 	$home = "";
@@ -50,15 +44,23 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	$quarter = 1;
 	$homeID = 0;
 	$comp = 0;
+	
+	$hq1Score = 0;
+	$hq2Score = 0;
+	$hq3Score = 0;
+	$hq4Score = 0;
+	$hOTScore = 0;
+			
+	$aq1Score = 0;
+	$aq2Score = 0;
+	$aq3Score = 0;
+	$aq4Score = 0;
+	$aOTScore = 0;
+		
+	$hTotal = 0;
+	$aTotal = 0;
     
 	$sql = "SELECT t.urlName AS sport FROM schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
-	
-	try {
-      $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
-    } catch (PDOException $e) {
-      echo "Error!:" . $e->getMessage() . "<br/>";
-      die();
-    }
 	
 	$query = $db->prepare($sql);
 	$query->execute();
@@ -66,7 +68,31 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$sport = $row->sport;
 	}
 	
-	$sqlsport = "SELECT s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id, s.team_id, t.formattedName, 
+	$sql = "SELECT s.notes AS info, s.time, s.game_date, s.season AS season, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id, s.team_id, t.formattedName,
+		h.formal_name AS homeName, a.formal_name AS awayName, s.time AS startTime
+		FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
+	
+	$query = $db->prepare($sql);
+	$query->execute();
+	
+	while($row = $query->fetchObject()){
+		printf("<center><h3>%s</h3></center><br>", $row->formattedName);
+		
+		$homeID = $row->hNum;
+		
+		$info = $row->info;
+		$season = $row->season;
+		$startTime = $row->startTime;
+			
+		$homeTeam = $row->home;
+		$awayTeam = $row->away;
+		
+		$homeName = $row->homeName;
+		$awayName = $row->awayName;
+	
+	}
+	
+	$sqlsport = "SELECT 
 		bl.home_quarter1 AS hq1, bl.home_quarter2 AS hq2, bl.home_quarter3 AS hq3, bl.home_quarter4 AS hq4, bl.home_ot AS hot, bl.home_total AS ht, 
 		bl.away_quarter1 AS aq1, bl.away_quarter2 AS aq2, bl.away_quarter3 AS aq3, bl.away_quarter4 AS aq4, bl.away_ot AS aot, bl.away_total AS at, bl.completed AS cmp
 		FROM blax AS bl JOIN schedule AS s ON bl.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
@@ -84,12 +110,6 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	$query = $db->prepare($sqlsport);
 	$query->execute();
 	while($row = $query->fetchObject()){
-		printf("<h5>%s</h5><br>", $row->formattedName);
-		
-		$homeID = $row->hNum;
-			
-		$homeTeam = $row->home;
-		$awayTeam = $row->away;
 			
 		$hq1Score = $row->hq1;
 		$hq2Score = $row->hq2;
@@ -107,7 +127,65 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 		$aTotal = $row->at;
 		
 		$comp = $row->cmp;
+	
 	}
+	
+	$sql = "SELECT rs.formal_name AS name, st.wins AS wins, st.losses AS losses, st.ties AS ties FROM standings AS st JOIN roster_schools AS rs ON st.school_id=rs.id JOIN roster_teams AS rt ON st.sport_id=rt.id WHERE (rs.formal_name =\"$homeName\" or rs.formal_name=\"$awayName\") and st.season='$season' and rt.urlName='$sport'";
+	$query = $db->prepare($sql);
+	$query->execute();
+	$homeWins = $homeLosses = $homeTies = $awayWins = $awayLosses = $awayTies = 0;
+	while($row = $query->fetchObject()){
+	
+		if($row->name == $homeName){
+			$homeWins = $row->wins;
+			$homeLosses = $row->losses;		
+			$homeTies= $row->ties;
+		}else if($row->name == $awayName){
+			$awayWins = $row->wins;
+			$awayLosses = $row->losses;		
+			$awayTies= $row->ties;
+		}			
+	}
+	
+	/*
+	#########################
+	#						#
+	#		Live Game Info	#
+	#						#
+	#########################
+	*/
+	if($comp != 1){
+		$live = false;
+		$sql = "SELECT period AS quarter, game_time AS time_, info_1 AS goalie FROM live_games AS lg JOIN schedule AS s ON lg.schedule_id=s.id WHERE lg.schedule_id = '$gameID'";
+		$query = $db->prepare($sql);
+		$query->execute();
+		while($row = $query->fetchObject()){
+			$qrtr = $row->quarter;
+			$time = $row->time_;
+			$goalie = $row->goalie;
+			
+			$live = true;
+		}
+		
+		//SPORTS INFO HEADER
+		if($live == true){
+			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Q%s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $qrtr, $awayTeam, $sport, $awayName);
+		}else{
+			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div>%s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $startTime, $awayTeam, $sport, $awayName);
+		}
+	}else{
+		printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div><b>FINAL</b></div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $awayTeam, $sport, $awayName);
+	}
+	printf('<div class="flex justify-between" ><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div><div>%s - %s</div><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div></div>', $sport, $homeWins, $homeLosses, $homeTies, $hTotal, $aTotal, $sport, $awayWins, $awayLosses, $awayTies);
+	printf("<center>%s</center><br><br><br><br>", $info);
+	//SPORTS INFO HEADER
+
+	/*
+	TEAM1 Period/Time TEAM2
+	Standing1 Score Standing2
+	
+			Info
+	*/
 	
 	/*
 	#########################
@@ -119,8 +197,8 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	
 	printf("<table><tr>	<td>Team</td> <td> | </td> <td>Qrtr 1</td> <td> | </td> <td>Qrtr 2</td> <td> | </td> <td>Qrtr 3</td> <td> | </td> <td>Qrtr 4</td> <td> | </td> <td>OT</td> <td> | </td> <td> Total </td></tr>");
 	printf("<tr>	<td>----</td> <td>-</td> <td>------</td> <td>-</td> <td>------</td> <td>-</td>  <td>------</td> <td>-</td> <td>------</td> <td>-</td> <td>--</td> <td>-</td> <td>------</td></tr>");
-	printf("<tr><td>%s</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td></tr>",$homeTeam, $hq1Score, $hq2Score, $hq3Score, $hq4Score, $hOTScore, $hTotal);
-	printf("<tr><td>%s</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td></tr></table><br><br>", $awayTeam, $aq1Score, $aq2Score, $aq3Score, $aq4Score, $aOTScore, $aTotal);
+	printf("<tr><td>%s</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td></tr>", $awayTeam, $aq1Score, $aq2Score, $aq3Score, $aq4Score, $aOTScore, $aTotal);
+	printf("<tr><td>%s</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td> <td> | </td> <td>%d</td></tr></table><br><br>",$homeTeam, $hq1Score, $hq2Score, $hq3Score, $hq4Score, $hOTScore, $hTotal);
 	
 	/*
 	#########################
@@ -145,19 +223,19 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 			$pbpText = "<b>$pbpText</b>";
 		}
 		switch($qrtr){
-			case "Q1":
+			case "1":
 				$qrtr = 0;
 				break;
-			case "Q2":
+			case "2":
 				$qrtr = 1;
 				break;
-			case "Q3":
+			case "3":
 				$qrtr = 2;
 				break;
-			case "Q4":
+			case "4":
 				$qrtr = 3;
 				break;
-			case "OT":
+			case "5":
 				$qrtr = 4;
 				break;
 		}
@@ -165,16 +243,158 @@ function updateScore($hq1, $hq2, $hq3, $hq4, $hOT, $aq1, $aq2, $aq3, $aq4, $aOT,
 	
 	}
 	
-	foreach($pbpArray as $row){
-		foreach($row as $entry){
-			printf($entry . "<br>");
+	if($comp == 1){
+		for($i = 0; $i<count($pbpArray); $i++){
+			$quarter = $pbpArray[$i][0];
+			?> <input type="checkbox" name="<?php echo $quarter?>" id="<?php echo $quarter?>" onclick="rtoggle('<?php echo $quarter?>')"><label for="<?php echo $quarter?>"><b><?php echo $quarter?> [+]</b></label><br><br>
+			<div class = "<?php echo $quarter?> hidden"><?php
+			foreach($pbpArray[$i] as $entry){
+				printf($entry . "<br><br>");
+			}
+			printf("</div>");
+			printf("<br>");
 		}
-		printf("<br>");
+		printf("<br>-END OF GAME-<br><br><br>");
+	}else{
+		$newestQuarter = true;
+		for($i = count($pbpArray); $i > 0; $i--){
+			if(count($pbpArray[$i-1]) > 1){//Only display if entries
+				$quarter = $pbpArray[$i-1][0];
+				?> <input type="checkbox" name="<?php echo $quarter?>" id="<?php echo $quarter?>" onclick="rtoggle('<?php echo $quarter?>')"><label for="<?php echo $quarter?>"><b><?php echo $quarter?> [+]</b></label><br><br>
+				<?php if(!$newestQuarter){ $quarter = $quarter . " hidden";}?>
+				<div class = "<?php echo $quarter?>"><?php
+				for($j = count($pbpArray[$i-1]); $j > 1; $j--){
+					printf($pbpArray[$i-1][$j-1] . "<br><br>");
+				}
+				printf("</div>");
+				$newestQuarter = false;
+			}
+		}
 	}
 	
-	if($comp == 1){
-		printf("<br>-END OF GAME-");
+	/*
+	#########################
+	#						#
+	#		Stats			#
+	#						#
+	#########################
+	*/
+	
+	$sql = "SELECT rp.number AS num, rp.name AS name, bs.goals AS goals, bs.assists AS assists, bs.ground_balls AS ground_balls, bs.faceoff_attempts AS faceoff_attempts, bs.faceoff_wins AS faceoff_wins, bs.shots_on_goal AS shots_on_goal,
+	bs.shots AS shots, bs.turnovers AS turnovers, bs.forced_turnovers AS forced_turnovers, bs.fouls AS fouls, bs.saves AS saves, bs.goals_allowed AS goals_allowed 
+	FROM blax_stats AS bs JOIN schedule AS s ON bs.game=s.id JOIN roster_player AS rp ON bs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
+	WHERE bs.game = '$gameID' AND h.short_name = '$homeTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	$query = $db->prepare($sql);
+	$query->execute();
+	
+	$statArray = array(array(["Players"], ["", "Goals", "Assts", "GB", "FO", "S", "SOG", "TO", "CT", "P"]), array(["Goalies"], ["" , "", "", "", "", "", "", "Saves", "G/A", "Save%"]));
+	printf("STATS<hr>");
+	printf("<br>$homeTeam<br>");
+	printf('<table style = "border-spacing: 9px">');
+	while($row = $query->fetchObject()){
+		$name = $row->name;
+		$num = $row->num;
+		$goals = $row->goals;
+		$assists = $row->assists;
+		$ground_balls = $row->ground_balls;
+		$shots = $row->shots;
+		$shots_on_goal = $row->shots_on_goal;
+		$faceoff_attempts = $row->faceoff_attempts;
+		$faceoff_wins = $row->faceoff_wins;
+		$turnovers = $row->turnovers;
+		$forced_turnovers = $row->forced_turnovers;
+		$fouls = $row->fouls;
+		$saves = $row->saves;
+		$goals_allowed = $row->goals_allowed;
+		$name = explode(" ", $name);
+		$name[0] = str_split($name[0])[0] . ".";
+		$name = implode(" ", $name);
+		if($goals != 0 or $assists != 0 or $ground_balls != 0 or $shots_on_goal != 0 or $shots != 0 or $faceoff_attempts != 0 or $faceoff_wins != 0 or $turnovers != 0 or $forced_turnovers != 0 or $fouls != 0){
+			$statArray[0][] = [$num . ' ' . $name, $goals, $assists, $ground_balls, $faceoff_wins."/".$faceoff_attempts, $shots, $shots_on_goal, $turnovers, $forced_turnovers, $fouls];
+		}
+		if($saves != 0 or $goals_allowed != 0){
+			$statArray[1][] = [$num . ' ' . $name, '', '','','','','', $saves, $goals_allowed, (int)($saves/($saves+$goals_allowed)*100) . "%"];
+		}
 	}
+	
+	//Table format
+	foreach($statArray as $statLine){
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<tr>');
+			}else{
+				printf('<tr">');
+			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<td style="text-align: left">%s</td>', $statLine[$j][$i]);
+				}else{
+					printf('<td style="text-align: right">%s</td>', $statLine[$j][$i]);
+				}
+			}
+			printf('</tr>');
+		}
+		printf('<tr></tr>');
+	}
+	printf("</table>");
+	
+	$sql = "SELECT rp.number AS num, rp.name AS name, bs.goals AS goals, bs.assists AS assists, bs.ground_balls AS ground_balls, bs.faceoff_attempts AS faceoff_attempts, bs.faceoff_wins AS faceoff_wins, bs.shots_on_goal AS shots_on_goal,
+	bs.shots AS shots, bs.turnovers AS turnovers, bs.forced_turnovers AS forced_turnovers, bs.fouls AS fouls, bs.saves AS saves, bs.goals_allowed AS goals_allowed 
+	FROM blax_stats AS bs JOIN schedule AS s ON bs.game=s.id JOIN roster_player AS rp ON bs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools a ON rp.school=a.id
+	WHERE bs.game = '$gameID' AND a.short_name = '$awayTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	$query = $db->prepare($sql);
+	$query->execute();
+	
+	$statArray = array(array(["Players"], ["", "Goals", "Assts", "GB", "FO", "S", "SOG", "TO", "CT", "P"]), array(["Goalies"], ["" , "", "", "", "", "", "", "Saves", "G/A", "Save%"]));
+	printf("STATS<hr>");
+	printf("<br>$awayTeam<br>");
+	printf('<table style = "border-spacing: 9px">');
+	while($row = $query->fetchObject()){
+		$name = $row->name;
+		$num = $row->num;
+		$goals = $row->goals;
+		$assists = $row->assists;
+		$ground_balls = $row->ground_balls;
+		$shots = $row->shots;
+		$shots_on_goal = $row->shots_on_goal;
+		$faceoff_attempts = $row->faceoff_attempts;
+		$faceoff_wins = $row->faceoff_wins;
+		$turnovers = $row->turnovers;
+		$forced_turnovers = $row->forced_turnovers;
+		$fouls = $row->fouls;
+		$saves = $row->saves;
+		$goals_allowed = $row->goals_allowed;
+		$name = explode(" ", $name);
+		$name[0] = str_split($name[0])[0] . ".";
+		$name = implode(" ", $name);
+		if($goals != 0 or $assists != 0 or $ground_balls != 0 or $shots_on_goal != 0 or $shots != 0 or $faceoff_attempts != 0 or $faceoff_wins != 0 or $turnovers != 0 or $forced_turnovers != 0 or $fouls != 0){
+			$statArray[0][] = [$num . ' ' . $name, $goals, $assists, $ground_balls, $faceoff_wins."/".$faceoff_attempts, $shots, $shots_on_goal, $turnovers, $forced_turnovers, $fouls];
+		}
+		if($saves != 0 or $goals_allowed != 0){
+			$statArray[1][] = [$num . ' ' . $name, '', '','','','','', $saves, $goals_allowed, (int)($saves/($saves+$goals_allowed)*100) . "%"];
+		}
+	}
+	
+	//Table format
+	foreach($statArray as $statLine){
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<tr>');
+			}else{
+				printf('<tr">');
+			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<td style="text-align: left">%s</td>', $statLine[$j][$i]);
+				}else{
+					printf('<td style="text-align: right">%s</td>', $statLine[$j][$i]);
+				}
+			}
+			printf('</tr>');
+		}
+		printf('<tr></tr>');
+	}
+	printf("</table>");
 ?>
 
 </body>

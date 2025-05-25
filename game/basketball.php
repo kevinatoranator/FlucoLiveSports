@@ -20,8 +20,8 @@ $phpURL = "basketball.php?gameID=".$gameID;
 <!--Schedule Body-->
 
 <?php
-	include '../include/header.php';
 	include '../include/database.php';
+	include '../include/header.php';
 
 	$sport = "";
 	$home = "";
@@ -35,13 +35,6 @@ $phpURL = "basketball.php?gameID=".$gameID;
 	$homeID = 0;
 	$comp = 0;
 	$sql = "SELECT t.urlName AS sport FROM schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
-	
-	try {
-      $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
-    } catch (PDOException $e) {
-      echo "Error!:" . $e->getMessage() . "<br/>";
-      die();
-    }
 	
 	$query = $db->prepare($sql);
 	$query->execute();
@@ -136,6 +129,7 @@ $phpURL = "basketball.php?gameID=".$gameID;
 	#########################
 	*/
 	if($comp != 1){
+		$live = false;
 		$sql = "SELECT period AS quarter, game_time AS time_, info_1 AS poss, info_2 AS hto, info_3 AS ato FROM live_games AS lg JOIN schedule AS s ON lg.schedule_id=s.id WHERE lg.schedule_id = '$gameID'";
 		$query = $db->prepare($sql);
 		$query->execute();
@@ -145,21 +139,17 @@ $phpURL = "basketball.php?gameID=".$gameID;
 			$poss = $row->poss;
 			$homeTimeOuts = $row->hto;
 			$awayTimeOuts = $row->ato;
+			$live = true;
 		}
 		
 		//SPORTS INFO HEADER
-		if($homeTeam == "FCHS"){
-			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Q%s %s</div><div><b>%s</b></div></div>', $sport, $homeName, $qrtr, $time, $awayName);
+		if($live == true){
+			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Q%s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $qrtr, $awayTeam, $sport, $awayName);
 		}else{
-			printf('<div class="flex justify-between"><div><b>%s</b></div><div class="red">Q%s %s</div><div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeName, $qrtr, $time, $sport, $awayName);
+			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div>%s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $startTime, $awayTeam, $sport, $awayName);
 		}
 	}else{
-		if($homeTeam == "FCHS"){
-			printf('<div class="flex justify-between"> <div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div>         <div><b>FINAL</b></div> <div><b>%s</b></div></div>', $sport, $homeName, $awayName);
-		}else{
-			printf('<div class="flex justify-between"> <div><b>%s</b></div>         <div><b>FINAL</b></div> <div><a href="../teams/roster.php?sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeName, $sport, $awayName);
-		}
-		
+		printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div><b>FINAL</b></div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $awayTeam, $sport, $awayName);
 	}
 	printf('<div class="flex justify-between" ><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div><div>%s - %s</div><div><a href = "../standings/standings.php?sport=%s" class="schedule-game">%s-%s-%s</a></div></div>', $sport, $homeWins, $homeLosses, $homeTies, $hTotal, $aTotal, $sport, $awayWins, $awayLosses, $awayTies);
 	printf("<center>%s</center><br><br><br><br>", $info);
