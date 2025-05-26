@@ -17,6 +17,7 @@ $affix = ''; ?>
 <!--Schedule Header-->
 
     <?php 
+	include '../include/database.php';
 	include '../include/header.php';
 	?>
 
@@ -32,17 +33,11 @@ $affix = ''; ?>
 <!--Schedule Body-->
 
 <?php
-	include '../include/database.php';
+	
 
-	$sql = "SELECT s.id AS gameID, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location, s.home_id, s.away_id, s.team_id, t.formattedName, t.urlName AS sport FROM $schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE a.short_name='FCHS' OR h.short_name='FCHS'
+	$sql = "SELECT s.id AS gameID, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location AS location, s.home_id, s.away_id, s.team_id, s.notes AS notes, t.formattedName, t.urlName AS sport FROM $schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE a.short_name='FLUV' OR h.short_name='FLUV'
 	ORDER BY s.time";
 
-    try {
-      $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
-    } catch (PDOException $e) {
-      echo "Error!:" . $e->getMessage() . "<br/>";
-      die();
-    }
 	$query = $db->prepare($sql);
 	$query->execute();
 	include '../include/schedule.php';
