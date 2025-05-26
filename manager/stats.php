@@ -600,6 +600,645 @@ if($statTable == "football_stats"){
 			$query->execute();
 		}	
 
-}
+}else if($statTable == "soccer_stats"){		
+		$stat = '';
+			
+		$playerID = getPlayerID($db, $homeTeam, $hgoalie, $sportID, $season);//TEMP FIX =TO INSERT GOALISES
+			
+		//Get player's stats
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $playerID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$playerID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+		
+		$assisterID = getPlayerID($db, $team, $assister, $sportID, $season);//
+			
+		//Get player's stats
+		if($assisterID != 0){
+			$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$assisterID' AND s.id='$gameID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+				
+			if($query->rowCount() == 0 ){//Create player stats if doesn't exist
+				$sql = "INSERT INTO $statTable (player, game) VALUES ('$assisterID', '$gameID')";
+				$query = $db->prepare($sql);
+				$query->execute();
+			}
+		}
+		
+		if($team == $homeTeam){
+				$defenseID = getPlayerID($db, $awayTeam, $defense, $sportID, $season);			
+		}else{
+				$defenseID = getPlayerID($db, $homeTeam, $defense, $sportID, $season);
+		}
+		
+		//Get player's stats
+		if($defenseID != 0){
+			$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$defenseID' AND s.id='$gameID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+				
+			if($query->rowCount() == 0 ){//Create player stats if doesn't exist
+				$sql = "INSERT INTO $statTable (player, game) VALUES ('$defenseID', '$gameID')";
+				$query = $db->prepare($sql);
+				$query->execute();
+			}
+		}
+		$playerID = getPlayerID($db, $awayTeam, $agoalie, $sportID, $season);
+		
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $playerID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$playerID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+		
+		$playerID = getPlayerID($db, $team, $player, $sportID, $season);
+		
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $playerID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$playerID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+			
+		if($action == "Goal scored by "){
+			$stat = "goals = goals + 1, shots_on_goal = shots_on_goal + 1";
+			
+			if($team == $homeTeam){
+				$goalieID = getPlayerID($db, $awayTeam, $agoalie, $sportID, $season);			
+			}else{
+				$goalieID = getPlayerID($db, $homeTeam, $hgoalie, $sportID, $season);
+			}
+			if($goalieID != 0){
+				$sqls = "UPDATE $statTable SET goals_allowed = goals_allowed + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			
+			if($assisterID != 0){
+				$sqls = "UPDATE $statTable SET assists = assists + 1 WHERE game='$gameID' AND player='$assisterID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Assist by "){
+			$stat = "assists = assists + 1";
+		}else if($action == "Shot by "){
+			$stat = "shots_on_goal = shots_on_goal + 1";
+			if($team == $homeTeam){
+				$goalieID = getPlayerID($db, $awayTeam, $agoalie, $sportID, $season);			
+			}else{
+				$goalieID = getPlayerID($db, $homeTeam, $hgoalie, $sportID, $season);
+			}
+			if($goalieID != 0 and $defenseID == 0){
+				$sqls = "UPDATE $statTable SET saves = saves + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}else if($defenseID != 0){
+				$sqls = "UPDATE $statTable SET blocked_shots = blocked_shots + 1 WHERE game='$gameID' AND player='$defenseID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Save by "){
+			$stat = "saves = saves + 1";
+		}else if($action == "Shot block by "){
+			$stat = "blocked_shots = blocked_shots + 1";
+		}else if($action == "Foul on "){
+			$stat = "fouls = fouls + 1";
+		}
+
+		if($stat != ''){
+			$sqls = "UPDATE $statTable SET $stat WHERE game='$gameID' AND player='$playerID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}
+
+
+	/*
+	#########################
+	#						#
+	#		GIRLS LAX		#
+	#						#
+	#########################
+	*/			
+	}else if($statTable == "glax_stats"){		
+		$stat = '';
+			
+		$hgoalieID = getPlayerID($db, $homeTeam, $hgoalie, $sportID, $season);
+			
+		//Get player's stats
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$hgoalieID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0 and $hgoalieID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$hgoalieID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+		
+		$assisterID = getPlayerID($db, $team, $assister, $sportID, $season);
+			
+		//Get player's stats
+		if($assisterID != 0){
+			$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$assisterID' AND s.id='$gameID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+				
+			if($query->rowCount() == 0){//Create player stats if doesn't exist
+				$sql = "INSERT INTO $statTable (player, game) VALUES ('$assisterID', '$gameID')";
+				$query = $db->prepare($sql);
+				$query->execute();
+			}
+		}
+		$agoalieID = getPlayerID($db, $awayTeam, $agoalie, $sportID, $season);
+		
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$agoalieID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $agoalieID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$agoalieID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+		
+		$playerID = getPlayerID($db, $team, $player, $sportID, $season);
+		
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $playerID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$playerID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+		
+		$defenseID = getPlayerID($db, $team, $defense, $sportID, $season);
+		
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$defenseID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $defenseID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$defenseID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+			
+		if($action == "Goal scored by "){
+			$stat = "goals = goals + 1, shots_on_goal = shots_on_goal + 1";
+			
+			if($team == $homeTeam){
+				$goalieID = getPlayerID($db, $awayTeam, $agoalie, $sportID, $season);			
+			}else{
+				$goalieID = getPlayerID($db, $homeTeam, $hgoalie, $sportID, $season);
+			}
+			if($goalieID != 0){
+				$sqls = "UPDATE $statTable SET goals_allowed = goals_allowed + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($assisterID != 0){
+				$sqls = "UPDATE $statTable SET assists = assists + 1 WHERE game='$gameID' AND player='$assisterID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Assist by "){
+			$stat = "assists = assists + 1";
+		}else if($action == "Shot on goal by "){
+			$stat = "shots_on_goal = shots_on_goal + 1";
+			if($team == $homeTeam){
+				$goalieID = getPlayerID($db, $awayTeam, $agoalie, $sportID, $season);			
+			}else{
+				$goalieID = getPlayerID($db, $homeTeam, $hgoalie, $sportID, $season);
+			}
+			if($goalieID != 0){
+				$sqls = "UPDATE $statTable SET saves = saves + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Shot by "){
+			$stat = "shots_off_target = shots_off_target + 1";
+		}else if($action == "Save by "){
+			$stat = "saves = saves + 1";
+		}else if($action == "Ground ball pickup by "){
+			$stat = "ground_balls = ground_balls + 1";
+		}else if($action == "Draw control by "){
+			$stat = "draw_control = draw_control + 1";
+		}else if($action == "Ball intercepted by "){
+			$stat = "ground_balls = ground_balls + 1, forced_turnovers = forced_turnovers + 1";
+		}else if($action == "Turnover by "){
+			$stat = "turnovers = turnovers + 1";
+			
+			if($team == $homeTeam){
+				$defenseID = getPlayerID($db, $awayTeam, $defense, $sportID, $season);			
+			}else{
+				$defenseID = getPlayerID($db, $homeTeam, $defense, $sportID, $season);
+			}
+			if($defenseID != 0){
+				$sqls = "UPDATE $statTable SET forced_turnovers = forced_turnovers + 1 WHERE game='$gameID' AND player='$defenseID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}
+
+		if($stat != ''){
+			$sqls = "UPDATE $statTable SET $stat WHERE game='$gameID' AND player='$playerID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}		
+		
+		
+	
+	/*
+	#########################
+	#						#
+	#		BOYS LAX		#
+	#						#
+	#########################
+	*/	
+		
+		
+		
+	}else if($statTable == "blax_stats"){		
+		$stat = '';
+			
+		$hgoalieID = getPlayerID($db, $homeTeam, $hgoalie, $sportID, $season);
+			
+		//Get player's stats
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$hgoalieID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0 and $hgoalieID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$hgoalieID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+		
+		$assisterID = getPlayerID($db, $team, $assister, $sportID, $season);//
+			
+		//Get player's stats
+		if($assisterID != 0){
+			$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$assisterID' AND s.id='$gameID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+				
+			if($query->rowCount() == 0){//Create player stats if doesn't exist
+				$sql = "INSERT INTO $statTable (player, game) VALUES ('$assisterID', '$gameID')";
+				$query = $db->prepare($sql);
+				$query->execute();
+			}
+		}
+		$agoalieID = getPlayerID($db, $awayTeam, $agoalie, $sportID, $season);
+		
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$agoalieID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $agoalieID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$agoalieID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+		
+		$playerID = getPlayerID($db, $team, $player, $sportID, $season);
+		
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $playerID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$playerID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+		
+		$defenseID = getPlayerID($db, $team, $defense, $sportID, $season);
+		
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$defenseID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $defenseID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$defenseID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+			
+		if($action == "Goal scored by "){
+			$stat = "goals = goals + 1, shots_on_goal = shots_on_goal + 1";
+			
+			if($team == $homeTeam){
+				$goalieID = getPlayerID($db, $awayTeam, $agoalie, $sportID, $season);			
+			}else{
+				$goalieID = getPlayerID($db, $homeTeam, $hgoalie, $sportID, $season);
+			}
+			if($goalieID != 0){
+				$sqls = "UPDATE $statTable SET goals_allowed = goals_allowed + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($assisterID != 0){
+				$sqls = "UPDATE $statTable SET assists = assists + 1 WHERE game='$gameID' AND player='$assisterID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Assist by "){
+			$stat = "assists = assists + 1";
+		}else if($action == "Shot on goal by "){
+			$stat = "shots_on_goal = shots_on_goal + 1";
+			if($team == $homeTeam){
+				$goalieID = getPlayerID($db, $awayTeam, $agoalie, $sportID, $season);			
+			}else{
+				$goalieID = getPlayerID($db, $homeTeam, $hgoalie, $sportID, $season);
+			}
+			if($goalieID != 0){
+				$sqls = "UPDATE $statTable SET saves = saves + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Shot by "){
+			$stat = "shots = shots + 1";
+		}else if($action == "Save by "){
+			$stat = "saves = saves + 1";
+		}else if($action == "Penalty on "){
+			$stat = "fouls = fouls + 1";
+		}else if($action == "Ball intercepted by "){
+			$stat = "ground_balls = ground_balls + 1, forced_turnovers = forced_turnovers + 1";
+		}else if($action == "Ground ball pickup by "){
+			$stat = "ground_balls = ground_balls + 1";
+		}else if($action == "Faceoff won by "){
+			$stat = "faceoff_attempts = faceoff_attempts + 1, faceoff_wins = faceoff_wins + 1";
+			if($team == $homeTeam){
+				$defenseID = getPlayerID($db, $awayTeam, $defense, $sportID, $season);			
+			}else{
+				$defenseID = getPlayerID($db, $homeTeam, $defense, $sportID, $season);
+			}
+			if($defenseID != 0){
+				$sqls = "UPDATE $statTable SET faceoff_attempts = faceoff_attempts + 1 WHERE game='$gameID' AND player='$defenseID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Turnover by "){
+			$stat = "turnovers = turnovers + 1";
+			
+			if($team == $homeTeam){
+				$defenseID = getPlayerID($db, $awayTeam, $defense, $sportID, $season);			
+			}else{
+				$defenseID = getPlayerID($db, $homeTeam, $defense, $sportID, $season);
+			}
+			if($defenseID != 0){
+				$sqls = "UPDATE $statTable SET forced_turnovers = forced_turnovers + 1 WHERE game='$gameID' AND player='$defenseID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}
+
+		if($stat != ''){
+			$sqls = "UPDATE $statTable SET $stat WHERE game='$gameID' AND player='$playerID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}		
+	}else if($statTable == "batball_stats"){		
+		$stat = '';
+			
+		$hpitcherID = getPlayerID($db, $homeTeam, $hpitcher, $sportID, $season);//TEMP FIX =TO INSERT GOALISES
+			
+		//Get player's stats
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$hpitcherID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0 and $hpitcherID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$hpitcherID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+		
+		$apitcherID = getPlayerID($db, $awayTeam, $apitcher, $sportID, $season);//
+			
+		//Get player's stats
+		if($apitcherID != 0){
+			$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$apitcherID' AND s.id='$gameID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+				
+			if($query->rowCount() == 0){//Create player stats if doesn't exist
+				$sql = "INSERT INTO $statTable (player, game) VALUES ('$apitcherID', '$gameID')";
+				$query = $db->prepare($sql);
+				$query->execute();
+			}
+		}
+		
+		$playerID = getPlayerID($db, $team, $player, $sportID, $season);
+		
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $playerID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$playerID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+		$batterID = getPlayerID($db, $team, $batter, $sportID, $season);
+		
+		$sqls = "SELECT * FROM $statTable AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$batterID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $batterID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $statTable (player, game) VALUES ('$batterID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+		
+		if($team == $homeTeam){
+			$pitcher = $apitcherID;			
+		}else{
+			$pitcher = $hpitcherID;		
+		}
+			
+		if($action == " singles"){
+			
+			if($pitcher != 0){
+				$sqls = "UPDATE $statTable SET pitches = pitches + 1, hits_allowed = hits_allowed + 1 WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $statTable SET hits = hits + 1, at_bats = at_bats + 1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " doubles"){
+			
+			if($pitcher != 0){
+				$sqls = "UPDATE $statTable SET pitches = pitches + 1, hits_allowed = hits_allowed + 1 WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $statTable SET hits = hits + 1, at_bats = at_bats + 1, doubles = doubles + 1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " triples"){
+			
+			if($pitcher != 0){
+				$sqls = "UPDATE $statTable SET pitches = pitches + 1, hits_allowed = hits_allowed + 1 WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $statTable SET hits = hits + 1, at_bats = at_bats + 1, triples = triples + 1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " homers"){
+			
+			if($pitcher != 0){
+				$sqls = "UPDATE $statTable SET pitches = pitches + 1, hits_allowed = hits_allowed + 1, runs_allowed = runs_allowed + 1, homeruns_allowed = homeruns_allowed + 1 WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $statTable SET hits = hits + 1, at_bats = at_bats + 1, runs = runs + 1, homeruns = homeruns + 1, runs_batted_in = runs_batted_in +1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " strikes out looking" or $action == " strikes out swinging"){
+			
+			if($pitcher != 0){
+				$innings_pitched = 0;
+				$sqls = "SELECT innings_pitched AS innings_pitched FROM $statTable WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+				while($row = $query->fetchObject()){
+					$innings_pitched = $row->innings_pitched;
+				}
+				//echo $innings_pitched - floor($innings_pitched);
+				if($innings_pitched - floor($innings_pitched) >= 0.2){
+					$innings_pitched = floor($innings_pitched) + 1;
+				}else{
+					$innings_pitched += 0.1;
+				}
+				
+				$sqls = "UPDATE $statTable SET pitches = pitches + 1, strikeouts_given = strikeouts_given + 1, innings_pitched = '$innings_pitched' WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $statTable SET strikeouts = strikeouts + 1, at_bats = at_bats + 1 WHERE game='$gameID' AND player='$playerID'";// could add individual lob as , left_on_base = left_on_base + '$lob'
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " flies out" or $action == " pops out" or $action == " grounds out" or $action == " lines out" or $action == " sacrifice fly" or $action == " sacrifice bunt"){
+			
+			if($pitcher != 0){
+				$innings_pitched = 0;
+				$sqls = "SELECT innings_pitched AS innings_pitched FROM $statTable WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+				while($row = $query->fetchObject()){
+					$innings_pitched = $row->innings_pitched;
+				}
+				//echo $innings_pitched - floor($innings_pitched);
+				if($innings_pitched - floor($innings_pitched) >= 0.2){
+					$innings_pitched = floor($innings_pitched) + 1;
+				}else{
+					$innings_pitched += 0.1;
+				}
+				
+				$sqls = "UPDATE $statTable SET pitches = pitches + 1, innings_pitched = '$innings_pitched' WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $statTable SET at_bats = at_bats + 1 WHERE game='$gameID' AND player='$playerID'";// could add individual lob as , left_on_base = left_on_base + '$lob'
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " scores"){
+			
+			if($pitcher != 0){
+				$sqls = "UPDATE $statTable SET runs_allowed = runs_allowed + 1 WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $statTable SET runs = runs + 1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($batterID != 0){
+				$sqls = "UPDATE $statTable SET runs_batted_in = runs_batted_in + 1 WHERE game='$gameID' AND player='$batterID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			
+			
+		}else if($action == " walks"){
+			
+			if($pitcher != 0){
+				$sqls = "UPDATE $statTable SET pitches = pitches + 1, base_on_balls_allowed = base_on_balls_allowed + 1 WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $statTable SET base_on_balls = base_on_balls + 1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " strike" or $action == " ball" or $action == " foul"){
+			
+			if($pitcher != 0){
+				$sqls = "UPDATE $statTable SET pitches = pitches + 1 WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " out at first" or $action == " out at second" or $action == " out at third" or $action == " out at home"){
+			
+			if($pitcher != 0){
+				$innings_pitched = 0;
+				$sqls = "SELECT innings_pitched AS innings_pitched FROM $statTable WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+				while($row = $query->fetchObject()){
+					$innings_pitched = $row->innings_pitched;
+				}
+				//echo $innings_pitched - floor($innings_pitched);
+				if($innings_pitched - floor($innings_pitched) >= 0.2){
+					$innings_pitched = floor($innings_pitched) + 1;
+				}else{
+					$innings_pitched += 0.1;
+				}
+				
+				$sqls = "UPDATE $statTable SET innings_pitched = '$innings_pitched' WHERE game='$gameID' AND player='$pitcher'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}
+
+		/*if($stat != ''){
+			$sqls = "UPDATE $statTable SET $stat WHERE game='$gameID' AND player='$playerID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}	*/	
+	}
 
 ?>

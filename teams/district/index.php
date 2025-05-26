@@ -14,6 +14,7 @@
 
     <br>
     <?php 
+	include '../../include/database.php';
 	include '../../include/header.php';
 	?>
 
@@ -26,20 +27,11 @@
 
 <?php
 
-	include '../../include/database.php';
-
-	
-    try {
-      $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
-    } catch (PDOException $e) {
-      echo "Error!:" . $e->getMessage() . "<br/>";
-      die();
-    }
 	
 	
 	echo "<b>Fall</b><br><br>";
 	
-	echo "<form action='./roster.php' method='get'>";
+	echo "<form action='../roster.php' method='get'>";
 	$sql = "SELECT * FROM roster_schools WHERE roster_schools.district='Jefferson' AND NOT roster_schools.formal_name='Fluvanna County'";
 	$query = $db->prepare($sql);
 	$query->execute();
@@ -64,7 +56,7 @@
 	
 	echo "<b>Winter</b><br><br>";
 	
-	echo "<form action='./roster.php' method='get'>";
+	echo "<form action='../roster.php' method='get'>";
 	$sql = "SELECT * FROM roster_schools WHERE roster_schools.district='Jefferson' AND NOT roster_schools.formal_name='Fluvanna County'";
 	$query = $db->prepare($sql);
 	$query->execute();
@@ -88,7 +80,7 @@
 	
 	echo "<b>Spring</b><br><br>";
 	
-	echo "<form action='./roster.php' method='get'>";
+	echo "<form action='../roster.php' method='get'>";
 	$sql = "SELECT * FROM roster_schools WHERE roster_schools.district='Jefferson' AND NOT roster_schools.formal_name='Fluvanna County'";
 	$query = $db->prepare($sql);
 	$query->execute();

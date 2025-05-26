@@ -46,6 +46,9 @@
 	.red{
 		color: red;
 	}
+	.green{
+		color: green;
+	}
 	
 	.sport{
 		background-color: blue;
@@ -83,8 +86,26 @@
 	}
 	
     .container {width:100%;}
+	
+	.schedule-box{
+		display: inline-block;
+		width: 43%;
+		height: 100px;
+		padding: 10px 10px;
+		
+	}.schedule-row{
+		width: 94%;
+		
+	}
 	.schedule-container{
-		width: 250px;
+		display: flex;
+		width: 150px;
+		align-items: center;
+	}
+	.schedule-parts-left{
+		margin-right: auto;
+	}.schedule-parts-right{
+		text-align: right;
 	}
 	.clear{
 		clear:both;
