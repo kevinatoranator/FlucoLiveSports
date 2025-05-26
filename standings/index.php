@@ -13,16 +13,9 @@
 <!--Team List by Season-->
 
 <?php
-	include '../include/header.php';
 	include '../include/database.php';
+	include '../include/header.php';
 
-	
-    try {
-      $db = new PDO("mysql:host=$host_name; dbname=$database;", $user_name, $password);
-    } catch (PDOException $e) {
-      echo "Error!:" . $e->getMessage() . "<br/>";
-      die();
-    }
 
 
 	echo "<b>Fall</b><br><br>";
@@ -79,6 +72,4 @@
 	<a class='sport' href ="./standings.php?sport=gtrack">Girls Varsity Outdoor Track</a><br><br><br>
 	<a class='sport' href ="./standings.php?sport=btrack">Boys Varsity Outdoor Track</a></div>
 	
-	
-?>
 </body>
