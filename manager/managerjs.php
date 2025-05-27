@@ -10,6 +10,10 @@
 
 <body>
 Manager 2,0
+
+<div class="flex justify-between">
+    <a href="../gmindex.php">Return to Home</a>
+</div>
 <br>
 
 <br>
@@ -40,6 +44,9 @@ Game Info:<div id="gameInfo"></div>
 <br>
 <br>
 <div id="manager"></div>
+<br>
+<br>
+<div id="complete" class="hidden"><button id="completeBtn">Complete</button></div>
 <br>
 <br>
 <hr>

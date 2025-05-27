@@ -13,13 +13,23 @@ var homeTeam = "";
 var awayTeam = "";
 var home = "";
 var away = "";
+var sportID = 0;
 var scores = new Array();
 var homeRoster = new Array();
 var awayRoster = new Array();
 var table = "";
 var level = "";
 var lastPlayTime = 0;
+var formattedTime = "";
 var lastPeriod = 1;
+var completed = 0;
+const SPORTTYPE = {
+	Half: 1,
+	Quarter: 2,
+	Inning: 3,
+	Set: 4
+}
+var gameType = SPORTTYPE.Half;
 
   function step(){
 	  if(started == false || currentSeconds < 0){
@@ -28,6 +38,27 @@ var lastPeriod = 1;
 	  var dt = Date.now() - expected;
 	  currentSeconds--;
 	  setTimer(currentSeconds);
+	  
+	  if(currentSeconds%60 == 0){
+		  if(table == "soccer"){
+				if(level == "jv"){
+					formattedTime = lastPeriod * 35 - Math.floor(currentSeconds/60);
+				}else{
+					formattedTime = lastPeriod * 40 - Math.floor(currentSeconds/60);
+				}
+			}else{
+				formattedTime = Math.floor(currentSeconds/60) + ":" + zeroPad(currentSeconds%60, 2);
+			}
+		  $.ajax({
+			url: "livegame.php",
+			data: {table: table,
+			gameID: gameID,
+			time: formattedTime},
+			success: function(data){
+				console.log(data);
+				}
+			});	
+	  }
 	  
 	  //Reset
 	  expected += interval;
@@ -40,23 +71,27 @@ var lastPeriod = 1;
   
   
  window.onload=function(){
-	setTimer(currentSeconds);
-	 
+	 timerSet();
 	 document.getElementById("timerControl").addEventListener('click', function(){	
-		if(started == false){			
+		if(started == false){
+			currentSeconds = ($("#minutes :selected").val() * 60) + parseInt($("#seconds :selected").val());
 			started = true;
 			expected = Date.now() + interval;
 			document.getElementById("timerControl").innerText = "Stop";
+			setTimer(currentSeconds);
 		  setTimeout(step, interval);
 		}else{
-			started = false;
-				document.getElementById("timerControl").innerText = "Start";
+			timerSet();
 		}
 	  }, false);
 	  
 	  document.getElementById("timerReset").addEventListener('click', function(){	
 		currentSeconds = seconds;
-		setTimer(currentSeconds);
+		if(started == true){
+			setTimer(currentSeconds);
+		}else{
+			timerSet();
+		}
 	  }, false);
 	  
 	  document.getElementById("gameLoad").addEventListener('click', loadGame, false);
@@ -68,13 +103,15 @@ var lastPeriod = 1;
 			url: "start.php",
 			data: {table: table,
 			gameID: gameID,
-			level: level},
+			time: formattedTime},
 			success: function(data){
 				console.log(data);
 				document.getElementById("manager").innerHTML = "<button id='play'>Add Play</button>";
 				document.getElementById("play").addEventListener('click', play);
 				document.getElementById("timerr").classList.remove("hidden");
 				document.getElementById("goalpitch").classList.remove("hidden");
+				document.getElementById("complete").classList.remove("hidden");
+				document.getElementById("completeBtn").addEventListener('click', complete);
 				//document.getElementById("goalpitch").innerText = "Goalie:";
 				goalpitchSelect(home);
 				goalpitchSelect(away);
@@ -113,28 +150,40 @@ function submitPlay(){
 	console.log("Plays added");
 	var playSelect = $("input[name='plays']:checked").val();
 	var teamSelect = $("input[name='team']:checked").val();
+	var oppTeam = $("input[name='team']:not(:checked)").val();
 	var playerSelect = $("input[name='player']:checked").val();
+	var goalie = $("#homegoalpitchsel :selected").val();
+	if(teamSelect == home){
+		goalie = $("#awaygoalpitchsel :selected").val();
+	}
+	
 	var playPeriod = 1;//TEMP FOR NOW
 	var playTime = Math.floor(currentSeconds/60) + ":" + zeroPad(currentSeconds%60, 2);
 	if(table == "soccer"){
-		if(level == "JV"){
+		if(level == "jv"){
 			playTime = playPeriod * 35 - Math.floor(currentSeconds/60);
 		}else{
 			playTime = playPeriod * 40 - Math.floor(currentSeconds/60);
 		}
 	}
-	var infoArray = [playSelect, teamSelect, playerSelect, playPeriod, playTime];
-	
+	var infoArray = [playSelect, teamSelect, oppTeam, playerSelect, playPeriod, playTime, sportID, goalie];
+	console.log(infoArray);
+	console.log(home);
 	$.ajax({
 			url: "submit.php",
 			data: {table: table,
 			gameID: gameID,
-			infoArray: infoArray},
+			infoArray: infoArray,
+			scores: scores,
+			home: home},
 			success: function(data){
 				var dataArray = $.parseJSON(data)
 				console.log(dataArray);
 				document.getElementById("manager").innerHTML = "<button id='play'>Add Play</button>";
 				document.getElementById("play").addEventListener('click', play);
+				scores = dataArray.scores;
+				document.getElementById("scoreTable").innerHTML = scoreTableText(scores);
+				document.getElementById("scoreTableManual").innerHTML = scoreTableManualText(scores);
 				}
 			});
 }
@@ -142,6 +191,24 @@ function cancel(){
 	console.log("Play cancelled");
 	document.getElementById("manager").innerHTML = "<button id='play'>Add Play</button>";
 	document.getElementById("play").addEventListener('click', play);
+}
+
+function complete(){
+	console.log("Game Completed");
+	var infoArray = [sportID, home, away, sumArrayRange(scores, 0, scores.length/2), sumArrayRange(scores, scores.length/2, scores.length)];
+	$.ajax({
+			url: "complete.php",
+			data: {table: table,
+			gameID: gameID,
+			infoArray: infoArray},
+			success: function(data){
+				var dataArray = $.parseJSON(data)
+				console.log(dataArray);
+				document.getElementById("manager").innerHTML = "Game Complete";
+				document.getElementById("complete").classList.add("hidden");
+				}
+			});
+	
 }
 
 function scoreTableText(scoreArray){
@@ -286,6 +353,32 @@ function sumArrayRange(array, start, end){
 	return sum;	
 }
 
+function timerSet(){
+	started = false;
+	document.getElementById("timerControl").innerText = "Start";
+	var toAdd = "";
+	var manMinutes = Math.floor(currentSeconds/60);
+	var manSeconds = currentSeconds%60;
+	toAdd += "<select name = 'minutes' id = 'minutes'>";
+	for(var i = 0; i <= minutes; i++){
+		if(i == manMinutes){
+			toAdd += `<option value="${i}" selected>${i}</option>`;
+		}else{
+			toAdd += `<option value="${i}">${i}</option>`;
+		}
+	}
+	toAdd += "</select>:<select name = 'seconds' id = 'seconds'>";
+	for(var i = 0; i < 60; i++){
+		if(i == manSeconds){
+			toAdd += `<option value="${i}" selected>${i}</option>`;
+		}else{
+			toAdd += `<option value="${i}">${i}</option>`;
+		}
+	}
+	toAdd += "</select>";
+	document.getElementById("timer").innerHTML = toAdd;
+}
+
 
 
 
@@ -307,10 +400,9 @@ function goalpitchSelect(team){
 	}else{
 		pgid = "awaygoalpitch";
 	}
-	console.log(pgid);
 	//document.getElementById(pgid).innerHTML = "";
 	var toAdd = "";
-	toAdd += "<select name = 'goalpitch'>"
+	toAdd += `<select name = ${pgid}sel' id = '${pgid}sel'>`;
 	for(const [key, value] of Object.entries(playerList[team])){
 		toAdd += `<option value="${key}">${key}</option>`;
 	}
@@ -333,8 +425,13 @@ function bonusAction(play){
 			for(const [key, value] of Object.entries(playerList[teamSelect])){
 				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="bonusPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
 			}
-		}else if(play == "Shot by "){
-			document.getElementById("bonusSelect").innerHTML += "<b>Block</b><br>";
+		}else if(play == "Faceoff won by "){
+			document.getElementById("bonusSelect").innerHTML += "<b>Vs</b><br>";
+			for(const [key, value] of Object.entries(playerList[opp])){
+				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="bonusPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
+			}
+		}else if(play == "Turnover by "){
+			document.getElementById("bonusSelect").innerHTML += "<b>Opp</b><br>";
 			for(const [key, value] of Object.entries(playerList[opp])){
 				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="bonusPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
 			}
@@ -357,6 +454,14 @@ function loadGame(){
 				away = dataArray.awayKey;
 				homeRoster = dataArray.homeRoster;
 				awayRoster = dataArray.awayRoster;
+				sportID = dataArray.sportID;
+				table = dataArray.table;
+				level = dataArray.level;
+				minutes = dataArray.minutes;
+				seconds = minutes * 60;
+				currentSeconds = seconds;
+				timerSet();
+				completed = parseInt(dataArray.completed);
 				
 				gameInfoText += dataArray.sport + "</br>";
 				gameInfoText += "Home: " + dataArray.home + "</br>";
@@ -369,38 +474,68 @@ function loadGame(){
 				}
 				document.getElementById("homeRoster").innerHTML = "-Home Roster-<br>" + rosterFormat(homeRoster);
 				document.getElementById("awayRoster").innerHTML = "-Away Roster-<br>" + rosterFormat(awayRoster);
-				
-				if(dataArray.sport.includes("Soccer")){
-					table = "soccer";
-				}
-				if(dataArray.sport.includes("JV")){
-					level = "jv";
-				}else{
-					level = "varsity";
+				if(table == "soccer"){
+					gameType = SPORTTYPE.Half;
+				}else if(table == "blax" || table == "glax" || table == "football" || table == "basketball" || table == "field_hockey"){
+					formattedTime = Math.floor(currentSeconds/60) + ":" + zeroPad(currentSeconds%60, 2);
+					gameType = SPORTTYPE.Quarter;
 				}
 				document.getElementById("gameLoad").innerText = "Reload Data";
+				
+				if(completed == 1){
+					  document.getElementById("manager").innerHTML = "Game Complete";
+				  }
 				}
 			});
 		document.getElementById("gameInfo").innerHTML = gameInfoText;
 }
 
 function updateScore(score){
-	if(score.name.includes("home")){
-		if(score.name.includes("1")){
-			scores[0] = score.value;
-		}else if(score.name.includes("2")){
-			scores[1] = score.value;
-		}else if(score.name.includes("3")){
-			scores[2] = score.value;
+	if(gameType == SPORTTYPE.Half){
+		if(score.name.includes("home")){
+			if(score.name.includes("1")){
+				scores[0] = score.value;
+			}else if(score.name.includes("2")){
+				scores[1] = score.value;
+			}else if(score.name.includes("3")){
+				scores[2] = score.value;
+			}
+			
+		}else if(score.name.includes("away")){
+			if(score.name.includes("1")){
+				scores[3] = score.value;
+			}else if(score.name.includes("2")){
+				scores[4] = score.value;
+			}else if(score.name.includes("3")){
+				scores[5] = score.value;
+			}
 		}
-		
-	}else if(score.name.includes("away")){
-		if(score.name.includes("1")){
-			scores[3] = score.value;
-		}else if(score.name.includes("2")){
-			scores[4] = score.value;
-		}else if(score.name.includes("3")){
-			scores[5] = score.value;
+	}else if(gameType == SPORTTYPE.Quarter){
+		if(score.name.includes("home")){
+			if(score.name.includes("1")){
+				scores[0] = score.value;
+			}else if(score.name.includes("2")){
+				scores[1] = score.value;
+			}else if(score.name.includes("3")){
+				scores[2] = score.value;
+			}else if(score.name.includes("4")){
+				scores[3] = score.value;
+			}else if(score.name.includes("5")){
+				scores[4] = score.value;
+			}
+			
+		}else if(score.name.includes("away")){
+			if(score.name.includes("1")){
+				scores[5] = score.value;
+			}else if(score.name.includes("2")){
+				scores[6] = score.value;
+			}else if(score.name.includes("3")){
+				scores[7] = score.value;
+			}else if(score.name.includes("4")){
+				scores[8] = score.value;
+			}else if(score.name.includes("5")){
+				scores[9] = score.value;
+			}
 		}
 	}
 	console.log(gameID, table, scores);

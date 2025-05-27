@@ -23,36 +23,29 @@ include '../include/database.php';
 		$info_6 = 10; //yards to go
 		$info_7 = 1; //down
 		$sportType = "quarter";
-		include './football.php'; //Import all football variables
+		include './sports/football.php'; //Import all football variables
 	}else if($table == "field_hockey"){
 		//jv 12 minutes
 		$minutes = 15;
 		$seconds = 0;
 		$maximumMinutes = 15;
 		$sportType = "quarter";
-		include './fieldhockey.php'; //Import all field hockey variables
+		include './sports/fieldhockey.php'; //Import all field hockey variables
 	}else if($table == "volleyball"){
 		$sportType = "set";
-		include './volleyball.php'; //Import all volleyball variables
+		include './sports/volleyball.php'; //Import all volleyball variables
 	}else if($table == "basketball"){
 		$minutes = 12;
 		$seconds = 0;
 		$maximumMinutes = 12;
 		$sportType = "quarter";
-		include './basketball.php'; //Import all basketball variables
+		include './sports/basketball.php'; //Import all basketball variables
 	}else if($table == "soccer"){
-		//jv 35
-		$minutes = 0;
-		$seconds = 0;
-		$maximumMinutes = 40;
-		$sportType = "half";
-		include './soccer.php'; //Import all soccer variables
-	}else if($table == "glax" or $table == "blax"){
-		$minutes = 0;
-		$seconds = 0;
-		$maximumMinutes = 12;
-		$sportType = "quarter";
-		include './glax.php'; //Import all glax variables
+		include './sports/soccer.php'; //Import all soccer variables
+	}else if($table == "glax"){
+		include './sports/glax.php'; //Import all glax variables
+	}else if($table == "blax"){
+		include './sports/blax.php'; //Import all glax variables
 	}else if($table == "batball"){
 		$minutes = 0;
 		$seconds = 0;
@@ -62,7 +55,7 @@ include '../include/database.php';
 		$outs = 0;
 		$sportType = "inning";
 		$game_time = "Top";
-		include './batball.php'; //Import all glax variables
+		include './sports/batball.php'; //Import all glax variables
 	}
 
 	$message = "Play Completed";

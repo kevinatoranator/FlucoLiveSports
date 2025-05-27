@@ -114,16 +114,21 @@
 	}
 
 	if($gamedb != ""){
-		$sql = "SELECT s.game_date, home_total, away_total, h.formal_name AS home, a.formal_name AS away, s.id AS id FROM $gamedb RIGHT JOIN schedule AS s ON $gamedb.schedule_id=s.id INNER JOIN roster_teams AS r ON s.team_id=r.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id WHERE r.urlName='$roster' AND (h.short_name='$school' OR a.short_name='$school') AND s.season='2024' ORDER BY s.game_date";
+		$sql = "SELECT s.game_date, home_total, away_total, h.formal_name AS home, a.formal_name AS away, s.id AS id, s.notes AS notes FROM $gamedb RIGHT JOIN schedule AS s ON $gamedb.schedule_id=s.id INNER JOIN roster_teams AS r ON s.team_id=r.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id WHERE r.urlName='$roster' AND (h.short_name='$school' OR a.short_name='$school') AND s.season='2024' ORDER BY s.game_date";
 		$query = $db->prepare($sql);
 		$query->execute();
 		while($row = $query->fetchObject()){
 			$hscore = $row->home_total;
 			$ascore = $row->away_total;
 			$id = $row->id;
+			$notes = $row->notes;
 			$sdate = date("D m/d", strtotime($row->game_date));
 			?><a href="../game/<?php echo $gamedb?>.php?gameID=<?php echo $id?>" class='schedule-game'> <!-- DOESNT WORK NO GAME PAGE FOR DISTRICT GAMES-->
 			<?php
+			if(str_contains($notes, "Region") or str_contains($notes, "State")){
+				$sdate = "*" . $sdate;
+			}
+			
 			if($hscore > $ascore){
 				printf("%s <b>%s %s</b>-%s %s<br>", $sdate, $row->home, $hscore, $ascore, $row->away);
 			}else if($hscore < $ascore){

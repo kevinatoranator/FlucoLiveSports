@@ -3,11 +3,10 @@ include '../include/database.php';
 
 	$table = $_GET['table'];
 	$gameID = $_GET['gameID'];
-	$level = $_GET['level'];
+	$game_time = $_GET['time'];
 	$completed = 0;
 	$sql = "";
 	
-	$game_time = "0";
 	$info_1 = "";
 	$info_2 = "";
 	$info_3 = "";
