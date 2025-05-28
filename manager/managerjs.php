@@ -36,7 +36,7 @@ Game Info:<div id="gameInfo"></div>
 
 <br>
 <br>
-<div id="timerr" class="hidden">Game Time: <span id = "timer"></span><br><br>
+<div id="timerr" class="hidden">Period: <span id = "period"></span> | Game Time: <span id = "timer"></span><br><br>
 <button id="timerControl">Start</button>
 <button id="timerReset">Reset</button></div>
 <br>

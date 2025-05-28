@@ -145,24 +145,48 @@ foreach($years as $year => $label){
 			
 			$entry[6] = $wins . "-" . $losses ."-" . $draws;
 			
+			$isLive = false;
 			$sql = "SELECT s.id AS id, s.game_date AS date, s.season AS season, h.formal_name AS fhome, a.formal_name AS faway, s.time AS startTime, h.short_name AS home, a.short_name AS away
-			FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE t.urlName='$roster' AND s.season='$year' AND (h.short_name ='$entry[0]' OR a.short_name ='$entry[0]')
-			AND s.game_date >= current_date ORDER BY s.game_date LIMIT 1"; //current_date 
+				FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id JOIN $sportdb AS sdb ON s.id=sdb.schedule_id
+				WHERE t.urlName='$roster' AND s.season='$year' AND (h.short_name ='$entry[0]' OR a.short_name ='$entry[0]') AND s.game_date = current_date AND sdb.completed = 0 ORDER BY s.game_date LIMIT 1"; //current_date
 			$query = $db->prepare($sql);
 			$query->execute();
 			while($row = $query->fetchObject()){
+				$isLive = true;
 				$fhome = $row->fhome;
 				$faway = $row->faway;
 				$home = $row->home;
 				$away = $row->away;
-				$date = $row->date;
-				$date = date_format(date_create($date), "m/d");
+				$date = '<span class="red">LIVE</span>';
 				$gameID = $row->id;
-				
+			}
+			
+			if($isLive == true){
 				if($home == $entry[0]){
-					$entry[7] = "<a style = 'text-decoration: none; color: var(--black);' href='../game/" . $sportdb . ".php?gameID=" . $gameID . "'>v " . $away . " " . $date . "</a>";
-				}else{
-					$entry[7] = "<a style = 'text-decoration: none; color: var(--black);' href='../game/" . $sportdb . ".php?gameID=" . $gameID . "'>@ " . $home . " " . $date  . "</a>";
+						$entry[7] = "<a style = 'text-decoration: none; color: var(--black);' href='../game/" . $sportdb . ".php?gameID=" . $gameID . "'>v " . $away . " " . $date . "</a>";
+					}else{
+						$entry[7] = "<a style = 'text-decoration: none; color: var(--black);' href='../game/" . $sportdb . ".php?gameID=" . $gameID . "'>@ " . $home . " " . $date  . "</a>";
+					}
+			}else{
+				$sql = "SELECT s.id AS id, s.game_date AS date, s.season AS season, h.formal_name AS fhome, a.formal_name AS faway, s.time AS startTime, h.short_name AS home, a.short_name AS away
+				FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id LEFT JOIN $sportdb AS sdb ON s.id=sdb.schedule_id
+				WHERE t.urlName='$roster' AND s.season='$year' AND (h.short_name ='$entry[0]' OR a.short_name ='$entry[0]') AND s.game_date >= current_date AND sdb.schedule_id is NULL ORDER BY s.game_date LIMIT 1"; //current_date 
+				$query = $db->prepare($sql);
+				$query->execute();
+				while($row = $query->fetchObject()){
+					$fhome = $row->fhome;
+					$faway = $row->faway;
+					$home = $row->home;
+					$away = $row->away;
+					$date = $row->date;
+					$date = date_format(date_create($date), "m/d");
+					$gameID = $row->id;
+					
+					if($home == $entry[0]){
+						$entry[7] = "<a style = 'text-decoration: none; color: var(--black);' href='../game/" . $sportdb . ".php?gameID=" . $gameID . "'>v " . $away . " " . $date . "</a>";
+					}else{
+						$entry[7] = "<a style = 'text-decoration: none; color: var(--black);' href='../game/" . $sportdb . ".php?gameID=" . $gameID . "'>@ " . $home . " " . $date  . "</a>";
+					}
 				}
 			}
 			

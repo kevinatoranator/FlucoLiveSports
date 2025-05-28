@@ -24,10 +24,10 @@ var formattedTime = "";
 var lastPeriod = 1;
 var completed = 0;
 const SPORTTYPE = {
-	Half: 1,
-	Quarter: 2,
-	Inning: 3,
-	Set: 4
+	Half: 2,
+	Quarter: 4,
+	Inning: 9,
+	Set: 5
 }
 var gameType = SPORTTYPE.Half;
 
@@ -53,7 +53,8 @@ var gameType = SPORTTYPE.Half;
 			url: "livegame.php",
 			data: {table: table,
 			gameID: gameID,
-			time: formattedTime},
+			time: formattedTime,
+			period: lastPeriod},
 			success: function(data){
 				console.log(data);
 				}
@@ -67,21 +68,26 @@ var gameType = SPORTTYPE.Half;
   
   const zeroPad = (num, places) => String(num).padStart(places, '0');
   const setTimer = (time) => document.getElementById("timer").innerText = Math.floor(time/60) + ":" + zeroPad(time%60, 2);
+  const setPeriod = (period) => document.getElementById("period").innerText = period;
   
   
   
  window.onload=function(){
 	 timerSet();
+	 periodSet();
 	 document.getElementById("timerControl").addEventListener('click', function(){	
 		if(started == false){
 			currentSeconds = ($("#minutes :selected").val() * 60) + parseInt($("#seconds :selected").val());
+			lastPeriod = $("#periods :selected").val();
 			started = true;
 			expected = Date.now() + interval;
 			document.getElementById("timerControl").innerText = "Stop";
 			setTimer(currentSeconds);
+			setPeriod(lastPeriod);
 		  setTimeout(step, interval);
 		}else{
 			timerSet();
+			periodSet();
 		}
 	  }, false);
 	  
@@ -91,6 +97,7 @@ var gameType = SPORTTYPE.Half;
 			setTimer(currentSeconds);
 		}else{
 			timerSet();
+			periodSet();
 		}
 	  }, false);
 	  
@@ -156,17 +163,26 @@ function submitPlay(){
 	if(teamSelect == home){
 		goalie = $("#awaygoalpitchsel :selected").val();
 	}
-	
-	var playPeriod = 1;//TEMP FOR NOW
-	var playTime = Math.floor(currentSeconds/60) + ":" + zeroPad(currentSeconds%60, 2);
-	if(table == "soccer"){
-		if(level == "jv"){
-			playTime = playPeriod * 35 - Math.floor(currentSeconds/60);
-		}else{
-			playTime = playPeriod * 40 - Math.floor(currentSeconds/60);
-		}
+	var assister = $("input[name='assistPlayer']:checked").val();
+	var defense = $("input[name='defPlayer']:checked").val();
+	if(assister == undefined){
+		assister = "";
 	}
-	var infoArray = [playSelect, teamSelect, oppTeam, playerSelect, playPeriod, playTime, sportID, goalie];
+	if(defense == undefined){
+		defense = "";
+	}
+	
+	var playTime = Math.floor(currentSeconds/60) + ":" + zeroPad(currentSeconds%60, 2);
+	 if(table == "soccer"){
+		if(level == "jv"){
+			playTime = lastPeriod * 35 - Math.floor(currentSeconds/60);
+		}else{
+			playTime = lastPeriod * 40 - Math.floor(currentSeconds/60);
+		}
+	}else{
+		playTime = Math.floor(currentSeconds/60) + ":" + zeroPad(currentSeconds%60, 2);
+	}
+	var infoArray = [playSelect, teamSelect, oppTeam, playerSelect, lastPeriod, playTime, sportID, goalie, assister, defense];
 	console.log(infoArray);
 	console.log(home);
 	$.ajax({
@@ -186,6 +202,16 @@ function submitPlay(){
 				document.getElementById("scoreTableManual").innerHTML = scoreTableManualText(scores);
 				}
 			});
+	$.ajax({
+		url: "livegame.php",
+		data: {table: table,
+		gameID: gameID,
+		time: playTime,
+		period: lastPeriod},
+		success: function(data){
+			console.log(data);
+			}
+		});	
 }
 function cancel(){
 	console.log("Play cancelled");
@@ -335,14 +361,28 @@ function scoreTableManualText(scoreArray){
 }
 
 function rosterFormat(roster){
+	//roster = rosterSort(roster);	
 	var rosterHTML = "";
+	var length = 0;
 	for(var name in roster){
-		rosterHTML += `${roster[name]} | ${name} <br/>`;
+		length++;
+		rosterHTML += `${roster[name]} | ${name}  <br/>`;
 	}
-	if(roster.length == 0){
+	if(length == 0){
 		rosterHTML = "No Roster Available";
 	}
 	return rosterHTML;
+}
+
+function rosterSort(obj){
+	var entries = Object.entries(obj);
+    entries.sort(([, valueA], [, valueB]) => valueA - valueB); // Sort in ascending order
+
+	const sortedObject = {};
+	for (const [key, value] of entries) {
+		sortedObject[key] = value;
+	}
+	return sortedObject;
 }
 
 function sumArrayRange(array, start, end){
@@ -377,6 +417,21 @@ function timerSet(){
 	}
 	toAdd += "</select>";
 	document.getElementById("timer").innerHTML = toAdd;
+}
+function periodSet(){
+	var toAdd = "";
+	var manPeriod = lastPeriod;
+	console.log(gameType+1);
+	toAdd += "<select name = 'periods' id = 'periods'>";
+	for(var i = 1; i <= gameType+1; i++){
+		if(i == manPeriod){
+			toAdd += `<option value="${i}" selected>${i}</option>`;
+		}else{
+			toAdd += `<option value="${i}">${i}</option>`;
+		}
+	}
+	toAdd += "</select>";
+	document.getElementById("period").innerHTML = toAdd;
 }
 
 
@@ -423,17 +478,27 @@ function bonusAction(play){
 		if(play == "Goal scored by "){
 			document.getElementById("bonusSelect").innerHTML += "<b>Assist</b><br>";
 			for(const [key, value] of Object.entries(playerList[teamSelect])){
-				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="bonusPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
+				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="assistPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
+			}
+		}else if(play == "Shot by " && table == "soccer"){
+			document.getElementById("bonusSelect").innerHTML += "<b>Block</b><br>";
+			for(const [key, value] of Object.entries(playerList[opp])){
+				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="defPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
+			}
+		}else if(play == "Shot on goal by " && table == "field_hockey"){
+			document.getElementById("bonusSelect").innerHTML += "<b>Block</b><br>";
+			for(const [key, value] of Object.entries(playerList[opp])){
+				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="defPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
 			}
 		}else if(play == "Faceoff won by "){
 			document.getElementById("bonusSelect").innerHTML += "<b>Vs</b><br>";
 			for(const [key, value] of Object.entries(playerList[opp])){
-				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="bonusPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
+				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="defPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
 			}
 		}else if(play == "Turnover by "){
 			document.getElementById("bonusSelect").innerHTML += "<b>Opp</b><br>";
 			for(const [key, value] of Object.entries(playerList[opp])){
-				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="bonusPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
+				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="defPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
 			}
 		}
 	}
@@ -452,8 +517,8 @@ function loadGame(){
 				scores = dataArray.scores;
 				home = dataArray.homeKey;
 				away = dataArray.awayKey;
-				homeRoster = dataArray.homeRoster;
-				awayRoster = dataArray.awayRoster;
+				homeRoster = rosterSort(dataArray.homeRoster)
+				awayRoster = rosterSort(dataArray.awayRoster)
 				sportID = dataArray.sportID;
 				table = dataArray.table;
 				level = dataArray.level;
@@ -466,7 +531,6 @@ function loadGame(){
 				gameInfoText += dataArray.sport + "</br>";
 				gameInfoText += "Home: " + dataArray.home + "</br>";
 				gameInfoText += "Away: " + dataArray.away + "</br>";
-				//gameInfoText += "Scores: " + dataArray.scores + "</br>";
 				document.getElementById("gameInfo").innerHTML = gameInfoText;
 				if(scores != null){
 					document.getElementById("scoreTable").innerHTML = scoreTableText(scores);

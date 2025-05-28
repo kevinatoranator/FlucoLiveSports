@@ -16,8 +16,8 @@ include '../include/database.php';
 	$time = $infoArray[5];
 	$sportID = $infoArray[6];
 	$goalie = $infoArray[7];
-	$assister = "";
-	$defense = "";
+	$assister = $infoArray[8];
+	$defense = $infoArray[9];
 	$completed = 0;
 	$season = 2024;
 	$sql = "";
@@ -33,13 +33,41 @@ include '../include/database.php';
 	
 	$pbp = "$team $action$player";
 	
+	if($table == "soccer"){
+		if($action == "Shot by " and $defense != ""){
+			$pbp = "$team Shot by $player (Block by $defense)";
+		}else if($action == "Shot by "){
+			$pbp = "$team Shot by $player (Save by $goalie)";
+		}else if($action == "Goal scored by " and $assister != ""){
+			$pbp = "$team Goal scored by $player (Assisted by $assister)";
+		}
+	}else if($table == "glax" or $table == "blax"){
+		if($action == "Shot on goal by "){
+			$pbp = "$team Shot on goal by $player (Save by $goalie)";
+		}else if($action == "Goal scored by " and $assister != ""){
+			$pbp = "$team Goal scored by $player (Assisted by $assister)";
+		}else if($action == "Turnover by "){
+			$pbp = "$team Turnover by $player (Forced by $defense)";
+		}else if($action == "Faceoff won by "){
+			$pbp = "$team Faceoff won by $player vs. $defense";
+		}
+	}else if($table =="field_hockey"){
+		if($action == "Shot on goal by " and $defense != ""){
+			$pbp = "$team Shot on goal by $player (Block by $defense)";
+		}else if($action == "Shot on goal by "){
+			$pbp = "$team Shot on goal by $player (Save by $goalie)";
+		}else if($action == "Goal scored by " and $assister != ""){
+			$pbp = "$team Goal scored by $player (Assisted by $assister)";
+		}
+	}
+	
 	$message = "";
 	if($table == "soccer"){//half sport
 		$sql = "INSERT INTO $tablePBP (text, half, time, game_id) VALUES ('$pbp', '$period', '$time', (SELECT id FROM schedule where id='$gameID'))";
 	}else if($table == "batball"){//inning
 		$gameType = SPORTTYPE::Inning;
 		$sql = "INSERT INTO $tablePBP (text, inning, game_id) VALUES ('$pbp', '$period', (SELECT id FROM schedule where id='$gameID'))";
-	}else if($table == "blax"){//quarter
+	}else if($table == "blax" or $table == "glax" or $table == "field_hockey"){//quarter
 	$gameType = SPORTTYPE::Quarter;
 		$sql = "INSERT INTO $tablePBP (text, quarter, time, game_id) VALUES ('$pbp', '$period', '$time', (SELECT id FROM schedule where id='$gameID'))";
 	}
@@ -178,69 +206,74 @@ include '../include/database.php';
 	#		STATS			#
 	#						#
 	#########################
+	
+	*/
+	
+	$playerID = getPlayerID($db, $team, $player, $sportID, $season);
+	$assisterID = getPlayerID($db, $team, $assister, $sportID, $season);
+	$defenseID = getPlayerID($db, $oppteam, $defense, $sportID, $season);			
+	$goalieID = getPlayerID($db, $oppteam, $goalie, $sportID, $season);
+			
+	//Get player's stats
+	$sql = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
+	$query = $db->prepare($sql);
+	$query->execute();
+		
+	if($query->rowCount() == 0  and $playerID != 0){//Create player stats if doesn't exist
+		$sql = "INSERT INTO $tableStats (player, game) VALUES ('$playerID', '$gameID')";
+		$query = $db->prepare($sql);
+		$query->execute();
+	}
+			
+	//Get assister stats
+	if($assisterID != 0){
+		$sqls = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$assisterID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0 ){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $tableStats (player, game) VALUES ('$assisterID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+	}
+	
+	//Get defense's stats
+	if($defenseID != 0){
+		$sqls = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$defenseID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0 ){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $tableStats (player, game) VALUES ('$defenseID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+	}
+			
+		
+	$sqls = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$goalieID' AND s.id='$gameID'";
+	$query = $db->prepare($sqls);
+	$query->execute();
+			
+	if($query->rowCount() == 0  and $goalieID != 0){//Create player stats if doesn't exist
+		$sql = "INSERT INTO $tableStats (player, game) VALUES ('$goalieID', '$gameID')";
+		$query = $db->prepare($sql);
+		$query->execute();
+	}
+	
+	/*
 
 	#########################
 	#						#
 	#		Soccer			#
 	#						#
 	#########################
-	*/	
+	*/
+	
 	
 	if($table == "soccer"){		
 		$stat = '';
-			
-		$playerID = getPlayerID($db, $team, $player, $sportID, $season);
-		$assisterID = getPlayerID($db, $team, $assister, $sportID, $season);
-		$defenseID = getPlayerID($db, $oppteam, $defense, $sportID, $season);			
-		$goalieID = getPlayerID($db, $oppteam, $goalie, $sportID, $season);
-			
-		//Get player's stats
-		$sql = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
-		$query = $db->prepare($sql);
-		$query->execute();
-			
-		if($query->rowCount() == 0  and $playerID != 0){//Create player stats if doesn't exist
-			$sql = "INSERT INTO $tableStats (player, game) VALUES ('$playerID', '$gameID')";
-			$query = $db->prepare($sql);
-			$query->execute();
-		}
-			
-		//Get assister stats
-		if($assisterID != 0){
-			$sqls = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$assisterID' AND s.id='$gameID'";
-			$query = $db->prepare($sqls);
-			$query->execute();
-				
-			if($query->rowCount() == 0 ){//Create player stats if doesn't exist
-				$sql = "INSERT INTO $tableStats (player, game) VALUES ('$assisterID', '$gameID')";
-				$query = $db->prepare($sql);
-				$query->execute();
-			}
-		}
-	
-		//Get defense's stats
-		if($defenseID != 0){
-			$sqls = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$defenseID' AND s.id='$gameID'";
-			$query = $db->prepare($sqls);
-			$query->execute();
-				
-			if($query->rowCount() == 0 ){//Create player stats if doesn't exist
-				$sql = "INSERT INTO $tableStats (player, game) VALUES ('$defenseID', '$gameID')";
-				$query = $db->prepare($sql);
-				$query->execute();
-			}
-		}
-			
-		
-		$sqls = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$goalieID' AND s.id='$gameID'";
-		$query = $db->prepare($sqls);
-		$query->execute();
-			
-		if($query->rowCount() == 0  and $goalieID != 0){//Create player stats if doesn't exist
-			$sql = "INSERT INTO $tableStats (player, game) VALUES ('$goalieID', '$gameID')";
-			$query = $db->prepare($sql);
-			$query->execute();
-		}
 			
 		if($action == "Goal scored by "){
 			$stat = "goals = goals + 1, shots_on_goal = shots_on_goal + 1";
@@ -256,8 +289,6 @@ include '../include/database.php';
 				$query = $db->prepare($sqls);
 				$query->execute();
 			}
-		}else if($action == "Assist by "){
-			$stat = "assists = assists + 1";
 		}else if($action == "Shot by "){
 			$stat = "shots_on_goal = shots_on_goal + 1";
 
@@ -270,10 +301,6 @@ include '../include/database.php';
 				$query = $db->prepare($sqls);
 				$query->execute();
 			}
-		}else if($action == "Save by "){
-			$stat = "saves = saves + 1";
-		}else if($action == "Shot block by "){
-			$stat = "blocked_shots = blocked_shots + 1";
 		}else if($action == "Foul on "){
 			$stat = "fouls = fouls + 1";
 		}
@@ -295,59 +322,6 @@ include '../include/database.php';
 			
 	else if($table == "blax"){		
 		$stat = '';
-			
-		$playerID = getPlayerID($db, $team, $player, $sportID, $season);
-		$assisterID = getPlayerID($db, $team, $assister, $sportID, $season);
-		$defenseID = getPlayerID($db, $oppteam, $defense, $sportID, $season);			
-		$goalieID = getPlayerID($db, $oppteam, $goalie, $sportID, $season);
-			
-		//Get player's stats
-		$sql = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
-		$query = $db->prepare($sql);
-		$query->execute();
-			
-		if($query->rowCount() == 0  and $playerID != 0){//Create player stats if doesn't exist
-			$sql = "INSERT INTO $tableStats (player, game) VALUES ('$playerID', '$gameID')";
-			$query = $db->prepare($sql);
-			$query->execute();
-		}
-			
-		//Get assister stats
-		if($assisterID != 0){
-			$sqls = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$assisterID' AND s.id='$gameID'";
-			$query = $db->prepare($sqls);
-			$query->execute();
-				
-			if($query->rowCount() == 0 ){//Create player stats if doesn't exist
-				$sql = "INSERT INTO $tableStats (player, game) VALUES ('$assisterID', '$gameID')";
-				$query = $db->prepare($sql);
-				$query->execute();
-			}
-		}
-	
-		//Get defense's stats
-		if($defenseID != 0){
-			$sqls = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$defenseID' AND s.id='$gameID'";
-			$query = $db->prepare($sqls);
-			$query->execute();
-				
-			if($query->rowCount() == 0 ){//Create player stats if doesn't exist
-				$sql = "INSERT INTO $tableStats (player, game) VALUES ('$defenseID', '$gameID')";
-				$query = $db->prepare($sql);
-				$query->execute();
-			}
-		}
-			
-		
-		$sqls = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$goalieID' AND s.id='$gameID'";
-		$query = $db->prepare($sqls);
-		$query->execute();
-			
-		if($query->rowCount() == 0  and $goalieID != 0){//Create player stats if doesn't exist
-			$sql = "INSERT INTO $tableStats (player, game) VALUES ('$goalieID', '$gameID')";
-			$query = $db->prepare($sql);
-			$query->execute();
-		}
 			
 		if($action == "Goal scored by "){
 			$stat = "goals = goals + 1, shots_on_goal = shots_on_goal + 1";
@@ -373,8 +347,6 @@ include '../include/database.php';
 			}
 		}else if($action == "Shot by "){
 			$stat = "shots = shots + 1";
-		}else if($action == "Save by "){
-			$stat = "saves = saves + 1";
 		}else if($action == "Penalty on "){
 			$stat = "fouls = fouls + 1";
 		}else if($action == "Ball intercepted by "){
@@ -405,6 +377,116 @@ include '../include/database.php';
 			$query->execute();
 		}		
 	}
+	
+	
+	/*
+	#########################
+	#						#
+	#		GIRLS LAX		#
+	#						#
+	#########################
+	*/			
+	else if($table == "glax"){		
+		$stat = '';
+
+			
+		if($action == "Goal scored by "){
+			$stat = "goals = goals + 1, shots_on_goal = shots_on_goal + 1";
+			
+			if($goalieID != 0){
+				$sqls = "UPDATE $tableStats SET goals_allowed = goals_allowed + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($assisterID != 0){
+				$sqls = "UPDATE $tableStats SET assists = assists + 1 WHERE game='$gameID' AND player='$assisterID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Shot on goal by "){
+			$stat = "shots_on_goal = shots_on_goal + 1";
+
+			if($goalieID != 0){
+				$sqls = "UPDATE $tableStats SET saves = saves + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Shot by "){
+			$stat = "shots_off_target = shots_off_target + 1";
+		}else if($action == "Ground ball pickup by "){
+			$stat = "ground_balls = ground_balls + 1";
+		}else if($action == "Draw control by "){
+			$stat = "draw_control = draw_control + 1";
+		}else if($action == "Ball intercepted by "){
+			$stat = "ground_balls = ground_balls + 1, forced_turnovers = forced_turnovers + 1";
+		}else if($action == "Turnover by "){
+			$stat = "turnovers = turnovers + 1";
+			
+			if($defenseID != 0){
+				$sqls = "UPDATE $tableStats SET forced_turnovers = forced_turnovers + 1 WHERE game='$gameID' AND player='$defenseID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}
+
+		if($stat != ''){
+			$sqls = "UPDATE $tableStats SET $stat WHERE game='$gameID' AND player='$playerID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}		
+		
+	}	
+	
+	/*
+	#########################
+	#						#
+	#	   FIELD HOCKEY		#
+	#						#
+	#########################
+	*/	
+	
+	else if($table == "field_hockey"){		
+		$stat = '';
+			
+
+			
+		if($action == "Goal scored by "){
+			$stat = "goals = goals + 1, shots_on_goal = shots_on_goal + 1";
+			
+			if($goalieID != 0){
+				$sqls = "UPDATE $tableStats SET goals_allowed = goals_allowed + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($assisterID != 0){
+				$sqls = "UPDATE $tableStats SET assists = assists + 1 WHERE game='$gameID' AND player='$assisterID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Shot on goal by "){
+			$stat = "shots_on_goal = shots_on_goal + 1";
+
+			if($goalieID != 0 and $defenseID == 0){
+				$sqls = "UPDATE $tableStats SET saves = saves + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}//else if($defenseID != 0){
+			//	$sqls = "UPDATE $tableStats SET blocked_shots = blocked_shots + 1 WHERE game='$gameID' AND player='$defenseID'";
+			//	$query = $db->prepare($sqls);
+			//	$query->execute();
+			//}
+		}else if($action == "Shot by "){
+			$stat = "shots = shots + 1";
+		}
+
+		if($stat != ''){
+			$sqls = "UPDATE $tableStats SET $stat WHERE game='$gameID' AND player='$playerID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}		
+	}	
+		
+		
 	$message = "Play Added to DB";
 	
 	$return = array("scores"=>$scores, "period"=>$period);

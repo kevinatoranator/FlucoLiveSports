@@ -61,6 +61,22 @@ include '../include/database.php';
 		}
 		$table = "blax";
 		$gameType = SPORTTYPE::Quarter;
+	}else if(str_contains($sportNice, "Lacrosse") and str_contains($sportNice, "Girls")){
+		if($level =="jv"){
+			$minutes = 10;
+		}else{
+			$minutes = 12;
+		}
+		$table = "glax";
+		$gameType = SPORTTYPE::Quarter;
+	}else if(str_contains($sportNice, "Field Hockey")){
+		if($level =="jv"){
+			$minutes = 12;
+		}else{
+			$minutes = 15;
+		}
+		$table = "field_hockey";
+		$gameType = SPORTTYPE::Quarter;
 	}
 
 	$info = array("sport"=>$sportNice, "sportID"=>$sportID, "home"=>$homeTeam, "away"=>$awayTeam, "homeKey"=>$home, "awayKey"=>$away, "table"=>$table, "level"=>$level, "minutes"=>$minutes);

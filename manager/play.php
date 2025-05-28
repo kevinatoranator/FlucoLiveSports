@@ -25,11 +25,6 @@ include '../include/database.php';
 		$sportType = "quarter";
 		include './sports/football.php'; //Import all football variables
 	}else if($table == "field_hockey"){
-		//jv 12 minutes
-		$minutes = 15;
-		$seconds = 0;
-		$maximumMinutes = 15;
-		$sportType = "quarter";
 		include './sports/fieldhockey.php'; //Import all field hockey variables
 	}else if($table == "volleyball"){
 		$sportType = "set";
@@ -45,7 +40,7 @@ include '../include/database.php';
 	}else if($table == "glax"){
 		include './sports/glax.php'; //Import all glax variables
 	}else if($table == "blax"){
-		include './sports/blax.php'; //Import all glax variables
+		include './sports/blax.php'; //Import all blax variables
 	}else if($table == "batball"){
 		$minutes = 0;
 		$seconds = 0;

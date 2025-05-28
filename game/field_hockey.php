@@ -161,7 +161,7 @@ $phpURL = "fhockey.php?gameID=".$gameID;
 		
 		//SPORTS INFO HEADER
 		if($live == true){
-			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Q%s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $qrtr, $awayTeam, $sport, $awayName);
+			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Q%s %s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $qrtr, $time, $awayTeam, $sport, $awayName);
 		}else{
 			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div>%s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $startTime, $awayTeam, $sport, $awayName);
 		}
@@ -278,12 +278,14 @@ $phpURL = "fhockey.php?gameID=".$gameID;
 	*/
 	
 	$sql = "SELECT rp.number AS num, rp.name AS name, fhs.goals AS goals, fhs.assists AS assists, fhs.shots AS shots, fhs.shots_on_goal AS shots_on_goal, fhs.saves AS saves , fhs.goals_allowed AS goals_allowed 
-	FROM field_hockey_stats AS fhs JOIN schedule AS s ON fhs.game=s.id JOIN roster_player AS rp ON fhs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id WHERE fhs.game = '$gameID' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	FROM field_hockey_stats AS fhs JOIN schedule AS s ON fhs.game=s.id JOIN roster_player AS rp ON fhs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
+	WHERE fhs.game = '$gameID'  AND h.short_name = '$homeTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
 	$query = $db->prepare($sql);
 	$query->execute();
 	
 	$statArray = array(array(["Players"], ["", "Goals", "Assts", "Shots", "SOG"]), array(["Goalies"], ["" , "", "", "Saves", "G/A"]));
 	printf("STATS<hr>");
+	printf("<br>$homeTeam<br>");
 	printf('<table style = "border-spacing: 9px">');
 	while($row = $query->fetchObject()){
 		$name = $row->name;
@@ -297,10 +299,61 @@ $phpURL = "fhockey.php?gameID=".$gameID;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
-		if($goals != '' or $assists != '' or $shots != '' or $shots_on_goal != ''){
+		if($goals != 0 or $assists != 0 or $shots != 0 or $shots_on_goal != 0){
 			$statArray[0][] = [$num . ' ' . $name, $goals, $assists, $shots, $shots_on_goal];
 		}
-		if($saves != '' or $goals_allowed != ''){
+		if($saves != 0 or $goals_allowed != 0){
+			$statArray[1][] = [$num . ' ' . $name, '', '', $saves, $goals_allowed];
+		}
+	}
+	
+	//Table format
+	foreach($statArray as $statLine){
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<tr>');
+			}else{
+				printf('<tr">');
+			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<td style="text-align: left">%s</td>', $statLine[$j][$i]);
+				}else{
+					printf('<td style="text-align: right">%s</td>', $statLine[$j][$i]);
+				}
+			}
+			printf('</tr>');
+		}
+		printf('<tr></tr>');
+	}
+	printf("</table>");
+	
+	$sql = "SELECT rp.number AS num, rp.name AS name, fhs.goals AS goals, fhs.assists AS assists, fhs.shots AS shots, fhs.shots_on_goal AS shots_on_goal, fhs.saves AS saves , fhs.goals_allowed AS goals_allowed 
+	FROM field_hockey_stats AS fhs JOIN schedule AS s ON fhs.game=s.id JOIN roster_player AS rp ON fhs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools a ON rp.school=a.id
+	WHERE fhs.game = '$gameID'  AND a.short_name = '$awayTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	$query = $db->prepare($sql);
+	$query->execute();
+	
+	$statArray = array(array(["Players"], ["", "Goals", "Assts", "Shots", "SOG"]), array(["Goalies"], ["" , "", "", "Saves", "G/A"]));
+	printf("STATS<hr>");
+	printf("<br>$awayTeam<br>");
+	printf('<table style = "border-spacing: 9px">');
+	while($row = $query->fetchObject()){
+		$name = $row->name;
+		$num = $row->num;
+		$goals = $row->goals;
+		$assists = $row->assists;
+		$shots = $row->shots;
+		$shots_on_goal = $row->shots_on_goal;
+		$saves = $row->saves;
+		$goals_allowed = $row->goals_allowed;
+		$name = explode(" ", $name);
+		$name[0] = str_split($name[0])[0] . ".";
+		$name = implode(" ", $name);
+		if($goals != 0 or $assists != 0 or $shots != 0 or $shots_on_goal != 0){
+			$statArray[0][] = [$num . ' ' . $name, $goals, $assists, $shots, $shots_on_goal];
+		}
+		if($saves != 0 or $goals_allowed != 0){
 			$statArray[1][] = [$num . ' ' . $name, '', '', $saves, $goals_allowed];
 		}
 	}
