@@ -42,15 +42,7 @@ include '../include/database.php';
 	}else if($table == "blax"){
 		include './sports/blax.php'; //Import all blax variables
 	}else if($table == "batball"){
-		$minutes = 0;
-		$seconds = 0;
-		$maximumMinutes = 0;
-		$strikes = 0;
-		$balls = 0;
-		$outs = 0;
-		$sportType = "inning";
-		$game_time = "Top";
-		include './sports/batball.php'; //Import all glax variables
+		include './sports/batball.php'; //Import all batball variables
 	}
 
 	$message = "Play Completed";

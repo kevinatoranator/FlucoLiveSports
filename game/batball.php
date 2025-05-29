@@ -176,12 +176,13 @@ $phpURL = "batball.php?gameID=".$gameID;
 	
 	if($comp != 1){
 		$live = false;
-		$sql = "SELECT period AS inning, game_time AS side, info_1 AS x, info_2 AS outs, info_3 AS strikes, info_4 AS balls, info_5 AS pitching, info_6 AS atBat, info_7 AS first, info_8 AS second, info_9 AS third FROM live_games AS lg JOIN schedule AS s ON lg.schedule_id=s.id WHERE lg.schedule_id = '$gameID'";
+		$sql = "SELECT period AS inning, game_time AS side, info_1 AS pitches, info_2 AS outs, info_3 AS strikes, info_4 AS balls, info_5 AS pitching, info_6 AS atBat, info_7 AS first, info_8 AS second, info_9 AS third FROM live_games AS lg JOIN schedule AS s ON lg.schedule_id=s.id WHERE lg.schedule_id = '$gameID'";
 		$query = $db->prepare($sql);
 		$query->execute();
 		while($row = $query->fetchObject()){// time tb outs strikes balls atbat 1st 2nd 3rd 
 			$inning = $row->inning;
 			$side = $row->side; //top bottom
+			$pitches = $row->pitches; //top bottom
 			$outs = $row->outs;
 			$strikes = $row->strikes;
 			$balls = $row->balls;
@@ -192,6 +193,8 @@ $phpURL = "batball.php?gameID=".$gameID;
 			$third = $row->third; //palyer
 			
 			$live = true;
+			
+			$pitches = explode(",", $pitches);
 			
 		}
 		
@@ -235,6 +238,17 @@ $phpURL = "batball.php?gameID=".$gameID;
 		printf("1B: %s<br>", $first);
 		printf("2B: %s<br>", $second);
 		printf("3B: %s<br>", $third);
+		
+		printf("Pitches:<br>");
+		
+		foreach($pitches as $pitch){
+			if(str_contains($pitch, "strike") or str_contains($pitch, "foul")){
+				printf("<span class='red'>%s</span><br>", $pitch);
+			}else{
+				printf("<span class='green'>%s</span><br>", $pitch);
+			}
+			
+		}
 	}
 	/*
 	#########################

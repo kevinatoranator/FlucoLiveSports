@@ -18,6 +18,7 @@ include '../include/database.php';
 	$goalie = $infoArray[7];
 	$assister = $infoArray[8];
 	$defense = $infoArray[9];
+	$batter = $infoArray[10];
 	$completed = 0;
 	$season = 2024;
 	$sql = "";
@@ -59,6 +60,8 @@ include '../include/database.php';
 		}else if($action == "Goal scored by " and $assister != ""){
 			$pbp = "$team Goal scored by $player (Assisted by $assister)";
 		}
+	}else if($table =="batball"){
+		$pbp = "$team $player$action";
 	}
 	
 	$message = "";
@@ -84,7 +87,7 @@ include '../include/database.php';
 
 	*/
 	$points = 0;
-	if($action == "Goal scored by "){
+	if($action == "Goal scored by " or $action == " scores" or $action == " homers"){
 		$points += 1;
 	}
 	if($points > 0){
@@ -132,6 +135,45 @@ include '../include/database.php';
 					$scores[8] += $points;
 				}else if($period == 5){
 					$scores[9] += $points;
+				}
+			}
+		}else if($gameType == SPORTTYPE::Inning){
+			if($team == $home){
+				if($period == 1){
+					$scores[0] += $points;
+				}else if($period == 2){
+					$scores[1] += $points;
+				}else if($period == 3){
+					$scores[2] += $points;
+				}else if($period == 4){
+					$scores[3] += $points;
+				}else if($period == 5){
+					$scores[4] += $points;
+				}else if($period == 6){
+					$scores[5] += $points;
+				}else if($period == 7){
+					$scores[6] += $points;
+				}else if($period == 8){
+					$scores[7] += $points;
+				}
+				
+			}else{
+				if($period == 1){
+					$scores[8] += $points;
+				}else if($period == 2){
+					$scores[9] += $points;
+				}else if($period == 3){
+					$scores[10] += $points;
+				}else if($period == 4){
+					$scores[11] += $points;
+				}else if($period == 5){
+					$scores[12] += $points;
+				}else if($period == 6){
+					$scores[13] += $points;
+				}else if($period == 7){
+					$scores[14] += $points;
+				}else if($period == 8){
+					$scores[15] += $points;
 				}
 			}
 		}
@@ -212,7 +254,7 @@ include '../include/database.php';
 	$playerID = getPlayerID($db, $team, $player, $sportID, $season);
 	$assisterID = getPlayerID($db, $team, $assister, $sportID, $season);
 	$defenseID = getPlayerID($db, $oppteam, $defense, $sportID, $season);			
-	$goalieID = getPlayerID($db, $oppteam, $goalie, $sportID, $season);
+	$goalieID = getPlayerID($db, $oppteam, $goalie, $sportID, $season); //Also goalie
 			
 	//Get player's stats
 	$sql = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
@@ -484,8 +526,187 @@ include '../include/database.php';
 			$query = $db->prepare($sqls);
 			$query->execute();
 		}		
-	}	
+	}
+	
+	/*
+	#########################
+	#						#
+	#	   BATBALL			#
+	#						#
+	#########################
+	*/	
+	
+	
+	
+	else if($table == "batball"){		
+		$stat = '';
+		$batterID = getPlayerID($db, $team, $batter, $sportID, $season);
 		
+		$sqls = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$batterID' AND s.id='$gameID'";
+		$query = $db->prepare($sqls);
+		$query->execute();
+			
+		if($query->rowCount() == 0  and $batterID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $tableStats (player, game) VALUES ('$batterID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
+	
+			
+		if($action == " singles"){
+			
+			if($goalieID != 0){
+				$sqls = "UPDATE $tableStats SET pitches = pitches + 1, hits_allowed = hits_allowed + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $tableStats SET hits = hits + 1, at_bats = at_bats + 1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " doubles"){
+			
+			if($goalieID != 0){
+				$sqls = "UPDATE $tableStats SET pitches = pitches + 1, hits_allowed = hits_allowed + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $tableStats SET hits = hits + 1, at_bats = at_bats + 1, doubles = doubles + 1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " triples"){
+			
+			if($goalieID != 0){
+				$sqls = "UPDATE $tableStats SET pitches = pitches + 1, hits_allowed = hits_allowed + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $tableStats SET hits = hits + 1, at_bats = at_bats + 1, triples = triples + 1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " homers"){
+			
+			if($goalieID != 0){
+				$sqls = "UPDATE $tableStats SET pitches = pitches + 1, hits_allowed = hits_allowed + 1, runs_allowed = runs_allowed + 1, homeruns_allowed = homeruns_allowed + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $tableStats SET hits = hits + 1, at_bats = at_bats + 1, runs = runs + 1, homeruns = homeruns + 1, runs_batted_in = runs_batted_in +1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " strikes out looking" or $action == " strikes out swinging"){
+			
+			if($goalieID != 0){
+				$innings_pitched = 0;
+				$sqls = "SELECT innings_pitched AS innings_pitched FROM $tableStats WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+				while($row = $query->fetchObject()){
+					$innings_pitched = $row->innings_pitched;
+				}
+				//echo $innings_pitched - floor($innings_pitched);
+				if($innings_pitched - floor($innings_pitched) >= 0.2){
+					$innings_pitched = floor($innings_pitched) + 1;
+				}else{
+					$innings_pitched += 0.1;
+				}
+				
+				$sqls = "UPDATE $tableStats SET pitches = pitches + 1, strikeouts_given = strikeouts_given + 1, innings_pitched = '$innings_pitched' WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $tableStats SET strikeouts = strikeouts + 1, at_bats = at_bats + 1 WHERE game='$gameID' AND player='$playerID'";// could add individual lob as , left_on_base = left_on_base + '$lob'
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " flies out" or $action == " pops out" or $action == " grounds out" or $action == " lines out" or $action == " sacrifice fly" or $action == " sacrifice bunt"){
+			
+			if($goalieID != 0){
+				$innings_pitched = 0;
+				$sqls = "SELECT innings_pitched AS innings_pitched FROM $tableStats WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+				while($row = $query->fetchObject()){
+					$innings_pitched = $row->innings_pitched;
+				}
+				//echo $innings_pitched - floor($innings_pitched);
+				if($innings_pitched - floor($innings_pitched) >= 0.2){
+					$innings_pitched = floor($innings_pitched) + 1;
+				}else{
+					$innings_pitched += 0.1;
+				}
+				
+				$sqls = "UPDATE $tableStats SET pitches = pitches + 1, innings_pitched = '$innings_pitched' WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $tableStats SET at_bats = at_bats + 1 WHERE game='$gameID' AND player='$playerID'";// could add individual lob as , left_on_base = left_on_base + '$lob'
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " scores"){
+			
+			if($goalie != 0){
+				$sqls = "UPDATE $tableStats SET runs_allowed = runs_allowed + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $tableStats SET runs = runs + 1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($batterID != 0){
+				$sqls = "UPDATE $tableStats SET runs_batted_in = runs_batted_in + 1 WHERE game='$gameID' AND player='$batterID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			
+			
+		}else if($action == " walks"){
+			
+			if($goalieID != 0){
+				$sqls = "UPDATE $tableStats SET pitches = pitches + 1, base_on_balls_allowed = base_on_balls_allowed + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+			if($playerID != 0){
+				$sqls = "UPDATE $tableStats SET base_on_balls = base_on_balls + 1 WHERE game='$gameID' AND player='$playerID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == " out at first" or $action == " out at second" or $action == " out at third" or $action == " out at home"){
+			
+			if($goalieID != 0){
+				$innings_pitched = 0;
+				$sqls = "SELECT innings_pitched AS innings_pitched FROM $tableStats WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+				while($row = $query->fetchObject()){
+					$innings_pitched = $row->innings_pitched;
+				}
+				//echo $innings_pitched - floor($innings_pitched);
+				if($innings_pitched - floor($innings_pitched) >= 0.2){
+					$innings_pitched = floor($innings_pitched) + 1;
+				}else{
+					$innings_pitched += 0.1;
+				}
+				
+				$sqls = "UPDATE $tableStats SET innings_pitched = '$innings_pitched' WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}	
+	}	
 		
 	$message = "Play Added to DB";
 	
