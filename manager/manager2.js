@@ -170,7 +170,7 @@ function play(){
 				dataArray.forEach(function(item){
 					document.getElementById("play").innerHTML += item;
 				});
-				document.getElementById("teamSelect").innerHTML += `<input type="radio" onclick="teamSelect(this)" id=${home} name="team" value=${home} ><label for=${home} >${home}</label><br><input type="radio" onclick="teamSelect(this)" id=${away} name="team" value=${away} ><label for=${away} >${away}</label><br>`;
+				document.getElementById("teamSelect").innerHTML += `<input type="radio" onclick="teamSelection(this)" id=${home} name="team" value=${home} ><label for=${home} >${home}</label><br><input type="radio" onclick="teamSelection(this)" id=${away} name="team" value=${away} ><label for=${away} >${away}</label><br>`;
 				
 				document.getElementById("submit").addEventListener('click', submitPlay);
 				document.getElementById("cancel").addEventListener('click', cancel);
@@ -188,7 +188,7 @@ function batballPlay(){
 				var dataArray = $.parseJSON(data)
 				console.log(lastPeriod + formattedTime);
 				document.getElementById("manager").innerHTML = "<button id='submit'>Submit</button><br><br><div class=\"flex justify-between\">Batter: <div id=\"teamSelect\"></div><div id=\"rosterSelect\"></div><div id=\"play\"></div><div id=\"bonusSelect\"></div></div><br>";
-				document.getElementById("teamSelect").innerHTML += `<input type="radio" onclick="teamSelect(this)" id=${away} name="team" value=${away} ><label for=${away} >${away}</label><br><input type="radio" onclick="teamSelect(this)" id=${home} name="team" value=${home} ><label for=${home} >${home}</label><br>`;
+				document.getElementById("teamSelect").innerHTML += `<input type="radio" onclick="teamSelection(this)" id=${away} name="team" value=${away} ><label for=${away} >${away}</label><br><input type="radio" onclick="teamSelection(this)" id=${home} name="team" value=${home} ><label for=${home} >${home}</label><br>`;
 				dataArray.forEach(function(item){
 						document.getElementById("play").innerHTML += item;
 				});
@@ -245,12 +245,26 @@ function submitPlay(){
 						formattedTime = "End";
 					}
 					outs = 0;
+					liveinfo[4] = "";
+					liveinfo[5] = "";
+					liveinfo[6] = "";
+					liveinfo[7] = "";
+					liveinfo[8] = "";
+					if(formattedTime == "Mid"){
+						document.getElementById("side").innerHTML= "<select name = 'sides' id = 'sides'><option value='Top'>Top</option><option value='Bot' selected>Bot</option></select>";
+					}else{
+						document.getElementById("side").innerHTML= "<select name = 'sides' id = 'sides'><option value='Top'>Top</option><option value='Bot'>Bot</option></select>";
+						lastPeriod++;
+						periodSet();
+					}
 				}
+				
 				strikes = 0;
 				balls = 0;
 				pitches = 0;
+				
 			}else if(playSelect == " walks" || playSelect == " hit by pitch"){
-				if(liveinfo[5] != "" && liveinfo[6] != ""){
+				if(liveinfo[6] != "" && liveinfo[7] != ""){
 					liveinfo[8] = liveinfo[7];
 				}
 				if(liveinfo[6] != ""){
@@ -280,6 +294,12 @@ function submitPlay(){
 				}if(playerSelect == liveinfo[8]){
 					liveinfo[8] = "";
 				}
+			}else if(playSelect == " singles"){
+				liveinfo[6] = playerSelect;
+			}else if(playSelect == " doubles"){
+				liveinfo[7] = playerSelect;
+			}else if(playSelect == " triples"){
+				liveinfo[8] = playerSelect;
 			}
 			if(playSelect == " out at first" || playSelect == " out at second" || playSelect == " out at third" || playSelect == " out at home"){
 				if(playerSelect == liveinfo[6]){
@@ -558,7 +578,7 @@ function periodSet(){
 
 
 
-function teamSelect(team){
+function teamSelection(team){
 	var playerList = {[home]: homeRoster, [away]: awayRoster};
 	var playSelect = $("input[name='plays']:checked").val();
 	document.getElementById("rosterSelect").innerHTML = "";
@@ -811,6 +831,7 @@ function foul(){
 function pitch(){
 	pitches++;
 	teamSelect = $("input[name='team']:checked").val();
+	var oppTeam = $("input[name='team']:not(:checked)").val();
 	lastPeriod = $("#periods :selected").val();
 	formattedTime = $("#sides :selected").val();
 	batter = $("input[name='player']:checked").val();
@@ -819,6 +840,7 @@ function pitch(){
 	if(teamSelect == home){
 		liveinfo[4] = $("#awaygoalpitchsel :selected").val();
 	}
+	var infoArray = ["pitch", teamSelect, oppTeam, "", "", "", sportID, liveinfo[4], "", "", batter];
 	$.ajax({
 			url: "livegame.php",
 			data: {table: table,
@@ -826,6 +848,17 @@ function pitch(){
 			time: formattedTime,
 			period: lastPeriod,
 			liveinfo: liveinfo},
+			success: function(data){
+				console.log(data);
+				}
+			});	
+			
+	$.ajax({
+			url: "submit.php",
+			data: {table: table,
+			gameID: gameID,
+			infoArray: infoArray,
+			home: home},
 			success: function(data){
 				console.log(data);
 				}

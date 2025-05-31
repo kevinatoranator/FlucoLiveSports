@@ -74,8 +74,11 @@ include '../include/database.php';
 	$gameType = SPORTTYPE::Quarter;
 		$sql = "INSERT INTO $tablePBP (text, quarter, time, game_id) VALUES ('$pbp', '$period', '$time', (SELECT id FROM schedule where id='$gameID'))";
 	}
-	$query = $db->prepare($sql);
-	$query->execute();
+	
+	if($action != "pitch"){
+		$query = $db->prepare($sql);
+		$query->execute();
+	}
 	
 	
 	/*
@@ -177,69 +180,69 @@ include '../include/database.php';
 				}
 			}
 		}
+		
+		if($table == "football" or $table == "field_hockey" or $table == "basketball" or $table == "glax" or $table == "blax"){//Sports with quarters 
+			$hTotal = $scores[0] + $scores[1] + $scores[2] + $scores[3] + $scores[4];
+			$aTotal = $scores[5] + $scores[6] + $scores[7] + $scores[8] + $scores[9];
+			
+			$sql = "UPDATE $table SET home_quarter1 = '$scores[0]', home_quarter2 = '$scores[1]', home_quarter3 = '$scores[2]', home_quarter4 = '$scores[3]', home_ot = '$scores[4]', home_total = '$hTotal', 
+				away_quarter1 = '$scores[5]', away_quarter2 = '$scores[6]', away_quarter3 = '$scores[7]', away_quarter4 = '$scores[8]', away_ot = '$scores[9]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
+			$query = $db->prepare($sql);
+			$query->execute();
+			
+		}else if($table == "volleyball"){//volleyball (unique with sets)
+			$hTotal = 0;
+			$aTotal = 0;
+			if($scores[0] >= 25 and $scores[0] > $scores[5] + 1){
+				$hTotal += 1;
+			}else if($scores[5] >= 25 and $scores[5] > $scores[0] + 1){
+				$aTotal += 1;
+			}
+			if($scores[1] >= 25 and $scores[1] > $scores[6] + 1){
+				$hTotal += 1;
+			}else if($scores[6] >= 25 and $scores[6] > $scores[1] + 1){
+				$aTotal += 1;
+			}
+			if($scores[2] >= 25 and $scores[2] > $scores[7] + 1){
+				$hTotal += 1;
+			}else if($scores[7] >= 25 and $scores[7] > $scores[2] + 1){
+				$aTotal += 1;
+			}
+			if($scores[3] >= 25 and $scores[3] > $scores[8] + 1){
+				$hTotal += 1;
+			}else if($scores[8] >= 25 and $scores[8] > $scores[3] + 1){
+				$aTotal += 1;
+			}
+			if($scores[4] >= 15 and $scores[4] > $scores[9] + 1){
+				$hTotal += 1;
+			}else if($scores[9] >= 15 and $scores[9] > $scores[4] + 1){
+				$aTotal += 1;
+			}
+			
+			$sql = "UPDATE $table SET home_set1 = '$scores[0]', home_set2 = '$scores[1]', home_set3 = '$scores[2]', home_set4 = '$scores[3]', home_set5 = '$scores[4]', home_total = '$hTotal',
+			away_set1 = '$scores[5]', away_set2 = '$scores[6]', away_set3 = '$scores[7]', away_set4 = '$scores[8]', away_set5 = '$scores[9]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}else if($table == "soccer"){//half sports
+			$hTotal = $scores[0] + $scores[1] + $scores[2];
+			$aTotal = $scores[3] + $scores[4] + $scores[5];
+			
+			$sql = "UPDATE $table SET home_half1 = '$scores[0]', home_half2 = '$scores[1]', home_OT = '$scores[2]', home_total = '$hTotal', 
+				away_half1 = '$scores[3]', away_half2 = '$scores[4]', away_OT = '$scores[5]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}else if($table == "batball"){//inning sports
+			
+			$hTotal = $scores[0] + $scores[1] + $scores[2] + $scores[3] + $scores[4] + $scores[5] + $scores[6] + $scores[7];
+			$aTotal = $scores[8] + $scores[9] + $scores[10] + $scores[11] + $scores[12] + $scores[13] + $scores[14]+ $scores[15];
+			
+			$sql = "UPDATE $table SET home_i1 = '$scores[0]', home_i2 = '$scores[1]', home_i3 = '$scores[2]', home_i4 = '$scores[3]', home_i5 = '$scores[4]', home_i6 = '$scores[5]', home_i7 = '$scores[6]', home_ex = '$scores[7]', home_total = '$hTotal', 
+				away_i1 = '$scores[8]', away_i2 = '$scores[9]', away_i3 = '$scores[10]', away_i4 = '$scores[11]', away_i5 = '$scores[12]', away_i6 = '$scores[13]', away_i7 = '$scores[14]', away_ex = '$scores[15]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
+			$query = $db->prepare($sql);
+			$query->execute();
+		}
 	}
-	
 
-	if($table == "football" or $table == "field_hockey" or $table == "basketball" or $table == "glax" or $table == "blax"){//Sports with quarters 
-		$hTotal = $scores[0] + $scores[1] + $scores[2] + $scores[3] + $scores[4];
-		$aTotal = $scores[5] + $scores[6] + $scores[7] + $scores[8] + $scores[9];
-		
-		$sql = "UPDATE $table SET home_quarter1 = '$scores[0]', home_quarter2 = '$scores[1]', home_quarter3 = '$scores[2]', home_quarter4 = '$scores[3]', home_ot = '$scores[4]', home_total = '$hTotal', 
-			away_quarter1 = '$scores[5]', away_quarter2 = '$scores[6]', away_quarter3 = '$scores[7]', away_quarter4 = '$scores[8]', away_ot = '$scores[9]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
-		$query = $db->prepare($sql);
-		$query->execute();
-		
-	}else if($table == "volleyball"){//volleyball (unique with sets)
-		$hTotal = 0;
-		$aTotal = 0;
-		if($scores[0] >= 25 and $scores[0] > $scores[5] + 1){
-			$hTotal += 1;
-		}else if($scores[5] >= 25 and $scores[5] > $scores[0] + 1){
-			$aTotal += 1;
-		}
-		if($scores[1] >= 25 and $scores[1] > $scores[6] + 1){
-			$hTotal += 1;
-		}else if($scores[6] >= 25 and $scores[6] > $scores[1] + 1){
-			$aTotal += 1;
-		}
-		if($scores[2] >= 25 and $scores[2] > $scores[7] + 1){
-			$hTotal += 1;
-		}else if($scores[7] >= 25 and $scores[7] > $scores[2] + 1){
-			$aTotal += 1;
-		}
-		if($scores[3] >= 25 and $scores[3] > $scores[8] + 1){
-			$hTotal += 1;
-		}else if($scores[8] >= 25 and $scores[8] > $scores[3] + 1){
-			$aTotal += 1;
-		}
-		if($scores[4] >= 15 and $scores[4] > $scores[9] + 1){
-			$hTotal += 1;
-		}else if($scores[9] >= 15 and $scores[9] > $scores[4] + 1){
-			$aTotal += 1;
-		}
-		
-		$sql = "UPDATE $table SET home_set1 = '$scores[0]', home_set2 = '$scores[1]', home_set3 = '$scores[2]', home_set4 = '$scores[3]', home_set5 = '$scores[4]', home_total = '$hTotal',
-		away_set1 = '$scores[5]', away_set2 = '$scores[6]', away_set3 = '$scores[7]', away_set4 = '$scores[8]', away_set5 = '$scores[9]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
-		$query = $db->prepare($sql);
-		$query->execute();
-	}else if($table == "soccer"){//half sports
-		$hTotal = $scores[0] + $scores[1] + $scores[2];
-		$aTotal = $scores[3] + $scores[4] + $scores[5];
-		
-		$sql = "UPDATE $table SET home_half1 = '$scores[0]', home_half2 = '$scores[1]', home_OT = '$scores[2]', home_total = '$hTotal', 
-			away_half1 = '$scores[3]', away_half2 = '$scores[4]', away_OT = '$scores[5]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
-		$query = $db->prepare($sql);
-		$query->execute();
-	}else if($table == "batball"){//inning sports
-		
-		$hTotal = $scores[0] + $scores[1] + $scores[2] + $scores[3] + $scores[4] + $scores[5] + $scores[6] + $scores[7];
-		$aTotal = $scores[8] + $scores[9] + $scores[10] + $scores[11] + $scores[12] + $scores[13] + $scores[14]+ $scores[15];
-		
-		$sql = "UPDATE $table SET home_i1 = '$scores[0]', home_i2 = '$scores[1]', home_i3 = '$scores[2]', home_i4 = '$scores[3]', home_i5 = '$scores[4]', home_i6 = '$scores[5]', home_i7 = '$scores[6]', home_ex = '$scores[7]', home_total = '$hTotal', 
-			away_i1 = '$scores[8]', away_i2 = '$scores[9]', away_i3 = '$scores[10]', away_i4 = '$scores[11]', away_i5 = '$scores[12]', away_i6 = '$scores[13]', away_i7 = '$scores[14]', away_ex = '$scores[15]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
-		$query = $db->prepare($sql);
-		$query->execute();
-	}
 
 	
 	/*
@@ -551,7 +554,6 @@ include '../include/database.php';
 			$query = $db->prepare($sql);
 			$query->execute();
 		}
-	
 			
 		if($action == " singles"){
 			
@@ -612,7 +614,7 @@ include '../include/database.php';
 					$innings_pitched = $row->innings_pitched;
 				}
 				//echo $innings_pitched - floor($innings_pitched);
-				if($innings_pitched - floor($innings_pitched) >= 0.2){
+				if(intval($innings_pitched * 10) - intval(floor($innings_pitched) * 10) >= 2){
 					$innings_pitched = floor($innings_pitched) + 1;
 				}else{
 					$innings_pitched += 0.1;
@@ -638,7 +640,7 @@ include '../include/database.php';
 					$innings_pitched = $row->innings_pitched;
 				}
 				//echo $innings_pitched - floor($innings_pitched);
-				if($innings_pitched - floor($innings_pitched) >= 0.2){
+				if(intval($innings_pitched * 10) - intval(floor($innings_pitched) * 10) >= 2){
 					$innings_pitched = floor($innings_pitched) + 1;
 				}else{
 					$innings_pitched += 0.1;
@@ -684,6 +686,13 @@ include '../include/database.php';
 				$query = $db->prepare($sqls);
 				$query->execute();
 			}
+		}else if($action == "pitch"){
+			
+			if($goalieID != 0){
+				$sqls = "UPDATE $tableStats SET pitches = pitches + 1 WHERE game='$gameID' AND player='$goalieID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
 		}else if($action == " out at first" or $action == " out at second" or $action == " out at third" or $action == " out at home"){
 			
 			if($goalieID != 0){
@@ -695,7 +704,7 @@ include '../include/database.php';
 					$innings_pitched = $row->innings_pitched;
 				}
 				//echo $innings_pitched - floor($innings_pitched);
-				if($innings_pitched - floor($innings_pitched) >= 0.2){
+				if(intval($innings_pitched * 10) - intval(floor($innings_pitched) * 10) >= 2){
 					$innings_pitched = floor($innings_pitched) + 1;
 				}else{
 					$innings_pitched += 0.1;
@@ -710,7 +719,7 @@ include '../include/database.php';
 		
 	$message = "Play Added to DB";
 	
-	$return = array("scores"=>$scores, "period"=>$period);
+	$return = array("scores"=>$scores, "period"=>$period, "action"=>$action);
 	echo json_encode($return);	
 	
 	

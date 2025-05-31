@@ -11,9 +11,9 @@
         font-size: 13px;
         --bg: white;
         --fg: black;
-        --red: red;
+        --red: #ff5050;
         --blue: #0000cd;
-        --green: green;
+        --green: #50da50;
         --gray: gray;
         --yellow: #f2be02;
         background-color: var(--bg);
@@ -30,6 +30,8 @@
         color: white;
         --blue: #9090ff;
         --yellow: #FFDF00;
+		--red: #ff5050;
+		--green: #50da50;
     }
 
     .label{
@@ -44,10 +46,10 @@
 	}
 	
 	.red{
-		color: red;
+		color: #ff5050;
 	}
 	.green{
-		color: green;
+		color: #50da50;
 	}
 	
 	.sport{

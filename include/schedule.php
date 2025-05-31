@@ -81,7 +81,7 @@
 			
 			
 			$newEntry = array($sportdb, $gameID, $formattedName);
-			if($notes == "Postponed"){
+			if(str_contains($notes, "Postponed")){
 				$newEntry[] = "Postponed";//3
 			}else{
 				$newEntry[] = $time . " EST";//3
