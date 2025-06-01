@@ -77,6 +77,17 @@ include '../include/database.php';
 		}
 		$table = "field_hockey";
 		$gameType = SPORTTYPE::Quarter;
+	}else if(str_contains($sportNice, "Basketball")){
+		if($level =="jv"){
+			$minutes = 10;
+		}else{
+			$minutes = 12;
+		}
+		$table = "basketball";
+		$gameType = SPORTTYPE::Quarter;
+	}else if(str_contains($sportNice, "Volleyball")){
+		$table = "volleyball";
+		$gameType = SPORTTYPE::Set;
 	}else if(str_contains($sportNice, "Softball") or str_contains($sportNice, "Baseball")){
 		
 		$table = "batball";
@@ -98,7 +109,10 @@ include '../include/database.php';
 		$sql = "SELECT game.home_i1 AS hi1, game.home_i2 AS hi2, game.home_i3 AS hi3, game.home_i4 AS hi4, game.home_i5 AS hi5, game.home_i6 AS hi6, game.home_i7 AS hi7, game.home_ex AS hex, game.home_hits AS hh, game.home_errors AS he,
 		game.away_i1 AS ai1, game.away_i2 AS ai2, game.away_i3 AS ai3, game.away_i4 AS ai4, game.away_i5 AS ai5, game.away_i6 AS ai6, game.away_i7 AS ai7, game.away_ex AS aex, game.away_hits AS ah, game.away_errors AS ae, game.completed AS cmp
 		FROM $table AS game JOIN schedule ON game.schedule_id = schedule.id JOIN roster_schools a ON schedule.away_id=a.id JOIN roster_schools h ON schedule.home_id=h.id JOIN roster_teams AS t ON schedule.team_id=t.id WHERE schedule.id='$gameID'";
-	
+	}else if($gameType == SPORTTYPE::Set){
+		$sqlsport = "SELECT game.home_set1 AS hs1, game.home_set2 AS hs2, game.home_set3 AS hs3, game.home_set4 AS hs4, game.home_set5 AS hs5,
+		game.away_set1 AS as1, game.away_set2 AS as2, game.away_set3 AS as3, game.away_set4 AS as4, game.away_set5 AS as5, game.completed AS cmp
+		FROM $table AS game JOIN schedule ON game.schedule_id = schedule.id JOIN roster_schools a ON schedule.away_id=a.id JOIN roster_schools h ON schedule.home_id=h.id JOIN roster_teams AS t ON schedule.team_id=t.id WHERE schedule.id='$gameID'";
 	}
 
 	$query = $db->prepare($sql);
@@ -111,6 +125,8 @@ include '../include/database.php';
 			$scoreArray = [$row->hh1, $row->hh2, $row->hot, $row->ah1, $row->ah2, $row->aot];
 		}else if($gameType == SPORTTYPE::Quarter){
 			$scoreArray = [$row->hq1, $row->hq2, $row->hq3, $row->hq4, $row->hot, $row->aq1, $row->aq2, $row->aq3, $row->aq4, $row->aot];
+		}else if($gameType == SPORTTYPE::Set){
+			$scoreArray = [$row->hs1, $row->hs2, $row->hs3, $row->hs4, $row->hs5, $row->as1, $row->as2, $row->as3, $row->as4, $row->as5];
 		}else if($gameType == SPORTTYPE::Inning){
 			$scoreArray = [$row->hi1, $row->hi2, $row->hi3, $row->hi4, $row->hi5, $row->hi6, $row->hi7, $row->hex, $row->ai1, $row->ai2, $row->ai3, $row->ai4, $row->ai5, $row->ai6, $row->ai7, $row->aex];
 		}

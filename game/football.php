@@ -295,12 +295,14 @@ $phpURL = "football.php?gameID=".$gameID;
 	fbs.carries AS carries, fbs.total_carry_yards AS tcy, fbs.rushing_touchdowns AS rtd, fbs.longest_carry AS lc,
 	fbs.receptions AS rec, fbs.total_reception_yards AS rec_yards, fbs.reception_touchdowns AS rec_tds, fbs.longest_reception AS rec_long, fbs.targets AS targets,
 	fbs.sacks AS sacks, fbs.tackle_for_loss AS tfl, fbs.interceptions AS ints, fbs.forced_fumbles AS ffs
-	FROM football_stats AS fbs JOIN schedule AS s ON fbs.game=s.id JOIN roster_player AS rp ON fbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id WHERE fbs.game = '$gameID' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	FROM football_stats AS fbs JOIN schedule AS s ON fbs.game=s.id JOIN roster_player AS rp ON fbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
+	WHERE fbs.game = '$gameID' AND h.short_name = '$homeTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
 	$query = $db->prepare($sql);
 	$query->execute();
 	
 	$statArray = array(array(["Passing"], ["", "C/ATT", "YDS", "AVG", "TD", "INT", "SACKS"]), array(["Rushing"], ["" , "", "CAR", "YDS", "AVG", "TD", "LONG"]), array(["Receiving"], ["" , "REC", "YDS", "AVG", "TD", "LONG", "TGTS"]), array(["Defense"], ["" , "", "", "SACKS", "TFL", "INT", "FF"]));
 	printf("STATS<hr>");
+	printf("<br>$homeTeam<br>");
 	printf('<table style = "border-spacing: 9px">');
 	while($row = $query->fetchObject()){
 		$name = $row->name;
@@ -341,20 +343,133 @@ $phpURL = "football.php?gameID=".$gameID;
 		$ints = $row->ints;
 		$ffs = $row->ffs;
 		
+		$urlname = $name;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$homeTeam' class='schedule-game'>$num $name</a>";
 		if($pass_attempts != '0'){
-			$statArray[0][] = [$num . ' ' . $name, $pass_completions . "/" . $pass_attempts , $total_passing_yards, number_format($pass_avg, 1), $passing_touchdowns, $thrown_interceptions, $sacks_taken];
+			$statArray[0][] = [$url, $pass_completions . "/" . $pass_attempts , $total_passing_yards, number_format($pass_avg, 1), $passing_touchdowns, $thrown_interceptions, $sacks_taken];
 		}
 		if($carries != '0'){
-			$statArray[1][] = [$num . ' ' . $name, "", $carries, $total_carry_yards, number_format($rushing_avg, 1), $rushing_touchdowns, $longest_carry];
+			$statArray[1][] = [$url, "", $carries, $total_carry_yards, number_format($rushing_avg, 1), $rushing_touchdowns, $longest_carry];
 		}
 		if($rec != '0' or $rec_yards != '0' or $targets != '0'){
-			$statArray[2][] = [$num . ' ' . $name, $rec, $rec_yards, number_format($rec_avg, 1), $rec_tds, $rec_long, $targets];
+			$statArray[2][] = [$url, $rec, $rec_yards, number_format($rec_avg, 1), $rec_tds, $rec_long, $targets];
 		}
 		if($sacks != '0' or $tfl != '0' or $ints != '0' or $ffs != '0'){
-			$statArray[3][] = [$num . ' ' . $name, "", "", $sacks, $tfl, $ints, $ffs];
+			$statArray[3][] = [$url, "", "", $sacks, $tfl, $ints, $ffs];
+		}
+	}
+	
+	//Table format
+	foreach($statArray as $statLine){
+		//sort($statLine);
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<tr>');
+			}else{
+				printf('<tr">');
+			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<td style="text-align: left">%s</td>', $statLine[$j][$i]);
+				}else{
+					printf('<td style="text-align: right">%s</td>', $statLine[$j][$i]);
+				}
+			}
+			printf('</tr>');
+		}
+		printf('<tr></tr>');
+	}
+	printf("</table>");
+	
+	//Non-table format
+	/*foreach($statArray as $statLine){
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<div class="flex justify-between">');
+			}else{
+				printf('<div class="flex justify-between">');
+			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<div class="left-align">%s</div><br>', $statLine[$j][$i]);
+				}else{
+					printf('<div class="right-align stat-width">%s</div>', $statLine[$j][$i]);
+				}
+			}
+			printf('</div><br>');
+		}
+	}*/
+	
+	$sql = "SELECT rp.number AS num, rp.name AS name, fbs.pass_attempts AS patt, fbs.pass_completions AS pcomp, fbs.total_passing_yards AS tpy, fbs.passing_touchdowns AS ptd, fbs.thrown_interceptions AS pint, fbs.sacks_taken AS qbsacks,
+	fbs.carries AS carries, fbs.total_carry_yards AS tcy, fbs.rushing_touchdowns AS rtd, fbs.longest_carry AS lc,
+	fbs.receptions AS rec, fbs.total_reception_yards AS rec_yards, fbs.reception_touchdowns AS rec_tds, fbs.longest_reception AS rec_long, fbs.targets AS targets,
+	fbs.sacks AS sacks, fbs.tackle_for_loss AS tfl, fbs.interceptions AS ints, fbs.forced_fumbles AS ffs
+	FROM football_stats AS fbs JOIN schedule AS s ON fbs.game=s.id JOIN roster_player AS rp ON fbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
+	WHERE fbs.game = '$gameID' AND h.short_name = '$awayTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	$query = $db->prepare($sql);
+	$query->execute();
+	
+	$statArray = array(array(["Passing"], ["", "C/ATT", "YDS", "AVG", "TD", "INT", "SACKS"]), array(["Rushing"], ["" , "", "CAR", "YDS", "AVG", "TD", "LONG"]), array(["Receiving"], ["" , "REC", "YDS", "AVG", "TD", "LONG", "TGTS"]), array(["Defense"], ["" , "", "", "SACKS", "TFL", "INT", "FF"]));
+	printf("<br>$awayTeam<br>");
+	printf('<table style = "border-spacing: 9px">');
+	while($row = $query->fetchObject()){
+		$name = $row->name;
+		$num = $row->num;
+		
+		$pass_attempts = $row->patt;
+		$pass_completions = $row->pcomp;
+		$total_passing_yards = $row->tpy;
+		$pass_avg = 0;
+		if($pass_attempts > 0){
+			$pass_avg = $total_passing_yards/$pass_attempts;
+		}
+		$passing_touchdowns = $row->ptd;
+		$thrown_interceptions = $row->pint;
+		$sacks_taken = $row->qbsacks;
+		
+		$carries = $row->carries;
+		$total_carry_yards = $row->tcy;
+		$rushing_touchdowns = $row->rtd;
+		$longest_carry = $row->lc;
+		$rushing_avg = 0;
+		if($carries > 0){
+			$rushing_avg = $total_carry_yards/$carries;
+		}
+		
+		$rec = $row->rec;
+		$rec_yards = $row->rec_yards;
+		$rec_avg = 0;
+		if($rec > 0){
+			$rec_avg = $rec_yards/$rec;
+		}
+		$rec_tds = $row->rec_tds;
+		$rec_long = $row->rec_long;
+		$targets = $row->targets;
+		
+		$sacks = $row->sacks;
+		$tfl = $row->tfl;
+		$ints = $row->ints;
+		$ffs = $row->ffs;
+		
+		$urlname = $name;
+		$name = explode(" ", $name);
+		$name[0] = str_split($name[0])[0] . ".";
+		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$awayTeam' class='schedule-game'>$num $name</a>";
+		if($pass_attempts != '0'){
+			$statArray[0][] = [$url, $pass_completions . "/" . $pass_attempts , $total_passing_yards, number_format($pass_avg, 1), $passing_touchdowns, $thrown_interceptions, $sacks_taken];
+		}
+		if($carries != '0'){
+			$statArray[1][] = [$url, "", $carries, $total_carry_yards, number_format($rushing_avg, 1), $rushing_touchdowns, $longest_carry];
+		}
+		if($rec != '0' or $rec_yards != '0' or $targets != '0'){
+			$statArray[2][] = [$url, $rec, $rec_yards, number_format($rec_avg, 1), $rec_tds, $rec_long, $targets];
+		}
+		if($sacks != '0' or $tfl != '0' or $ints != '0' or $ffs != '0'){
+			$statArray[3][] = [$url, "", "", $sacks, $tfl, $ints, $ffs];
 		}
 	}
 	

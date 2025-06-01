@@ -23,6 +23,8 @@ var lastPlayTime = 0;
 var formattedTime = "";
 var lastPeriod = 1;
 var completed = 0;
+var homeTimeouts = 3;
+var awayTimeouts = 3;
 const SPORTTYPE = {
 	Half: 2,
 	Quarter: 4,
@@ -140,16 +142,20 @@ var batter = "";
 						document.getElementById("side").innerHTML= "<select name = 'sides' id = 'sides'><option value='Top'>Top</option><option value='Bot'>Bot</option></select>";
 					}
 					batballPlay();
+				}else if(table == "volleyball"){
+					document.getElementById("timerr").innerHTML = 'Set: <span id = "period"></span>';
 				}
 				periodSet();
 				document.getElementById("goalpitch").classList.remove("hidden");
 				document.getElementById("complete").classList.remove("hidden");
 				document.getElementById("completeBtn").addEventListener('click', complete);
-				//document.getElementById("goalpitch").innerText = "Goalie:";
-				goalpitchSelect(home);
-				goalpitchSelect(away);
+				if(table != "basketball"){
+					goalpitchSelect(home);
+					goalpitchSelect(away);
+					}
+					loadGame();	
 				}
-			});	
+			});		
 	  }, false);
 	  loadGame();
 	  //manager start button -> creates game -> becomes play button -> gets time/period  -> becomes submit button -> then allows inserting of play -> back to play button
@@ -616,17 +622,12 @@ function bonusAction(play){
 	var opp = $("input[name='team']:not(:checked)").val();
 	var playerSelect = $("input[name='player']:checked").val();
 	if(teamSelect != undefined){
-		if(play == "Goal scored by "){
+		if(play == "Goal scored by " || play == "Jumper by " || play == "Layup by " || play == "Dunk by " || play == "3 Pointer by " || play == "Kill by "){
 			document.getElementById("bonusSelect").innerHTML += "<b>Assist</b><br>";
 			for(const [key, value] of Object.entries(playerList[teamSelect])){
 				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="assistPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
 			}
-		}else if(play == "Shot by " && table == "soccer"){
-			document.getElementById("bonusSelect").innerHTML += "<b>Block</b><br>";
-			for(const [key, value] of Object.entries(playerList[opp])){
-				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="defPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
-			}
-		}else if(play == "Shot on goal by " && table == "field_hockey"){
+		}else if((play == "Shot by " && table == "soccer") || (play == "Shot on goal by " && table == "field_hockey") || play == "Attack error by "){
 			document.getElementById("bonusSelect").innerHTML += "<b>Block</b><br>";
 			for(const [key, value] of Object.entries(playerList[opp])){
 				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="defPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;

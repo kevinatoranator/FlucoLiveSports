@@ -296,14 +296,16 @@ $phpURL = "fhockey.php?gameID=".$gameID;
 		$shots_on_goal = $row->shots_on_goal;
 		$saves = $row->saves;
 		$goals_allowed = $row->goals_allowed;
+		$urlname = $name;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$homeTeam' class='schedule-game'>$num $name</a>";
 		if($goals != 0 or $assists != 0 or $shots != 0 or $shots_on_goal != 0){
-			$statArray[0][] = [$num . ' ' . $name, $goals, $assists, $shots, $shots_on_goal];
+			$statArray[0][] = [$url, $goals, $assists, $shots, $shots_on_goal];
 		}
 		if($saves != 0 or $goals_allowed != 0){
-			$statArray[1][] = [$num . ' ' . $name, '', '', $saves, $goals_allowed];
+			$statArray[1][] = [$url, '', '', $saves, $goals_allowed];
 		}
 	}
 	
@@ -347,14 +349,16 @@ $phpURL = "fhockey.php?gameID=".$gameID;
 		$shots_on_goal = $row->shots_on_goal;
 		$saves = $row->saves;
 		$goals_allowed = $row->goals_allowed;
+		$urlname = $name;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$awayTeam' class='schedule-game'>$num $name</a>";
 		if($goals != 0 or $assists != 0 or $shots != 0 or $shots_on_goal != 0){
-			$statArray[0][] = [$num . ' ' . $name, $goals, $assists, $shots, $shots_on_goal];
+			$statArray[0][] = [$url, $goals, $assists, $shots, $shots_on_goal];
 		}
 		if($saves != 0 or $goals_allowed != 0){
-			$statArray[1][] = [$num . ' ' . $name, '', '', $saves, $goals_allowed];
+			$statArray[1][] = [$url, '', '', $saves, $goals_allowed];
 		}
 	}
 	

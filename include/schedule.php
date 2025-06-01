@@ -322,11 +322,22 @@
 			$entries += 1;
 		}
 	}
-	if($entries == 0){
-		printf("<center>-No Scheduled Games-</center>");
-	}
+	//if($entries == 0){
+	//	printf("<center>-No Scheduled Games-</center>");
+	//}
 	
-	
+	//Spring Season No Entries 0,1,2,3,10,12
+	//Fall Season No Entries 4,5,6,8,9, 16
+	//Winter Season No Entries 7, 11, 13, 14, 15
+	/*if(date('m', strtotime($date)) > 2 and date('m', strtotime($date)) < 7){
+		$entry_array = array($entry_array[0],$entry_array[1],$entry_array[2],$entry_array[3],$entry_array[10],$entry_array[12]);
+	}else if(date('m', strtotime($date)) > 7 and date('m', strtotime($date)) < 12){
+		$entry_array = array($entry_array[4],$entry_array[5],$entry_array[6],$entry_array[9],$entry_array[16]);
+	}else if(date('m', strtotime($date)) > 11 and date('m', strtotime($date)) < 3){
+		$entry_array = array($entry_array[7],$entry_array[11],$entry_array[13],$entry_array[14],$entry_array[15]);
+	}else{
+		$entry_array = array(array(["No Sports in Season"]));
+	}*/
 	foreach($entry_array as $entry){
 		if(count($entry) > 2){
 			
@@ -421,6 +432,34 @@
 			}
 			
 			echo "<br>";
+		}else{
+			for($j = 0; $j < count($entry); $j++){
+				if($j == 0){
+					printf("<center><b>-%s-</b></center>", $entry[$j][0]);
+				}else if($j == 1){
+					$linkrow = 'Standings';
+					foreach($entry[$j] as $link){
+						$label = "";
+						$newlink = $link;
+						if(str_contains($link,  "jv")){
+							$label = "JV";
+							$newlink = substr($newlink, 2);
+						}
+						if($newlink[0] == 'g'){
+							$label = "Girls " . $label;
+						}else if($newlink[0] == 'b' and $newlink != 'baseball'){
+							$label = "Boys " . $label;
+						}
+						if($label == ''){
+							$label = "Varsity";
+						}
+						
+						$linkrow = $linkrow . " | <a href ='/flucolivesports/standings/standings.php?sport=${link}'>${label}</a> ";
+					}
+					printf('<center>%s |</center>', $linkrow);
+				}
+			}
+			printf("<br><br><center>-No Scheduled Games-</center><br><br>");
 		}
 	}
 	

@@ -241,7 +241,8 @@
 <?php
 	$playerRoster = getRoster($db, $roster, 2024, $school);
 	foreach($playerRoster as $player){
-		?><a href="./player.php?player=<? echo explode(" | ", $player)[1]?>&school=<?php echo $school?>" class='schedule-game'><?php printf($player . "<br>");?></a><?php
+		$name = explode(" | ", $player)[1];
+		echo "<a href='./player.php?player=$name&school=$school' class='schedule-game'>$player<br></a>";
 	}
 	if(count($playerRoster) == 0){
 		printf("No Roster Available");

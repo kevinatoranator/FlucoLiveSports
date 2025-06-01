@@ -322,7 +322,7 @@ $phpURL = "batball.php?gameID=".$gameID;
 	bbs.doubles AS doubles, bbs.triples AS triples, bbs.homeruns AS homeruns,
 	bbs.innings_pitched AS innings_pitched, bbs.hits_allowed AS hits_allowed, bbs.pitches AS pitches, bbs.runs_allowed AS runs_allowed, bbs.earned_runs_allowed AS earned_runs_allowed, bbs.base_on_balls_allowed AS base_on_balls_allowed, bbs.strikeouts_given AS strikeouts_given, bbs.homeruns_allowed AS homeruns_allowed 
 	FROM batball_stats AS bbs JOIN schedule AS s ON bbs.game=s.id JOIN roster_player AS rp ON bbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
-	WHERE bbs.game = '$gameID' AND h.short_name = '$homeTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	WHERE bbs.game = '$gameID' AND h.short_name = '$homeTeam' AND t.urlName = '$sport'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	//Doesn't pull doubles, triples, homeruns, errors, bases_stolen
@@ -353,14 +353,16 @@ $phpURL = "batball.php?gameID=".$gameID;
 		$base_on_balls_allowed = $row->base_on_balls_allowed;
 		$strikeouts_given = $row->strikeouts_given;
 		$homeruns_allowed = $row->homeruns_allowed;
+		$urlname = $name;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$homeTeam' class='schedule-game'>$num $name</a>";
 		if($at_bats != 0 or $runs != 0){
-			$statArray[0][] = [$num . ' ' . $name, "",$hits, $at_bats, $runs, $runs_batted_in, $base_on_balls, $strikeouts, $doubles, $triples, $homeruns];
+			$statArray[0][] = [$url, "",$hits, $at_bats, $runs, $runs_batted_in, $base_on_balls, $strikeouts, $doubles, $triples, $homeruns];
 		}
 		if($pitches != 0){
-			$statArray[1][] = [$num . ' ' . $name, "",$innings_pitched, $hits_allowed, $runs_allowed, $earned_runs_allowed, $base_on_balls_allowed, $strikeouts_given, $homeruns_allowed, $pitches];
+			$statArray[1][] = [$url, "",$innings_pitched, $hits_allowed, $runs_allowed, $earned_runs_allowed, $base_on_balls_allowed, $strikeouts_given, $homeruns_allowed, $pitches];
 		}
 	}
 	
@@ -389,7 +391,7 @@ $phpURL = "batball.php?gameID=".$gameID;
 	bbs.doubles AS doubles, bbs.triples AS triples, bbs.homeruns AS homeruns,
 	bbs.innings_pitched AS innings_pitched, bbs.hits_allowed AS hits_allowed, bbs.pitches AS pitches, bbs.runs_allowed AS runs_allowed, bbs.earned_runs_allowed AS earned_runs_allowed, bbs.base_on_balls_allowed AS base_on_balls_allowed, bbs.strikeouts_given AS strikeouts_given, bbs.homeruns_allowed AS homeruns_allowed 
 	FROM batball_stats AS bbs JOIN schedule AS s ON bbs.game=s.id JOIN roster_player AS rp ON bbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
-	WHERE bbs.game = '$gameID' AND h.short_name = '$awayTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	WHERE bbs.game = '$gameID' AND h.short_name = '$awayTeam' AND t.urlName = '$sport'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	//Doesn't pull doubles, triples, homeruns, errors, bases_stolen
@@ -420,14 +422,16 @@ $phpURL = "batball.php?gameID=".$gameID;
 		$base_on_balls_allowed = $row->base_on_balls_allowed;
 		$strikeouts_given = $row->strikeouts_given;
 		$homeruns_allowed = $row->homeruns_allowed;
+		$urlname = $name;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$awayTeam' class='schedule-game'>$num $name</a>";
 		if($at_bats != 0 or $runs != 0){
-			$statArray[0][] = [$num . ' ' . $name, "",$hits, $at_bats, $runs, $runs_batted_in, $base_on_balls, $strikeouts, $doubles, $triples, $homeruns];
+			$statArray[0][] = [$url, "",$hits, $at_bats, $runs, $runs_batted_in, $base_on_balls, $strikeouts, $doubles, $triples, $homeruns];
 		}
 		if($pitches != 0){
-			$statArray[1][] = [$num . ' ' . $name, "", $innings_pitched, $hits_allowed, $runs_allowed, $earned_runs_allowed, $base_on_balls_allowed, $strikeouts_given, $homeruns_allowed, $pitches];
+			$statArray[1][] = [$url, "", $innings_pitched, $hits_allowed, $runs_allowed, $earned_runs_allowed, $base_on_balls_allowed, $strikeouts_given, $homeruns_allowed, $pitches];
 		}
 	}
 	

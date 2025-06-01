@@ -282,12 +282,14 @@ $phpURL = "volleyball.php?gameID=".$gameID;
 	*/
 	
 	$sql = "SELECT rp.number AS num, rp.name AS name, vbs.kills AS kills, vbs.assists AS assists, vbs.aces AS aces, vbs.attack_errors AS attack_errors, vbs.service_errors AS service_errors , vbs.blocks AS blocks , vbs.digs AS digs 
-	FROM volleyball_stats AS vbs JOIN schedule AS s ON vbs.game=s.id JOIN roster_player AS rp ON vbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id WHERE vbs.game = '$gameID' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	FROM volleyball_stats AS vbs JOIN schedule AS s ON vbs.game=s.id JOIN roster_player AS rp ON vbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
+	WHERE vbs.game = '$gameID' AND h.short_name = '$homeTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
 	$query = $db->prepare($sql);
 	$query->execute();
 	
-	$statArray[] = ["", "","Kills", "Assts", "Aces", "A/ERR", "S/ERR", "Blocks", "Digs"];
+	$statArray = array(array(["Players"],["","Kills", "Assts", "Aces", "A/ERR", "S/ERR", "Blocks", "Digs"]));
 	printf("STATS<hr>");
+	printf("<br>$homeTeam<br>");
 	printf('<table style = "border-spacing: 9px">');
 	while($row = $query->fetchObject()){
 		$name = $row->name;
@@ -299,34 +301,85 @@ $phpURL = "volleyball.php?gameID=".$gameID;
 		$service_errors = $row->service_errors;
 		$blocks = $row->blocks;
 		$digs = $row->digs;
-		$playerName = $name;
+		$urlname = $name;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$homeTeam' class='schedule-game'>$num $name</a>";
 		if($kills != '' or $assists != '' or $aces != '' or $attack_errors != '' or $service_errors != ''or $blocks != '' or $digs != ''){
-			$statArray[] = [$playerName, $num . ' ' . $name, $kills, $assists, $aces, $attack_errors, $service_errors, $blocks, $digs];
+			$statArray[0][] = [$url, $kills, $assists, $aces, $attack_errors, $service_errors, $blocks, $digs];
 		}
 	}
 	
 	//Table format
-	for($j = 0; $j < count($statArray); $j++){
-		if($j%2){//alternate colors doesn't work well with table
-			printf('<tr>');
-		}else{
-			printf('<tr">');
-		}
-		for($i = 0; $i < count($statArray[$j]); $i++){
-			if($i == 0){
-			
-			}else if($i == 1){
-				printf('<td style="text-align: left"><a href="/flucolivesports/teams/player.php?player=%s" class="schedule-game">%s</a></td>', $statArray[$j][0], $statArray[$j][$i]);
+	foreach($statArray as $statLine){
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<tr>');
 			}else{
-				printf('<td style="text-align: right">%s</td>', $statArray[$j][$i]);
+				printf('<tr">');
 			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<td style="text-align: left">%s</td>', $statLine[$j][$i]);
+				}else{
+					printf('<td style="text-align: right">%s</td>', $statLine[$j][$i]);
+				}
+			}
+			printf('</tr>');
 		}
-		printf('</tr>');
+		printf('<tr></tr>');
 	}
-	printf('<tr></tr>');
+	printf("</table>");
+	
+	$sql = "SELECT rp.number AS num, rp.name AS name, vbs.kills AS kills, vbs.assists AS assists, vbs.aces AS aces, vbs.attack_errors AS attack_errors, vbs.service_errors AS service_errors , vbs.blocks AS blocks , vbs.digs AS digs 
+	FROM volleyball_stats AS vbs JOIN schedule AS s ON vbs.game=s.id JOIN roster_player AS rp ON vbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
+	WHERE vbs.game = '$gameID' AND h.short_name = '$awayTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	$query = $db->prepare($sql);
+	$query->execute();
+	
+	$statArray = array(array(["Players"],["","Kills", "Assts", "Aces", "A/ERR", "S/ERR", "Blocks", "Digs"]));
+	printf("<br>$awayTeam<br>");
+	printf('<table style = "border-spacing: 9px">');
+	while($row = $query->fetchObject()){
+		$name = $row->name;
+		$num = $row->num;
+		$kills = $row->kills;
+		$assists = $row->assists;
+		$aces = $row->aces;
+		$attack_errors = $row->attack_errors;
+		$service_errors = $row->service_errors;
+		$blocks = $row->blocks;
+		$digs = $row->digs;
+		$urlname = $name;
+		$name = explode(" ", $name);
+		$name[0] = str_split($name[0])[0] . ".";
+		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$awayTeam' class='schedule-game'>$num $name</a>";
+		if($kills != '' or $assists != '' or $aces != '' or $attack_errors != '' or $service_errors != ''or $blocks != '' or $digs != ''){
+			$statArray[0][] = [$url, $kills, $assists, $aces, $attack_errors, $service_errors, $blocks, $digs];
+		}
+	}
+	
+	//Table format
+	foreach($statArray as $statLine){
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<tr>');
+			}else{
+				printf('<tr">');
+			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<td style="text-align: left">%s</td>', $statLine[$j][$i]);
+				}else{
+					printf('<td style="text-align: right">%s</td>', $statLine[$j][$i]);
+				}
+			}
+			printf('</tr>');
+		}
+		printf('<tr></tr>');
+	}
 	printf("</table>");
 
 ?>

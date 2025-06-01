@@ -283,14 +283,16 @@ $phpURL = "soccer.php?gameID=".$gameID;
 		$fouls = $row->fouls;
 		$saves = $row->saves;
 		$goals_allowed = $row->goals_allowed;
+		$urlname = $name;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$homeTeam' class='schedule-game'>$num $name</a>";
 		if($goals != 0 or $assists != 0 or $shots_on_goal != 0 or $blocked_shots != 0 or $fouls != 0){
-			$homestatArray[0][] = [$num . ' ' . $name, $goals, $assists, $shots_on_goal, $blocked_shots, $fouls];
+			$homestatArray[0][] = [$url, $goals, $assists, $shots_on_goal, $blocked_shots, $fouls];
 		}
 		if($saves != 0 or $goals_allowed != 0){
-			$homestatArray[1][] = [$num . ' ' . $name, '', '', $saves, $goals_allowed, (int)($saves/($saves+$goals_allowed)*100) . "%"];
+			$homestatArray[1][] = [$url, '', '', $saves, $goals_allowed, (int)($saves/($saves+$goals_allowed)*100) . "%"];
 		}
 	}
 	
@@ -338,14 +340,16 @@ $phpURL = "soccer.php?gameID=".$gameID;
 		$fouls = $row->fouls;
 		$saves = $row->saves;
 		$goals_allowed = $row->goals_allowed;
+		$urlname = $name;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$awayTeam' class='schedule-game'>$num $name</a>";
 		if($goals != 0 or $assists != 0 or $shots_on_goal != 0 or $blocked_shots != 0 or $fouls != 0){
-			$awaystatArray[0][] = [$num . ' ' . $name, $goals, $assists, $shots_on_goal, $blocked_shots, $fouls];
+			$awaystatArray[0][] = [$url, $goals, $assists, $shots_on_goal, $blocked_shots, $fouls];
 		}
 		if($saves != 0 or $goals_allowed != 0){
-			$awaystatArray[1][] = [$num . ' ' . $name, '', '', $saves, $goals_allowed, (int)($saves/($saves+$goals_allowed)*100) . "%"];
+			$awaystatArray[1][] = [$url, '', '', $saves, $goals_allowed, (int)($saves/($saves+$goals_allowed)*100) . "%"];
 		}
 	}
 	

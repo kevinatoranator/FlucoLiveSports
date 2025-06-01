@@ -15,6 +15,17 @@ $gameID = $_GET['gameID'];
 $phpURL = "basketball.php?gameID=".$gameID;
 ?>
 
+<script>
+	function rtoggle(id){
+		var checkBox = document.getElementById(id);
+		var displayr = document.getElementsByClassName(id)[0];
+		if(displayr.classList.contains("hidden")){
+			displayr.classList.remove("hidden")
+		}else{
+			displayr.classList.add("hidden")
+		}
+	}
+</script>
 
 
 <!--Schedule Body-->
@@ -28,12 +39,27 @@ $phpURL = "basketball.php?gameID=".$gameID;
 	$away = "";
 	$roster = array();
 	$pbpEntries = array();
-	$minutes = 0;
-	$seconds = 0;
-	$maxMin = 99;
-	$quarter = 1;
 	$homeID = 0;
 	$comp = 0;
+	
+	$hq1Score = 0;
+	$hq2Score = 0;
+	$hq3Score = 0;
+	$hq4Score = 0;
+	$hOTScore = 0;
+			
+	$aq1Score = 0;
+	$aq2Score = 0;
+	$aq3Score = 0;
+	$aq4Score = 0;
+	$aOTScore = 0;
+		
+	$hTotal = 0;
+	$aTotal = 0;
+	
+	$poss = "";
+	$homeTimeOuts = 0;
+	$awayTimeOuts = 0;
 	$sql = "SELECT t.urlName AS sport FROM schedule AS s JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id = '$gameID'";
 	
 	$query = $db->prepare($sql);
@@ -43,7 +69,7 @@ $phpURL = "basketball.php?gameID=".$gameID;
 	}
 	
 	$sql = "SELECT s.notes AS info, s.time, s.game_date, s.season AS season, h.short_name AS home, a.short_name AS away, s.location, s.home_id as hNum, s.away_id, s.team_id, t.formattedName,
-		h.formal_name AS homeName, a.formal_name AS awayName
+		h.formal_name AS homeName, a.formal_name AS awayName, s.time AS startTime
 		FROM schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
 	
 	$query = $db->prepare($sql);
@@ -56,6 +82,7 @@ $phpURL = "basketball.php?gameID=".$gameID;
 		
 		$info = $row->info;
 		$season = $row->season;
+		$startTime = $row->startTime;
 			
 		$homeTeam = $row->home;
 		$awayTeam = $row->away;
@@ -70,16 +97,6 @@ $phpURL = "basketball.php?gameID=".$gameID;
 	$sqlsport = "SELECT bb.home_quarter1 AS hq1, bb.home_quarter2 AS hq2, bb.home_quarter3 AS hq3, bb.home_quarter4 AS hq4, bb.home_ot AS hot, bb.home_total AS ht, 
 		bb.away_quarter1 AS aq1, bb.away_quarter2 AS aq2, bb.away_quarter3 AS aq3, bb.away_quarter4 AS aq4, bb.away_ot AS aot, bb.away_total AS at, bb.completed AS cmp
 		FROM basketball AS bb JOIN schedule AS s ON bb.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE s.id='$gameID'";
-	
-	if($sport=="bbball" or $sport=="gbball"){
-		$minutes = 12;
-		$seconds = 0;
-		$maxMin = 12;
-	}else if($sport=="jvbbball" or $sport=="jvgbball"){
-		$minutes = 8;
-		$seconds = 0;
-		$maxMin = 8;
-	}
 	
 	$query = $db->prepare($sqlsport);
 	$query->execute();
@@ -144,7 +161,7 @@ $phpURL = "basketball.php?gameID=".$gameID;
 		
 		//SPORTS INFO HEADER
 		if($live == true){
-			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Q%s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $qrtr, $awayTeam, $sport, $awayName);
+			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div class="red">Q%s %s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $qrtr, $time, $awayTeam, $sport, $awayName);
 		}else{
 			printf('<div class="flex justify-between"><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div><div>%s</div><div><a href="../teams/roster.php?school=%s&sport=%s" class="schedule-game"><b>%s</b></a></div></div>', $homeTeam, $sport, $homeName, $startTime, $awayTeam, $sport, $awayName);
 		}
@@ -261,13 +278,14 @@ $phpURL = "basketball.php?gameID=".$gameID;
 	
 	$sql = "SELECT rp.number AS num, rp.name AS name, bbs.field_goals_attempted AS field_goals_attempted, bbs.field_goals_made AS field_goals_made, bbs.threes_attempted AS threes_attempted, bbs.threes_made AS threes_made, 
 	bbs.free_throws_attempted AS free_throws_attempted, bbs.free_throws_made AS free_throws_made , bbs.rebounds AS rebounds, bbs.steals AS steals, bbs.blocks AS blocks, bbs.turnovers AS turnovers, bbs.fouls AS fouls, bbs.assists AS assists 
-	FROM basketball_stats AS bbs JOIN schedule AS s ON bbs.game=s.id JOIN roster_player AS rp ON bbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id 
-	WHERE bbs.game = '$gameID' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	FROM basketball_stats AS bbs JOIN schedule AS s ON bbs.game=s.id JOIN roster_player AS rp ON bbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
+	WHERE bbs.game = '$gameID' AND h.short_name = '$homeTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
 	$query = $db->prepare($sql);
 	$query->execute();
 	
 	$statArray = array(array(["Players"], ["", "FG", "3PT", "FT", "R", "A", "S", "B", "TO", "PF", "PTS"]));
 	printf("STATS<hr>");
+	printf("<br>$homeTeam<br>");
 	printf('<table style = "border-spacing: 9px">');
 	while($row = $query->fetchObject()){
 		$name = $row->name;
@@ -284,11 +302,70 @@ $phpURL = "basketball.php?gameID=".$gameID;
 		$turnovers = $row->turnovers;
 		$fouls = $row->fouls;
 		$assists = $row->assists;
+		$urlname = $name;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$homeTeam' class='schedule-game'>$num $name</a>";
 		if($field_goals_attempted != '' or $assists != '' or $threes_attempted != '' or $free_throws_attempted != '' or $rebounds != '' or $steals != '' or $blocks != '' or $turnovers != '' or $fouls != ''){
-			$statArray[0][] = [$num . ' ' . $name, $field_goals_made . "/" . $field_goals_attempted, $threes_made . "/" . $threes_attempted, $free_throws_made . "/" . $free_throws_attempted, $rebounds, $assists, $steals, $blocks, $turnovers, $fouls, $free_throws_made + $field_goals_made * 2 + $threes_made * 3];
+			$statArray[0][] = [$url, $field_goals_made . "/" . $field_goals_attempted, $threes_made . "/" . $threes_attempted, $free_throws_made . "/" . $free_throws_attempted, $rebounds, $assists, $steals, $blocks, $turnovers, $fouls, $free_throws_made + $field_goals_made * 2 + $threes_made * 3];
+		}
+	}
+	
+	//Table format
+	foreach($statArray as $statLine){
+		for($j = 0; $j < count($statLine); $j++){
+			if($j%2){//alternate colors doesn't work well with table
+				printf('<tr>');
+			}else{
+				printf('<tr">');
+			}
+			for($i = 0; $i < count($statLine[$j]); $i++){
+				if($i == 0){
+					printf('<td style="text-align: left">%s</td>', $statLine[$j][$i]);
+				}else{
+					printf('<td style="text-align: right">%s</td>', $statLine[$j][$i]);
+				}
+			}
+			printf('</tr>');
+		}
+		printf('<tr></tr>');
+	}
+	printf("</table>");$sql = "SELECT rp.number AS num, rp.name AS name, bbs.field_goals_attempted AS field_goals_attempted, bbs.field_goals_made AS field_goals_made, bbs.threes_attempted AS threes_attempted, bbs.threes_made AS threes_made, 
+	bbs.free_throws_attempted AS free_throws_attempted, bbs.free_throws_made AS free_throws_made , bbs.rebounds AS rebounds, bbs.steals AS steals, bbs.blocks AS blocks, bbs.turnovers AS turnovers, bbs.fouls AS fouls, bbs.assists AS assists 
+	FROM basketball_stats AS bbs JOIN schedule AS s ON bbs.game=s.id JOIN roster_player AS rp ON bbs.player=rp.id JOIN roster_teams AS t ON s.team_id=t.id JOIN roster_schools h ON rp.school=h.id
+	WHERE bbs.game = '$gameID' AND h.short_name = '$awayTeam' AND t.urlName = '$sport' ORDER BY cast(num as unsigned)";
+	$query = $db->prepare($sql);
+	$query->execute();
+	
+	$statArray = array(array(["Players"], ["", "FG", "3PT", "FT", "R", "A", "S", "B", "TO", "PF", "PTS"]));
+	
+	
+	
+	printf("<br>$awayTeam<br>");
+	printf('<table style = "border-spacing: 9px">');
+	while($row = $query->fetchObject()){
+		$name = $row->name;
+		$num = $row->num;
+		$field_goals_attempted = $row->field_goals_attempted;
+		$field_goals_made = $row->field_goals_made;
+		$threes_attempted = $row->threes_attempted;
+		$threes_made = $row->threes_made;
+		$free_throws_attempted = $row->free_throws_attempted;
+		$free_throws_made = $row->free_throws_made;
+		$rebounds = $row->rebounds;
+		$steals = $row->steals;
+		$blocks = $row->blocks;
+		$turnovers = $row->turnovers;
+		$fouls = $row->fouls;
+		$assists = $row->assists;
+		$urlname = $name;
+		$name = explode(" ", $name);
+		$name[0] = str_split($name[0])[0] . ".";
+		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$awayTeam' class='schedule-game'>$num $name</a>";
+		if($field_goals_attempted != '' or $assists != '' or $threes_attempted != '' or $free_throws_attempted != '' or $rebounds != '' or $steals != '' or $blocks != '' or $turnovers != '' or $fouls != ''){
+			$statArray[0][] = [$url, $field_goals_made . "/" . $field_goals_attempted, $threes_made . "/" . $threes_attempted, $free_throws_made . "/" . $free_throws_attempted, $rebounds, $assists, $steals, $blocks, $turnovers, $fouls, $free_throws_made + $field_goals_made * 2 + $threes_made * 3];
 		}
 	}
 	

@@ -306,14 +306,16 @@ $phpURL = "blax.php?gameID=".$gameID;
 		$fouls = $row->fouls;
 		$saves = $row->saves;
 		$goals_allowed = $row->goals_allowed;
+		$urlname = $name;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$homeTeam' class='schedule-game'>$num $name</a>";
 		if($goals != 0 or $assists != 0 or $ground_balls != 0 or $shots_on_goal != 0 or $shots != 0 or $faceoff_attempts != 0 or $faceoff_wins != 0 or $turnovers != 0 or $forced_turnovers != 0 or $fouls != 0){
-			$statArray[0][] = [$num . ' ' . $name, $goals, $assists, $ground_balls, $faceoff_wins."/".$faceoff_attempts, $shots, $shots_on_goal, $turnovers, $forced_turnovers, $fouls];
+			$statArray[0][] = [$url, $goals, $assists, $ground_balls, $faceoff_wins."/".$faceoff_attempts, $shots, $shots_on_goal, $turnovers, $forced_turnovers, $fouls];
 		}
 		if($saves != 0 or $goals_allowed != 0){
-			$statArray[1][] = [$num . ' ' . $name, '', '','','','','', $saves, $goals_allowed, (int)($saves/($saves+$goals_allowed)*100) . "%"];
+			$statArray[1][] = [$url, '', '','','','','', $saves, $goals_allowed, (int)($saves/($saves+$goals_allowed)*100) . "%"];
 		}
 	}
 	
@@ -346,7 +348,6 @@ $phpURL = "blax.php?gameID=".$gameID;
 	$query->execute();
 	
 	$statArray = array(array(["Players"], ["", "Goals", "Assts", "GB", "FO", "S", "SOG", "TO", "CT", "P"]), array(["Goalies"], ["" , "", "", "", "", "", "", "Saves", "G/A", "Save%"]));
-	printf("STATS<hr>");
 	printf("<br>$awayTeam<br>");
 	printf('<table style = "border-spacing: 9px">');
 	while($row = $query->fetchObject()){
@@ -364,14 +365,16 @@ $phpURL = "blax.php?gameID=".$gameID;
 		$fouls = $row->fouls;
 		$saves = $row->saves;
 		$goals_allowed = $row->goals_allowed;
+		$urlname = $name;
 		$name = explode(" ", $name);
 		$name[0] = str_split($name[0])[0] . ".";
 		$name = implode(" ", $name);
+		$url =  "<a href='../teams/player.php?player=$urlname&school=$awayTeam' class='schedule-game'>$num $name</a>";
 		if($goals != 0 or $assists != 0 or $ground_balls != 0 or $shots_on_goal != 0 or $shots != 0 or $faceoff_attempts != 0 or $faceoff_wins != 0 or $turnovers != 0 or $forced_turnovers != 0 or $fouls != 0){
-			$statArray[0][] = [$num . ' ' . $name, $goals, $assists, $ground_balls, $faceoff_wins."/".$faceoff_attempts, $shots, $shots_on_goal, $turnovers, $forced_turnovers, $fouls];
+			$statArray[0][] = [$url, $goals, $assists, $ground_balls, $faceoff_wins."/".$faceoff_attempts, $shots, $shots_on_goal, $turnovers, $forced_turnovers, $fouls];
 		}
 		if($saves != 0 or $goals_allowed != 0){
-			$statArray[1][] = [$num . ' ' . $name, '', '','','','','', $saves, $goals_allowed, (int)($saves/($saves+$goals_allowed)*100) . "%"];
+			$statArray[1][] = [$url, '', '','','','','', $saves, $goals_allowed, (int)($saves/($saves+$goals_allowed)*100) . "%"];
 		}
 	}
 	

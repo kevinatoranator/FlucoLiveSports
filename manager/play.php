@@ -27,13 +27,8 @@ include '../include/database.php';
 	}else if($table == "field_hockey"){
 		include './sports/fieldhockey.php'; //Import all field hockey variables
 	}else if($table == "volleyball"){
-		$sportType = "set";
 		include './sports/volleyball.php'; //Import all volleyball variables
 	}else if($table == "basketball"){
-		$minutes = 12;
-		$seconds = 0;
-		$maximumMinutes = 12;
-		$sportType = "quarter";
 		include './sports/basketball.php'; //Import all basketball variables
 	}else if($table == "soccer"){
 		include './sports/soccer.php'; //Import all soccer variables
