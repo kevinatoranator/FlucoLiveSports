@@ -83,7 +83,11 @@ function removeGame($gameID, $db){
 	$query = $db->prepare($sql);
 	$query->execute();
 	while($row = $query->fetchObject()){
-		printf("<form action='./manager/managerjs.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type='submit' class='gameID' value='%s\n%s vs. %s \n@%s'></form>", $row->gameID, $row->formattedName, $row->home, $row->away, $row->date);
+		$manager = "managerjs.php";
+		if($row->sport == "jvbaseball" or $row->sport == "baseball" or $row->sport == "jvsoftball" or $row->sport == "softball"){
+			$manager = "batmanager.php";
+		}
+		printf("<form action='./manager/$manager' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type='submit' class='gameID' value='%s\n%s vs. %s \n@%s'></form>", $row->gameID, $row->formattedName, $row->home, $row->away, $row->date);
 		printf("<form action='edit.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type='submit' class='gameID' value='Edit'></form>", $row->gameID);
 		printf("<form action='gmindex.php' method='post'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type='submit' class='gameID' value='Remove'></form><br>", $row->gameID);	
 	}

@@ -40,7 +40,7 @@ Game Info:<div id="gameInfo"></div>
 <button id="timerControl">Start</button>
 <button id="timerReset">Reset</button></div>
 <br>
-<div id="goalpitch" class="flex justify-between hidden">Home Goalie/Pitcher:<div id="homegoalpitch"></div>Away Goalie/Pitcher:<div id="awaygoalpitch"></div></div>
+<div id="goalie" class="flex justify-between hidden">Home Goalie:<div id="homegoalie"></div>Away Goalie:<div id="awaygoalie"></div></div>
 <br>
 <br>
 <div id="manager"></div>
@@ -55,5 +55,5 @@ Game Info:<div id="gameInfo"></div>
 <div id="scoreTableManual"></div>
 
 <script src="//ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script src="manager2.js"></script>
+<script type ="module" src="manager2.js"></script>
 </body>

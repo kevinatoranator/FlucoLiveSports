@@ -246,8 +246,10 @@ include '../include/database.php';
 			
 			$sql = "UPDATE $table SET home_i1 = '$scores[0]', home_i2 = '$scores[1]', home_i3 = '$scores[2]', home_i4 = '$scores[3]', home_i5 = '$scores[4]', home_i6 = '$scores[5]', home_i7 = '$scores[6]', home_ex = '$scores[7]', home_total = '$hTotal', 
 				away_i1 = '$scores[8]', away_i2 = '$scores[9]', away_i3 = '$scores[10]', away_i4 = '$scores[11]', away_i5 = '$scores[12]', away_i6 = '$scores[13]', away_i7 = '$scores[14]', away_ex = '$scores[15]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
-			$query = $db->prepare($sql);
-			$query->execute();
+			if($action != "pitch"){
+				$query = $db->prepare($sql);
+				$query->execute();
+			}
 		}
 	}
 
@@ -697,6 +699,7 @@ include '../include/database.php';
 		}else if($action == "pitch"){
 			
 			if($goalieID != 0){
+				$action = "pitchedaroo";
 				$sqls = "UPDATE $tableStats SET pitches = pitches + 1 WHERE game='$gameID' AND player='$goalieID'";
 				$query = $db->prepare($sqls);
 				$query->execute();
