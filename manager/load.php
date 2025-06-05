@@ -110,7 +110,7 @@ include '../include/database.php';
 		game.away_i1 AS ai1, game.away_i2 AS ai2, game.away_i3 AS ai3, game.away_i4 AS ai4, game.away_i5 AS ai5, game.away_i6 AS ai6, game.away_i7 AS ai7, game.away_ex AS aex, game.away_hits AS ah, game.away_errors AS ae, game.completed AS cmp
 		FROM $table AS game JOIN schedule ON game.schedule_id = schedule.id JOIN roster_schools a ON schedule.away_id=a.id JOIN roster_schools h ON schedule.home_id=h.id JOIN roster_teams AS t ON schedule.team_id=t.id WHERE schedule.id='$gameID'";
 	}else if($gameType == SPORTTYPE::Set){
-		$sqlsport = "SELECT game.home_set1 AS hs1, game.home_set2 AS hs2, game.home_set3 AS hs3, game.home_set4 AS hs4, game.home_set5 AS hs5,
+		$sql = "SELECT game.home_set1 AS hs1, game.home_set2 AS hs2, game.home_set3 AS hs3, game.home_set4 AS hs4, game.home_set5 AS hs5,
 		game.away_set1 AS as1, game.away_set2 AS as2, game.away_set3 AS as3, game.away_set4 AS as4, game.away_set5 AS as5, game.completed AS cmp
 		FROM $table AS game JOIN schedule ON game.schedule_id = schedule.id JOIN roster_schools a ON schedule.away_id=a.id JOIN roster_schools h ON schedule.home_id=h.id JOIN roster_teams AS t ON schedule.team_id=t.id WHERE schedule.id='$gameID'";
 	}

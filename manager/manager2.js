@@ -123,9 +123,6 @@ var playerList = {[home]: homeRoster, [away]: awayRoster};
 				document.getElementById("manager").innerHTML = "<button id='play'>Add Play</button>";
 				document.getElementById("play").addEventListener('click', play);
 				document.getElementById("timerr").classList.remove("hidden");
-				if(table == "volleyball"){
-					document.getElementById("timerr").innerHTML = 'Set: <span id = "period"></span>';
-				}
 				suv.periodSet(lastPeriod, gameType);
 				document.getElementById("goalie").classList.remove("hidden");
 				document.getElementById("complete").classList.remove("hidden");
@@ -411,7 +408,7 @@ function bonusAction(play){
 	var opp = $("input[name='team']:not(:checked)").val();
 	var playerSelect = $("input[name='player']:checked").val();
 	if(teamSelect != undefined){
-		if(play == "Goal scored by " || play == "Jumper by " || play == "Layup by " || play == "Dunk by " || play == "3 Pointer by " || play == "Kill by "){
+		if(play == "Goal scored by " || play == "Jumper by " || play == "Layup by " || play == "Dunk by " || play == "3 Pointer by "){
 			document.getElementById("bonusSelect").innerHTML += "<b>Assist</b><br>";
 			for(const [key, value] of Object.entries(playerList[teamSelect])){
 				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="assistPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;

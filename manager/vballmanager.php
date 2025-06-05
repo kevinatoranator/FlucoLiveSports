@@ -36,9 +36,7 @@ Game Info:<div id="gameInfo"></div>
 
 <br>
 <br>
-<div id="timing" class="hidden">Inning: <span id = "period"></span> <span id = "side"></span> | <button id="strike">Strike</button> <button id="ball">Ball</button> <button id="foul">Foul</button></div><br>
-<br>
-<div id="pitching" class="flex justify-between hidden"></div>
+<div id="timing" class="hidden flex">Set: <div id = "period"></div> | Serve: <div id = "serveTeam"></div> <div id = "server"></div></div>
 <br>
 <br>
 <div id="manager"></div>
@@ -53,5 +51,5 @@ Game Info:<div id="gameInfo"></div>
 <div id="scoreTableManual"></div>
 
 <script src="//ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script type ="module" src="BatballManager.js"></script>
+<script type ="module" src="VolleyballManager.js"></script>
 </body>

@@ -296,12 +296,33 @@
 				}
 				$newEntry[5] = $newEntry[4];
 				$newEntry[4] = substr($location, 0, 9);
-				if($sportdb == 'xc'){
+				
+				$exists = false;
+				for($i = 2; $i < count($entry_array[9]); $i++){
+					if($newEntry[4] == $entry_array[9][$i][4] and $newEntry[5] == $entry_array[9][$i][5] and $newEntry[3] == $entry_array[9][$i][3]){
+						$exists = true;
+						$entry_array[9][$i][2] = $notes; 
+					}
+				}
+				for($i = 2; $i < count($entry_array[10]); $i++){
+					if($newEntry[4] == $entry_array[10][$i][4] and $newEntry[5] == $entry_array[10][$i][5] and $newEntry[3] == $entry_array[10][$i][3]){
+						$exists = true;
+						$entry_array[10][$i][2] = $notes; 
+					}
+				}
+				for($i = 2; $i < count($entry_array[11]); $i++){
+					if($newEntry[4] == $entry_array[11][$i][4] and $newEntry[5] == $entry_array[11][$i][5] and $newEntry[3] == $entry_array[11][$i][3]){
+						$exists = true;
+						$entry_array[11][$i][2] = $notes; 
+					}
+				}
+				
+				if($sportdb == 'xc' and $exists == false){
 					$entry_array[9][] = $newEntry;
-				}else if($sportdb == 'indoor'){
+				}else if($sportdb == 'indoor' and $exists == false){
 					$entry_array[11][] = $newEntry;
 				}
-				else if($sportdb == 'track'){
+				else if($sportdb == 'track' and $exists == false){
 					$entry_array[10][] = $newEntry;
 				}
 			}else if($sportdb == 'tennis'){
