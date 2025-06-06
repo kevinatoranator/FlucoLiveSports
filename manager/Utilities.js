@@ -189,9 +189,8 @@ export function cancel(){
 	document.getElementById("play").addEventListener('click', play);
 }
 
-export function complete(){
+export function complete(table, gameID, infoArray){
 	console.log("Game Completed");
-	var infoArray = [sportID, home, away, sumArrayRange(scores, 0, scores.length/2), sumArrayRange(scores, scores.length/2, scores.length)];
 	$.ajax({
 			url: "complete.php",
 			data: {table: table,

@@ -126,7 +126,7 @@ var playerList = {[home]: homeRoster, [away]: awayRoster};
 				suv.periodSet(lastPeriod, gameType);
 				document.getElementById("goalie").classList.remove("hidden");
 				document.getElementById("complete").classList.remove("hidden");
-				document.getElementById("completeBtn").addEventListener('click', suv.complete);
+				document.getElementById("completeBtn").addEventListener('click', suv.complete(table, gameID, [sportID, home, away, suv.sumArrayRange(scores, 0, scores.length/2), suv.sumArrayRange(scores, scores.length/2, scores.length)]));
 				if(table != "basketball"){
 					goalieSelect(home);
 					goalieSelect(away);
