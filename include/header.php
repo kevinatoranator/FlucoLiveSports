@@ -70,16 +70,11 @@
 	<br>
 	<div class="flex justify-between">
         <a href ="/flucolivesports/index.php">Schedule</a>
-		<a href ="/flucolivesports/schedule/district/index.php">District Schedule</a>
+		<a href ="/flucolivesports/standings/index.php">Standings</a>
     </div>
     <br>
     <div class="flex justify-between">
         <a href ="/flucolivesports/teams/index.php">Teams</a>
 		<a href ="/flucolivesports/teams/district/index.php">District Teams</a>
-	</div>
-	<br>
-    <div class="flex justify-between">
-        <a href ="/flucolivesports/standings/index.php">Standings</a>
-		<!--<a href ="/flucolivesports/standings/index.php">TEMP</a>-->
 	</div>
 	<br>

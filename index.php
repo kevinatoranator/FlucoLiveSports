@@ -9,7 +9,7 @@
 
 <body>
 <?php 
-$date = date("Y-m-d", strtotime("today" ));
+$pagedate = date("Y-m-d", strtotime("today" ));
 $fdate = date("l, F d", strtotime("today")); 
 $baseUrl = './'; 
 $schedule = 'schedule';
@@ -26,23 +26,55 @@ $affix = '';?>
 
 <br>
 <div class="flex justify-between">
-<form action='./schedule/schedule.php' method='get'><input type ='hidden' id='date' name='date' value='<?php echo date("Y-m-d", strtotime("yesterday")); ?>'><input type='submit' class='schedule' value='< <?php echo date("M. d", strtotime("-1 days", strtotime($date)))?>'></form> <b><?php echo $fdate ?></b> <form action='./schedule/schedule.php' method='get'><input type ='hidden' id='date' name='date' value='<?php echo date("Y-m-d", strtotime("tomorrow")); ?>'><input type='submit' class='schedule' value='<?php echo date("M. d", strtotime("+1 days", strtotime($date)))?> >'></form> 
+<form action='./schedule/schedule.php' method='get'><input type ='hidden' id='date' name='date' value='<?php echo date("Y-m-d", strtotime("yesterday")); ?>'><input type='submit' class='schedule' value='< <?php echo date("M. d", strtotime("-1 days", strtotime($pagedate)))?>'></form> <b><?php echo $fdate ?></b> <form action='./schedule/schedule.php' method='get'><input type ='hidden' id='date' name='date' value='<?php echo date("Y-m-d", strtotime("tomorrow")); ?>'><input type='submit' class='schedule' value='<?php echo date("M. d", strtotime("+1 days", strtotime($pagedate)))?> >'></form> 
 </div>
 <br>
 
+<div ><input id="fluvanna" type="radio" class="hidden" name="radioheader" value="fluvanna" checked><input id="jefferson" type="radio" class="hidden" name="radioheader" value="jefferson">
+<div class="flex justify-evenly"><label for="fluvanna" class="nav" id="fluvlabel">Fluvanna</label><label for="jefferson" class="nav" id="jefflabel">Jefferson</label></div></div>
+
+<br>
+<br>
 
 <!--Schedule Body-->
+<div id="sched-display"></div>
 
-<?php
-	
 
-	$sql = "SELECT s.id AS gameID, s.time, s.game_date, h.short_name AS home, a.short_name AS away, s.location AS location, s.home_id, s.away_id, s.team_id, s.notes AS notes, t.formattedName, t.urlName AS sport FROM $schedule AS s JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE a.short_name='FLUV' OR h.short_name='FLUV'
-	ORDER BY s.time";
-	
-	$query = $db->prepare($sql);
-	$query->execute();
-	
-	include './include/schedule.php';
-	
-?>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+function setSchedule(){
+	var date = '<?php echo "$pagedate"; ?>';
+	var displaySetting = $("input[name='radioheader']:checked").val();
+	if(displaySetting == "jefferson"){
+		var filter = "AND (h.district = 'Jefferson' or a.district = 'Jefferson')";
+		document.getElementById("jefflabel").innerHTML = "<b>Jefferson</b>";
+		document.getElementById("fluvlabel").innerHTML = "Fluvanna";
+	}else{
+		var filter = "AND (h.short_name = 'FLUV' or a.short_name = 'FLUV')";
+		document.getElementById("fluvlabel").innerHTML = "<b>Fluvanna</b>";
+		document.getElementById("jefflabel").innerHTML = "Jefferson";
+	}
+	document.getElementById("sched-display").innerHTML = "";
+	var gameInfoText = "";
+		$.ajax({
+			url: "schedule/scheduleFunction.php",
+			data: {date: date,
+			filter: filter},
+			success: function(data){
+				var dataArray = $.parseJSON(data);
+				//console.log(dataArray);
+				gameInfoText = dataArray;
+				document.getElementById("sched-display").innerHTML = gameInfoText;
+			}});
+		document.getElementById("sched-display").innerHTML = gameInfoText;
+}
+window.onload=function(){
+	document.getElementById("fluvanna").addEventListener('click', setSchedule);
+	document.getElementById("jefferson").addEventListener('click', setSchedule);
+	setSchedule();
+	}
+
+
+</script>
+
 </body>

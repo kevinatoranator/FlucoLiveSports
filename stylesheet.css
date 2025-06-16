@@ -119,6 +119,7 @@
     .flex-col {flex-direction: column;}
     .flex-initial{flex: 0 1 initial;}
     .justify-between{justify-content: space-between;}
+    .justify-evenly{justify-content: space-evenly;}
     .items-center{align-items: center;}
     .items-end {align-items: flex-end;}
     .items-start{align-items: flex-start;}
@@ -129,6 +130,11 @@
     .text-justify{test-align: justify;}
 	.stat-width{length: 50px;}
 	.half-width{width: 50%;}
+	
+	.nav{color: #9090ff;
+	text-decoration: none;
+	cursor: pointer;
+	}
 	
 
     .width-align{width: 90%;}

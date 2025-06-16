@@ -120,18 +120,20 @@ var playerList = {[home]: homeRoster, [away]: awayRoster};
 			success: function(data){
 				console.log(data);
 				console.log(table);
+				loadGame();	
 				document.getElementById("manager").innerHTML = "<button id='play'>Add Play</button>";
 				document.getElementById("play").addEventListener('click', play);
 				document.getElementById("timerr").classList.remove("hidden");
 				suv.periodSet(lastPeriod, gameType);
 				document.getElementById("goalie").classList.remove("hidden");
 				document.getElementById("complete").classList.remove("hidden");
-				document.getElementById("completeBtn").addEventListener('click', suv.complete(table, gameID, [sportID, home, away, suv.sumArrayRange(scores, 0, scores.length/2), suv.sumArrayRange(scores, scores.length/2, scores.length)]));
+				document.getElementById("completeBtn").addEventListener('click', function(){
+					var infoArray = [sportID, home, away, suv.sumArrayRange(scores, 0, scores.length/2), suv.sumArrayRange(scores, scores.length/2, scores.length)];
+					suv.complete(table, gameID, infoArray)});
 				if(table != "basketball"){
 					goalieSelect(home);
 					goalieSelect(away);
 					}
-					loadGame();	
 				}
 			});		
 	  }, false);
