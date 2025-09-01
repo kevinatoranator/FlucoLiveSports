@@ -10,7 +10,7 @@ include '../include/database.php';
 	$homeTotal = $infoArray[3];
 	$awayTotal = $infoArray[4];
 	
-	$season = 2024;
+	$season = 2025;
 	$sql = "";
 	
 	

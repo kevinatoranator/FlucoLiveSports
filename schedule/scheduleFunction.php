@@ -78,6 +78,10 @@ include '../include/database.php';
 				$formattedName = explode(" ", $formattedName);
 				$formattedName = $formattedName[0][0] . "." . " " . $formattedName[1];
 				$sportdb = 'tennis';
+			}else if($sport == "golf" or $sport == "bgolf" or $sport == "ggolf"){
+				$formattedName = explode(" ", $formattedName);
+				$formattedName = $formattedName[0][0] . "." . " " . $formattedName[1];
+				$sportdb = 'golf';
 			}
 			
 			
@@ -340,21 +344,35 @@ include '../include/database.php';
 				
 				
 				$entry_array[12][] = $newEntry;
+			}else if($sportdb == 'golf'){
+				//gets live game stats
+				//$sqlbb = "SELECT * FROM $sportdb AS sdb JOIN schedule AS s ON sdb.schedule_id = s.id WHERE s.id='$gameID'";
+				//$querylg = $db->prepare($sqlbb);
+				//$querylg->execute();
+				//$livegame = $querylg->fetch(PDO::FETCH_ASSOC);
+		
+				$newEntry[] = 0;//6
+				//if($livegame){
+				//	$newEntry[] = $livegame['url'];//7
+				//}
+				
+				
+				$entry_array[8][] = $newEntry;
 			}
 	}
 	
 	//Spring Season No Entries 0,1,2,3,10,12
 	//Fall Season No Entries 4,5,6,8,9, 16
 	//Winter Season No Entries 7, 11, 13, 14, 15
-	/*if(date('m', strtotime($date)) > 2 and date('m', strtotime($date)) < 7){
+	if(date('m', strtotime($date)) > 2 and date('m', strtotime($date)) < 7){
 		$entry_array = array($entry_array[0],$entry_array[1],$entry_array[2],$entry_array[3],$entry_array[10],$entry_array[12]);
 	}else if(date('m', strtotime($date)) > 7 and date('m', strtotime($date)) < 12){
-		$entry_array = array($entry_array[4],$entry_array[5],$entry_array[6],$entry_array[9],$entry_array[16]);
+		$entry_array = array($entry_array[4],$entry_array[5],$entry_array[6],$entry_array[8],$entry_array[9],$entry_array[16]);
 	}else if(date('m', strtotime($date)) > 11 and date('m', strtotime($date)) < 3){
 		$entry_array = array($entry_array[7],$entry_array[11],$entry_array[13],$entry_array[14],$entry_array[15]);
 	}else{
 		$entry_array = array(array(["No Sports in Season"]));
-	}*/
+	}
 	$scheduleHTML = "";
 	
 	foreach($entry_array as $entry){

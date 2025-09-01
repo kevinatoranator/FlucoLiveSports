@@ -44,4 +44,34 @@
 	//Add throw away, where text = $qb throws away, pass attempts +1 but no player takes a target
 	//Receiving vs running touchdown
 	
+	$actionRadio = [
+	'<input type="radio" onclick="bonusAction(this)" id="run" name="plays" value="Run by "><label for="run">Run by </label><br>',
+	'<input type="radio"  id="ipass" name="plays" value="Incomplete pass to "><label for="ipass">Incomplete pass to </label><br>',
+	'<input type="radio" id="rec" name="plays" value="Reception by "><label for="rec">Reception by </label><br>',
+	'<input type="radio" onclick="bonusAction(this)" id="kick" name="plays" value="Kick by "><label for="kick">Kick by </label><br>',
+	'<input type="radio" id="td" name="plays" value="Touchdown by "><label for="td">Touchdown by </label><br>',
+	'<input type="radio" id="tdr" name="plays" value="Touchdown reception by "><label for="tdr">Touchdown reception by </label><br>',
+	'<input type="radio" id="epgood" name="plays" value="Extra point GOOD by "><label for="epgood">Extra point GOOD by </label><br>',
+	'<input type="radio" id="epmiss" name="plays" value="Extra point MISS by "><label for="epmiss">Extra point MISS by </label><br>',
+	'<input type="radio" id="fggood" name="plays" value="Field goal GOOD by "><label for="fggood">Field goal GOOD by </label><br>',
+	'<input type="radio" id="fgmiss" name="plays" value="Field goal MISS by "><label for="fgmiss">Field goal MISS by </label><br>',
+	'<input type="radio" id="cgood" name="plays" value="2-point conversion GOOD by "><label for="cgood">2-point conversion GOOD by </label><br>',
+	'<input type="radio" id="cfail" name="plays" value="2-point conversion FAIL by "><label for="cfail">2-point conversion FAIL by </label><br>',
+	'<input type="radio" id="safe" name="plays" value="Safety by "><label for="safe">Safety by </label><br>',
+	'<input type="radio" id="pen" name="plays" value="Penalty on "><label for="pen">Penalty on </label><br>',
+	'<input type="radio" id="hold" name="plays" value="Holding on "><label for="hold">Holding on </label><br>',
+	'<input type="radio" id="off" name="plays" value="Offsides on "><label for="off">Offsides on </label><br>',
+	'<input type="radio" id="passi" name="plays" value="Pass interference on "><label for="passi">Pass interference on </label><br>',
+	'<input type="radio" id="false" name="plays" value="False start on "><label for="false">False start on </label><br>',
+	'<input type="radio" id="ground" name="plays" value="Intentional grounding on "><label for="ground">Intentional grounding on </label><br>',
+	'<input type="radio" id="sack" name="plays" value="Sack by "><label for="sack">Sack by </label><br>',
+	'<input type="radio" id="fum" name="plays" value="Fumble by "><label for="fum">Fumble by </label><br>',
+	'<input type="radio" id="fumr" name="plays" value="Fumble recovered by "><label for="fumr">Fumble recovered by </label><br>',
+	'<input type="radio" id="int" name="plays" value="Interception by "><label for="int">Interception by </label><br>',
+	'<input type="radio" id="punt" name="plays" value="Punt by "><label for="punt">Punt by </label><br>',
+	'<input type="radio" id="ret" name="plays" value="Return by "><label for="ret">Return by </label><br>',
+	'<input type="radio" id="time" name="plays" value="Timeout"><label for="time">Timeout</label><br>',
+	'<input type="radio" id="tback" name="plays" value="Touchback"><label for="tback">Touchback</label><br>',
+	'<input type="radio" id="eoh" name="plays" value="-End of Half-"><label for="eoh">-End of Half-</label><br>'];
+	
 ?>

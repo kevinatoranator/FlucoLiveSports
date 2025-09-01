@@ -51,7 +51,7 @@
 	$i = $query->fetchObject();
 	$sportFormat = $i->formattedName;
 	
-	$sql = "SELECT * FROM standings JOIN roster_teams ON standings.sport_id=roster_teams.id JOIN roster_schools ON standings.school_id=roster_schools.id WHERE roster_teams.urlName='$roster' AND standings.season='2024' AND roster_schools.short_name='$school'";
+	$sql = "SELECT * FROM standings JOIN roster_teams ON standings.sport_id=roster_teams.id JOIN roster_schools ON standings.school_id=roster_schools.id WHERE roster_teams.urlName='$roster' AND standings.season='2025' AND roster_schools.short_name='$school'";
 	$query = $db->prepare($sql);
 	$query->execute();
 	$i = $query->fetchObject();
@@ -89,10 +89,84 @@
 
 <br><br>
 
-<!-- 2024 -->
+<!-- 2025 -->
+<input type="checkbox" name="g2025" id="g2025" onclick="rtoggle('g2025')"><label for="g2025"><b>25-26 [+]</b></label>
+<br><br>
+<div class = "g2025">
+<?php
+	$gamedb = "";
+	if($roster == "jvblax" or $roster == "blax"){
+		$gamedb = "blax";
+	}else if($roster == "jvglax" or $roster == "glax"){
+		$gamedb = "glax";
+	}else if($roster == "jvbsoccer" or $roster == "bsoccer" or $roster == "jvgsoccer" or $roster == "gsoccer"){
+		$gamedb = "soccer";
+	}else if($roster == "jvbaseball" or $roster == "baseball" or $roster == "jvsoftball" or $roster == "softball"){
+		$gamedb = "batball";
+	}else if($roster == "jvfhockey" or $roster == "fhockey"){
+		$gamedb = "field_hockey";
+	}else if($roster == "jvfootball" or $roster == "football"){
+		$gamedb = "football";
+	}else if($roster == "jvbbball" or $roster == "bbball" or $roster == "jvgbball" or $roster == "gbball"){
+		$gamedb = "basketball";
+	}else if($roster == "jvvball" or $roster == "vball"){
+		$gamedb = "volleyball";
+	}
+
+	if($gamedb != ""){
+		$sql = "SELECT s.game_date, home_total, away_total, h.formal_name AS home, a.formal_name AS away, s.id AS id, s.notes AS notes FROM $gamedb RIGHT JOIN schedule AS s ON $gamedb.schedule_id=s.id INNER JOIN roster_teams AS r ON s.team_id=r.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id WHERE r.urlName='$roster' AND (h.short_name='$school' OR a.short_name='$school') AND s.season='2025' ORDER BY s.game_date";
+		$query = $db->prepare($sql);
+		$query->execute();
+		while($row = $query->fetchObject()){
+			$hscore = $row->home_total;
+			$ascore = $row->away_total;
+			$id = $row->id;
+			$notes = $row->notes;
+			$sdate = date("D m/d", strtotime($row->game_date));
+			?><a href="../game/<?php echo $gamedb?>.php?gameID=<?php echo $id?>" class='schedule-game'> <!-- DOESNT WORK NO GAME PAGE FOR DISTRICT GAMES-->
+			<?php
+			if(str_contains($notes, "Region") or str_contains($notes, "State")){
+				$sdate = "*" . $sdate;
+			}
+			
+			if($hscore > $ascore){
+				printf("%s <b>%s %s</b>-%s %s<br>", $sdate, $row->home, $hscore, $ascore, $row->away);
+			}else if($hscore < $ascore){
+				printf("%s %s %s-<b>%s %s</b><br>", $sdate, $row->home, $hscore, $ascore, $row->away);
+			}else{
+				printf("%s %s %s-%s %s<br>", $sdate, $row->home, $hscore, $ascore, $row->away);
+			}
+			?></a><?php
+		}
+	}else{//If no game database just pull schedule info
+		$sql = "SELECT s.game_date, h.formal_name AS home, a.formal_name AS away, s.location AS location, s.id AS id FROM schedule AS s INNER JOIN roster_teams AS r ON s.team_id=r.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id WHERE r.urlName='$roster' AND (h.short_name='$school' OR a.short_name='$school') AND s.season='2025' ORDER BY s.game_date";
+		$query = $db->prepare($sql);
+		$query->execute();
+		while($row = $query->fetchObject()){
+
+			
+			if($row->home != "Fluvanna County"){
+				$opponent = $row->home;
+			}else{
+				$opponent = $row->away;
+			}
+			
+			$id = $row->id;
+			$location = $row->location;
+			$sdate = date("D m/d", strtotime($row->game_date));
+
+			printf("%s vs. %s @ %s<br>", $sdate, $opponent, $location);
+
+		}
+	}
+?>
+</div>
+
+
+<br><br><!-- 2024 -->
 <input type="checkbox" name="g2024" id="g2024" onclick="rtoggle('g2024')"><label for="g2024"><b>24-25 [+]</b></label>
 <br><br>
-<div class = "g2024">
+<div class = "g2024 hidden">
 <?php
 	$gamedb = "";
 	if($roster == "jvblax" or $roster == "blax"){
@@ -233,11 +307,27 @@
 <br>
 <b> ROSTERS </b>
 
-<!--2024-->
+<!--2025-->
+<br><br>
+<input type="checkbox" name="r2025" id="r2025" onclick="rtoggle('r2025')"><label for="r2025"><b>25-26 [+]</b></label>
+<br><br>
+<div class = "r2025">
+<?php
+	$playerRoster = getRoster($db, $roster, 2025, $school);
+	foreach($playerRoster as $player){
+		$name = explode(" | ", $player)[1];
+		echo "<a href='./player.php?player=$name&school=$school' class='schedule-game'>$player<br></a>";
+	}
+	if(count($playerRoster) == 0){
+		printf("No Roster Available");
+	}
+?>
+
+</div><!--2024-->
 <br><br>
 <input type="checkbox" name="r2024" id="r2024" onclick="rtoggle('r2024')"><label for="r2024"><b>24-25 [+]</b></label>
 <br><br>
-<div class = "r2024">
+<div class = "r2024 hidden">
 <?php
 	$playerRoster = getRoster($db, $roster, 2024, $school);
 	foreach($playerRoster as $player){

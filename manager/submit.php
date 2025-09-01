@@ -19,6 +19,10 @@ include '../include/database.php';
 	$assister = $infoArray[8];
 	$defense = $infoArray[9];
 	$batter = $infoArray[10];
+	$info11 = $infoArray[11];
+	$info12 = $infoArray[12];
+	$info13 = $infoArray[13];
+	$info14 = $infoArray[14];
 	$completed = 0;
 	$season = 2024;
 	$sql = "";
@@ -43,6 +47,7 @@ include '../include/database.php';
 			$pbp = "$team Goal scored by $player (Assisted by $assister)";
 		}
 	}else if($table == "glax" or $table == "blax"){
+		$gameType = SPORTTYPE::Quarter;
 		if($action == "Shot on goal by "){
 			$pbp = "$team Shot on goal by $player (Save by $goalie)";
 		}else if($action == "Goal scored by " and $assister != ""){
@@ -53,6 +58,7 @@ include '../include/database.php';
 			$pbp = "$team Faceoff won by $player vs. $defense";
 		}
 	}else if($table =="field_hockey"){
+		$gameType = SPORTTYPE::Quarter;
 		if($action == "Shot on goal by " and $defense != ""){
 			$pbp = "$team Shot on goal by $player (Block by $defense)";
 		}else if($action == "Shot on goal by "){
@@ -63,6 +69,7 @@ include '../include/database.php';
 	}else if($table =="batball"){
 		$pbp = "$team $player$action";
 	}else if($table =="basketball"){
+		$gameType = SPORTTYPE::Quarter;
 		if($action == "Timeout"){
 			$pbp = "$action - $team";
 		}else if($action == "Jump ball"){
@@ -70,6 +77,21 @@ include '../include/database.php';
 		}else if(($action == "Jumper by " or $action == "Layup by " or $action == "Dunk by " or $action == "3 Pointer by ") and $assister != ""){
 			$pbp = "$team $action$player (Assisted by $assister)";
 		}
+	}else if($table =="football"){//currently assister = yards
+		$gameType = SPORTTYPE::Quarter;
+		if($action == "Timeout"){
+			$pbp = "$action - $team";
+		}else if($action == "Run by " or $action == "Touchdown by " or $action == "Kick by " or $action == "Penalty on " or $action == "Holding on " or $action == "Offsides on " or 
+		$action == "Pass interference on " or $action == "False start on " or $action == "Intentional grounding on " or $action == "Sack by " or $action == "Punt by " or $action == "Return by "){
+			$pbp = "$action $team $player for $assister yards";
+			if($defense != "" and $defense != "None"){
+				$pbp .= " (Tackle by $defense)";
+			}
+		}
+		
+		if($action != "Timeout" or $action != "Extra point GOOD by " or $action != "Extra point MISS by " or $action != "2-point conversion GOOD by " or $action != "2-point conversion FAIL by " or $action != "Touchback" or $action != "-End of Half-"){
+				$pbp = "$batter & $info11 @ $info13 $info14:<br>" . $pbp;//batter = down
+			}
 	}
 	
 	$message = "";
@@ -78,8 +100,7 @@ include '../include/database.php';
 	}else if($table == "batball"){//inning
 		$gameType = SPORTTYPE::Inning;
 		$sql = "INSERT INTO $tablePBP (text, inning, game_id) VALUES ('$pbp', '$period', (SELECT id FROM schedule where id='$gameID'))";
-	}else if($table == "blax" or $table == "glax" or $table == "field_hockey" or $table == "basketball"){//quarter
-	$gameType = SPORTTYPE::Quarter;
+	}else if($gameType == SPORTTYPE::Quarter){//quarter
 		$sql = "INSERT INTO $tablePBP (text, quarter, time, game_id) VALUES ('$pbp', '$period', '$time', (SELECT id FROM schedule where id='$gameID'))";
 	}
 	

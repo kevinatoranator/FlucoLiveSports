@@ -166,6 +166,12 @@ function play(){
 			});
 }
 
+function cancel(){//move to utilities?
+	console.log("Play cancelled");
+	document.getElementById("manager").innerHTML = "<button id='play'>Add Play</button>";
+	document.getElementById("play").addEventListener('click', play);
+}
+
 function submitPlay(){
 	console.log("Plays added");
 	var playSelect = $("input[name='plays']:checked").val();

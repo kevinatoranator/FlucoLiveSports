@@ -17,6 +17,9 @@ var serve = "";
 var lastPeriod = 1;
 var completed = 0;
 var playerList;
+var hTotal = 0;
+var aTotal = 0;
+
 
 var liveinfo = ["", "", "", "", "", "", "", "", ""];
 
@@ -53,7 +56,9 @@ window.onload=function(){
 				document.getElementById("server").innerHTML = `Server:<div id="serverList"></div>`;
 				document.getElementById("server").classList.remove("hidden");
 				document.getElementById("complete").classList.remove("hidden");
-				document.getElementById("completeBtn").addEventListener('click', suv.complete);
+				document.getElementById("completeBtn").addEventListener('click', function(){
+					var infoArray = [sportID, home, away, suv.sumArrayRange(scores, 0, scores.length/2), suv.sumArrayRange(scores, scores.length/2, scores.length)];
+					suv.complete(table, gameID, infoArray)});
 				document.getElementById(`${away}service`).addEventListener('click', suv.soloSelect(away, "serverList", playerList), false);
 				document.getElementById(`${home}service`).addEventListener('click', suv.soloSelect(home, "serverList", playerList), false);
 				loadGame();
@@ -222,7 +227,12 @@ function scoreTableText(scoreArray){
 		}else if(row == 1){
 			tableText += "<td>-</td><td>--</td>";
 		}else{
-			var val = suv.sumArrayRange(scoreArray, Math.abs(row - 3) * (scoreArray.length/2), Math.abs(row - 4) * (scoreArray.length/2)); //Calculates total of scores in that subsection of array
+			var val = 0;
+			if(row == 2){
+				val = aTotal;
+			}else if (row == 3){
+				val = hTotal;
+			}
 			tableText += `<td> | </td> <td> ${val} </td> `;
 		}
 		tableText +="</tr>";
@@ -282,7 +292,12 @@ function scoreTableManualText(scoreArray){
 		}else if(row == 1){
 			tableText += "<td>-</td><td>----</td>";
 		}else{
-			var val = suv.sumArrayRange(scoreArray, Math.abs(row - 3) * (scoreArray.length/2), Math.abs(row - 4) * (scoreArray.length/2)); //Calculates total of scores in that subsection of array
+			var val = 0;
+			if(row == 2){
+				val = aTotal;
+			}else if (row == 3){
+				val = hTotal;
+			}
 			tableText += `<td> | </td> <td> ${val} </td> `;
 		}
 		tableText +="</tr>";
@@ -305,6 +320,33 @@ function eventAdder(){
 
 function supdate(){
 	suv.updateScore(this, scores, gameType, gameID, table);
+	hTotal = 0;
+	aTotal = 0;
+	if(scores[0] >= 25 && scores[0] > scores[5] + 1){
+			hTotal += 1;
+		}else if(scores[5] >= 25 && scores[5] > scores[0] + 1){
+			aTotal += 1;
+		}
+		if(scores[1] >= 25 && scores[1] > scores[6] + 1){
+			hTotal += 1;
+		}else if(scores[6] >= 25 && scores[6] > scores[1] + 1){
+			aTotal += 1;
+		}
+		if(scores[2] >= 25 && scores[2] > scores[7] + 1){
+			hTotal += 1;
+		}else if(scores[7] >= 25 && scores[7] > scores[2] + 1){
+			aTotal += 1;
+		}
+		if(scores[3] >= 25 && scores[3] > scores[8] + 1){
+			hTotal += 1;
+		}else if(scores[8] >= 25 && scores[8] > scores[3] + 1){
+			aTotal += 1;
+		}
+		if(scores[4] >= 25 && scores[4] > scores[9] + 1){
+			hTotal += 1;
+		}else if(scores[9] >= 25 && scores[9] > scores[4] + 1){
+			aTotal += 1;
+		}
 	document.getElementById("scoreTable").innerHTML = scoreTableText(scores);
 	document.getElementById("scoreTableManual").innerHTML = scoreTableManualText(scores);
 	eventAdder();
@@ -335,68 +377,3 @@ function bonusAction(play){
 	}
 }
 
-
-function strike(){
-	if(strikes < 3){
-		strikes++;
-	}
-	liveinfo[2] = strikes;
-	liveinfo[0] += `P${pitches}: strike,`;
-	pitch();
-	console.log("Strike: " + strikes);
-}
-function ball(){
-	if(balls < 4){
-		balls++;
-	}
-	liveinfo[3] = balls;
-	liveinfo[0] += `P${pitches}: ball,`;
-	pitch();
-	console.log("Ball: " + balls);
-}
-function foul(){
-	
-	if(strikes < 2){
-		strikes++;
-	}
-	liveinfo[2] = strikes;
-	liveinfo[0] += `P${pitches}: foul,`;
-	pitch();
-	console.log("Strike: " + strikes);
-}
-function pitch(){
-	pitches++;
-	var teamSelect = $("input[name='team']:checked").val();
-	var oppTeam = $("input[name='team']:not(:checked)").val();
-	lastPeriod = $("#periods :selected").val();
-	serve = $("#sides :selected").val();
-	batter = $("input[name='player']:checked").val();
-	liveinfo[5] = batter;
-	liveinfo[4] = $("#homepitchersel :selected").val();
-	if(teamSelect == home){
-		liveinfo[4] = $("#awaypitchersel :selected").val();
-	}
-	var infoArray = ["pitch", teamSelect, oppTeam, "", "", "", sportID, liveinfo[4], "", "", batter];
-	$.ajax({
-			url: "livegame.php",
-			data: {table: table,
-			gameID: gameID,
-			time: serve,
-			period: lastPeriod,
-			liveinfo: liveinfo},
-			success: function(data){
-				console.log(data);
-				}
-			});	
-			
-	$.ajax({
-			url: "submit.php",
-			data: {table: table,
-			gameID: gameID,
-			infoArray: infoArray,
-			home: home},
-			success: function(data){
-				console.log(data);
-				}
-			});	
-}

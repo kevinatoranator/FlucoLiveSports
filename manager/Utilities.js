@@ -25,7 +25,7 @@ export function updateScore(score, scores, gameType, gameID, table){
 				scores[5] = score.value;
 			}
 		}
-	}else if(gameType == SPORTTYPE.Quarter){
+	}else if(gameType == SPORTTYPE.Quarter || gameType == SPORTTYPE.Set){
 		if(score.name.includes("home")){
 			if(score.name.includes("1")){
 				scores[0] = score.value;

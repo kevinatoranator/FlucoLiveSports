@@ -68,7 +68,7 @@
 <!--Standings Body-->
 
 <?php 
-$years = [2024 => '24-25', 2023 =>  '23-24', 2022 =>  '22-23', 2021 => '21-22'];
+$years = [2025 => '25-26',2024 => '24-25', 2023 =>  '23-24', 2022 =>  '22-23', 2021 => '21-22'];
 $count = 0;
 
 foreach($years as $year => $label){
@@ -82,7 +82,7 @@ foreach($years as $year => $label){
 	$current_season = []; // School, url, Win, loss, Streak, last 10, next game
 	$current_season[] = ["", "", "W-L-T","", "", "STRK", "L5", "NEXT"];
 	
-	if($sportdb == 'soccer' or $sportdb == 'glax' or $sportdb == 'blax'){
+	if($sportdb == 'soccer' or $sportdb == 'glax' or $sportdb == 'blax' or $sportdb == 'field_hockey'){
 		array_push($current_season[0],"GD", "GF", "GA");
 	}
 
@@ -190,7 +190,7 @@ foreach($years as $year => $label){
 				}
 			}
 			
-			if($sportdb == 'soccer' or $sportdb == 'glax' or $sportdb == 'blax'){
+			if($sportdb == 'soccer' or $sportdb == 'glax' or $sportdb == 'blax' or $sportdb == 'field_hockey'){
 				$sql = "SELECT sdb.home_total AS ht, sdb.away_total AS at, h.short_name AS home, a.short_name AS away
 				FROM $sportdb AS sdb JOIN schedule AS s ON sdb.schedule_id = s.id JOIN roster_schools a ON s.away_id=a.id JOIN roster_schools h ON s.home_id=h.id JOIN roster_teams AS t ON s.team_id=t.id 
 				WHERE t.urlName='$roster' AND s.season='$year' AND s.notes!='Scrimmage' AND (h.short_name ='$entry[0]' OR a.short_name ='$entry[0]') AND s.game_date <= current_date AND sdb.completed = '1'";
@@ -232,7 +232,7 @@ foreach($years as $year => $label){
 			}
 			printf('<td style="text-align: right">%s</td>', $entry[6]); // Last 5
 			printf('<td style="text-align: right">%s</td>', $entry[7]); // Next game
-			if($sportdb == 'soccer' or $sportdb == 'glax' or $sportdb == 'blax'){
+			if($sportdb == 'soccer' or $sportdb == 'glax' or $sportdb == 'blax' or $sportdb == 'field_hockey'){
 				printf('<td style="text-align: right">%s</td>', $entry[9]);
 				printf('<td style="text-align: right">%s</td>', $entry[10]);
 				if($entry[8] > 0){
@@ -251,7 +251,7 @@ foreach($years as $year => $label){
 			printf('<td style="text-align: right">%s</td>', $entry[5]);// Streak
 			printf('<td style="text-align: center">%s</td>', $entry[6]); // Last 5
 			printf('<td style="text-align: center">%s</td>', $entry[7]); // Next game
-			if($sportdb == 'soccer' or $sportdb == 'glax' or $sportdb == 'blax'){
+			if($sportdb == 'soccer' or $sportdb == 'glax' or $sportdb == 'blax' or $sportdb == 'field_hockey'){
 				printf('<td style="text-align: right">%s</td>', $entry[9]); //GF
 				printf('<td style="text-align: right">%s</td>', $entry[10]); //GA
 				printf('<td style="text-align: right">%s</td>', $entry[8]); // GD

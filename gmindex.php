@@ -88,6 +88,8 @@ function removeGame($gameID, $db){
 			$manager = "batmanager.php";
 		}else if($row->sport == "jvvball" or $row->sport == "vball"){
 			$manager = "vballmanager.php";
+		}else if($row->sport == "jvfootball" or $row->sport == "football"){
+			$manager = "fbmanager.php";
 		}
 		printf("<form action='./manager/$manager' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type='submit' class='gameID' value='%s\n%s vs. %s \n@%s'></form>", $row->gameID, $row->formattedName, $row->home, $row->away, $row->date);
 		printf("<form action='edit.php' method='get'><input type ='hidden' id='gameID' name='gameID' value='%s'><input type='submit' class='gameID' value='Edit'></form>", $row->gameID);

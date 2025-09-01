@@ -92,6 +92,14 @@ include '../include/database.php';
 		
 		$table = "batball";
 		$gameType = SPORTTYPE::Inning;
+	}else if(str_contains($sportNice, "Football")){
+		if($level =="jv"){
+			$minutes = 10;
+		}else{
+			$minutes = 12;
+		}
+		$table = "football";
+		$gameType = SPORTTYPE::Quarter;
 	}
 
 	$info = array("sport"=>$sportNice, "sportID"=>$sportID, "home"=>$homeTeam, "away"=>$awayTeam, "homeKey"=>$home, "awayKey"=>$away, "table"=>$table, "level"=>$level, "minutes"=>$minutes);
