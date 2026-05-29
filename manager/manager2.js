@@ -152,7 +152,7 @@ function play(){
 			success: function(data){
 				var dataArray = $.parseJSON(data)
 				var manager = document.getElementById("manager");
-				manager.innerHTML = "<button id='submit'>Submit</button><br><br><div class=\"flex justify-between\"><div id=\"play\"></div><div id=\"teamSelect\"></div><div id=\"rosterSelect\"></div><div id=\"bonusSelect\"></div></div><br><button id='cancel'>cancel</button>";
+				manager.innerHTML = "<div class='text-center'><button id='submit'>Submit</button></div><br><br><div class=\"flex justify-between\"><div id=\"play\"></div><div id=\"teamSelect\"></div><div id=\"rosterSelect\"></div><div id=\"bonusSelect\"></div></div><br><div class='text-center'><button id='cancel'>cancel</button></div>";
 				dataArray.forEach(function(item){
 					document.getElementById("play").innerHTML += item;
 				});
@@ -190,6 +190,7 @@ function submitPlay(){
 	if(defense == undefined){
 		defense = "";
 	}
+	var batter = "";
 	
 	var playTime = Math.floor(currentSeconds/60) + ":" + zeroPad(currentSeconds%60, 2);
 	if(table == "soccer"){
@@ -216,7 +217,9 @@ function submitPlay(){
 				console.log(dataArray);
 				document.getElementById("manager").innerHTML = "<button id='play'>Add Play</button>";
 				document.getElementById("play").addEventListener('click', play);
-				scores = dataArray.scores;
+				if(dataArray.scores != null){
+					scores = dataArray.scores;
+				}
 				document.getElementById("scoreTable").innerHTML = scoreTableText(scores);
 				document.getElementById("scoreTableManual").innerHTML = scoreTableManualText(scores);
 				eventAdder();
@@ -360,11 +363,11 @@ function scoreTableManualText(scoreArray){
 }
 
 function eventAdder(){
-	for(var i = 1; i <= gameType; i++){
+	for(var i = 1; i <= gameType+1; i++){
 		var idName = 'awayPeriod' + i + 'Score';
 		document.getElementById(idName).addEventListener('input', supdate, false);
 	}
-	for(var i = 1; i <= gameType; i++){
+	for(var i = 1; i <= gameType+1; i++){
 		var idName = 'homePeriod' + i + 'Score';
 		document.getElementById(idName).addEventListener('input', supdate, false);
 	}

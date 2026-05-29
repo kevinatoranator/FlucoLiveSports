@@ -194,7 +194,6 @@ $phpURL = "batball.php?gameID=".$gameID;
 			
 			$live = true;
 			
-			$pitches = explode(",", $pitches);
 			
 		}
 		
@@ -240,14 +239,23 @@ $phpURL = "batball.php?gameID=".$gameID;
 		printf("3B: %s<br>", $third);
 		
 		printf("Pitches:<br>");
-		
-		foreach($pitches as $pitch){
-			if(str_contains($pitch, "strike") or str_contains($pitch, "foul")){
-				printf("<span class='red'>%s</span><br>", $pitch);
+		$pitchCount = 1;
+		foreach(str_split($pitches) as $pitch){
+			if($pitch == "L"){
+					$pitch = "ꓘ";
+				}
+			if($pitch == "K"){
+				printf("<span class='red'>Pitch %d: Swinging Strike</span><br>", $pitchCount);
+			}else if($pitch == "F"){
+				printf("<span class='red'>Pitch %d: Foul</span><br>", $pitchCount);
+			}else if($pitch == "ꓘ"){
+				printf("<span class='red'>Pitch %d: Called Strike</span><br>", $pitchCount);
+			}else if($pitch == "B"){
+				printf("<span class='green'>Pitch %d: Ball</span><br>", $pitchCount);
 			}else{
-				printf("<span class='green'>%s</span><br>", $pitch);
+				printf("<span class='purple'>Pitch %d: %s</span><br>", $pitchCount, $pitch);
 			}
-			
+			$pitchCount++;
 		}
 	}
 	/*
@@ -267,6 +275,24 @@ $phpURL = "batball.php?gameID=".$gameID;
 	while($row = $query->fetchObject()){
 		$text = $row->text;
 		$inn = $row->inning;
+		
+		$pitchColorizer = explode("(", $text);
+		$colorizedString = "";
+		if(count($pitchColorizer)>1){	
+			foreach(str_split($pitchColorizer[1]) as $pitch){
+				if($pitch == "L"){
+					$pitch = "ꓘ";
+				}
+				if($pitch == "K" or $pitch == "F" or $pitch == "ꓘ"){
+					$colorizedString .= "<span class='red'>$pitch</span>";
+				}else if($pitch == "B"){
+					$colorizedString .= "<span class='green'>$pitch</span>";
+				}else if($pitch == "P" or $pitch == "H"){
+					$colorizedString .= "<span class='purple'>$pitch</span>";
+				}
+			}
+			$text = $pitchColorizer[0] . "(" . $colorizedString . ")";
+		}
 		$pbpText = $inn . " | " . $text;
 		if(str_contains($text, "scores") or str_contains($text, "homers")){
 			$pbpText = "<b>$pbpText</b>";

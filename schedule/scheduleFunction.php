@@ -11,7 +11,7 @@ include '../include/database.php';
 	$query = $db->prepare($sql);
 	$query->execute();
 	
-	$entry_array = array(array(["Lacrosse"], ["blax", "jvblax", "glax", "jvglax"]), array(["Soccer"], ["gsoccer", "jvgsoccer", "bsoccer", "jvbsoccer"]), array(["Baseball"], ["baseball", "jvbaseball"]), array(["Softball"], ["softball", "jvsoftball"]),
+	$entry_array = array(array(["Lacrosse"], ["blax", "jvblax", "glax", "jvglax"]), array(["Soccer"], ["bsoccer", "jvbsoccer", "gsoccer", "jvgsoccer"]), array(["Baseball"], ["baseball", "jvbaseball"]), array(["Softball"], ["softball", "jvsoftball"]),
 	array(["Field Hockey"], ["fhockey", "jvfhockey"]), array(["Football"], ["football", "jvfootball"]), array(["Volleyball"], ["vball", "jvvball"]), array(["Basketball"], ["bbball", "jvbbball", "gbball", "jvgbball"]), 
 	array(["Golf"], ["Sublinks Here"]), array(["Cross Country"], ["Sublinks Here"]),
 	array(["Outdoor Track"], ["Sublinks Here"]), array(["Indoor Track"], ["Sublinks Here"]), array(["Tennis"], ["Sublinks Here"]), array(["Wrestling"], ["Sublinks Here"]), array(["Scholastic Bowl"], ["Sublinks Here"]),

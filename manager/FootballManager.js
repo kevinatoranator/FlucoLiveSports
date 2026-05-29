@@ -77,12 +77,23 @@ var playerList = {[home]: homeRoster, [away]: awayRoster};
   
   const zeroPad = (num, places) => String(num).padStart(places, '0');
   const setTimer = (time) => document.getElementById("timer").innerText = Math.floor(time/60) + ":" + zeroPad(time%60, 2);
-  const setPeriod = (period) => document.getElementById("period").innerText = period;
+  const setPeriod = (period) => document.getElementById("period").innerText = period; 
+  
+  const setSide = (fieldSide) => document.getElementById("side").innerText = fieldSide;
+  const setYL = (currentYardLine) => document.getElementById("yl").innerText = currentYardLine;
+  const setDown = (down) => document.getElementById("down").innerText = down;
+  const setYTG = (yardsToGo) => document.getElementById("ytg").innerText = yardsToGo;
+  const setPoss = (currentPossession) => document.getElementById("poss").innerText = currentPossession;
 
 
 window.onload=function(){
 	 started = suv.timerSet(minutes, currentSeconds);
 	 suv.periodSet(lastPeriod, gameType);
+	 setSide(fieldSide);
+	setYL(currentYardLine);
+	setDown(down);
+	setYTG(yardsToGo);
+	setPoss(currentPossession);
 	 document.getElementById("timerControl").addEventListener('click', function(){	
 		if(started == false){
 			currentSeconds = ($("#minutes :selected").val() * 60) + parseInt($("#seconds :selected").val());
@@ -127,7 +138,45 @@ window.onload=function(){
 				document.getElementById("play").addEventListener('click', play);
 				document.getElementById("timerr").classList.remove("hidden");
 				suv.periodSet(lastPeriod, gameType);
+				suv.sideSet(side, home, away);
+				suv.ylSet(currentYardLine);
+				suv.downSet(currentYardLine);
+				suv.ytgSet(yardsToGo);
+				suv.possSet(currentPossession, home, away);
+				document.getElementById("ylUpdate").addEventListener('click', function(){
+					liveinfo[0] = $("#posss :selected").val();
+					liveinfo[1] = homeTimeouts;
+					liveinfo[2] = awayTimeouts;
+					liveinfo[3] = $("#sides :selected").val();
+					liveinfo[4] = $("#yls :selected").val();
+					liveinfo[5] = $("#ytgs :selected").val();
+					liveinfo[6] = $("#downs :selected").val();
+					currentYardLine = $("#yls :selected").val();
+					currentPossession = $("#posss :selected").val();
+					fieldSide = $("#sides :selected").val();
+					yardsToGo = $("#ytgs :selected").val();
+					down = $("#downs :selected").val();
+					
+					
+					var playTime = Math.floor(currentSeconds/60) + ":" + zeroPad(currentSeconds%60, 2);
+					$.ajax({
+						url: "livegame.php",
+						data: {table: table,
+						gameID: gameID,
+						time: playTime,
+						period: lastPeriod,
+						liveinfo: liveinfo},
+						success: function(data){
+							console.log(data);
+							suv.sideSet(side, home, away);
+							suv.ylSet(currentYardLine);
+							suv.downSet(currentYardLine);
+							suv.ytgSet(yardsToGo);
+							suv.possSet(currentPossession, home, away);
+							}
+						});});
 				document.getElementById("qb").classList.remove("hidden");
+				document.getElementById("yardline").classList.remove("hidden");
 				document.getElementById("complete").classList.remove("hidden");
 				document.getElementById("completeBtn").addEventListener('click', function(){
 					var infoArray = [sportID, home, away, suv.sumArrayRange(scores, 0, scores.length/2), suv.sumArrayRange(scores, scores.length/2, scores.length)];
@@ -226,10 +275,13 @@ console.log("Plays added");
 	var oppTeam = $("input[name='team']:not(:checked)").val();
 	var playerSelect = $("input[name='player']:checked").val();
 	var qb = $("#homeqbsel :selected").val();
-	if(teamSelect == away){
+	if(teamSelect == away || ((playSelect == "Interception by " || playSelect == "Sack by " ) && teamSelect == home)){
 		qb = $("#awayqbsel :selected").val();
 	}
-	var yards = $('#yardsel').find(":selected").val();
+	var yards = 0;
+	if($('#yardsel').find(":selected").val()){
+		yards = $('#yardsel').find(":selected").val();
+	}
 	var defense = $("input[name='defPlayer']:checked").val();
 	if(defense == undefined){
 		defense = "";
@@ -304,8 +356,9 @@ console.log("Plays added");
 			}else{
 				currentPossession = home;
 			}
+			yardsToGo = 10;
 		}
-	}else if(playSelect == "Kickoff by " || playSelect == "Field goal MISS by " || playSelect == "Interception by " || playSelect == "Punt by " || (playSelect == "Recovered by " && team != currentPossession)){
+	}else if(playSelect == "Kick by " || playSelect == "Field goal MISS by " || playSelect == "Interception by " || playSelect == "Punt by " || (playSelect == "Recovered by " && team != currentPossession)){
 		down = 1;
 		yardsToGo = 10;
 				
@@ -315,33 +368,24 @@ console.log("Plays added");
 			currentPossession = home;
 		}
 		
-	}
-			
-			if($action == "Field goal GOOD by " or $action == "Extra point GOOD by " or $action == "Extra point MISS by " or $action == "2-point conversion GOOD by " or $action == "2-point conversion FAIL by "){
-				$down = 1;
-				$sof = $poss;
-				$yardline = 40;
+	}else if(playSelect == "Field goal GOOD by " || playSelect == "Extra point GOOD by " || playSelect == "Extra point MISS by " || playSelect == "2-point conversion GOOD by " || playSelect == "2-point conversion FAIL by "){
+		down = 1;
+		fieldSide = currentPossession;
+		currentYardLine = 40;
 				
-			}else if($action == "Safety by " or $action == "Touchback"){
-				if($action == "Touchback"){
-					if($poss == $homeTeam){
-						$poss = $awayTeam;
-					}else{
-						$poss = $homeTeam;
-					}
-				}
-				$down = 1;
-				$sof = $poss;
-				$yardline = 20;
-			}
-			
-			if($ytg <= 0){
-				$ytg = 10;
-				$down = 1;
-				if($sof != $poss && $yardline < 10){
-					$ytg = $yardline;
-				}
-			}
+	}else if(playSelect == "Safety by " || playSelect == "Touchback"){
+		down = 1;
+		fieldSide = currentPossession;
+		currentYardLine = 20;
+	}
+	
+	if(yardsToGo <= 0){
+		yardsToGo = 10;
+		down = 1;
+		if(fieldSide != currentPossession && currentYardLine < 10){
+			yardsToGo = currentYardLine;
+		}
+	}
 	
 	liveinfo[0] = currentPossession;
 	liveinfo[1] = homeTimeouts;
@@ -361,7 +405,13 @@ console.log("Plays added");
 		success: function(data){
 			console.log(data);
 			}
-		});	
+		});
+
+	suv.sideSet(side, home, away);
+	suv.ylSet(currentYardLine);
+	suv.downSet(currentYardLine);
+	suv.ytgSet(yardsToGo);
+	suv.possSet(currentPossession, home, away);		
 }
 
 function scoreTableText(scoreArray){

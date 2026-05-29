@@ -173,6 +173,16 @@ include '../include/database.php';
 		}
 	}
 	$info["awayRoster"] = $awayRoster;
+	
+	
+	//PULL LIVE INFO IF GAME ALREADY IN PROGRESS
+	
+	$sql = "SELECT * FROM live_games WHERE schedule_id='$gameID'";
+	$query = $db->prepare($sql);
+	$query->execute();
+	while($row = $query->fetchObject()){
+		$info["info"] = $row;
+	}
 
 echo json_encode($info);
 			

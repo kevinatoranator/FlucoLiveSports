@@ -2,14 +2,6 @@
 
 
 
-/*
-TODO
-
-Needs to get:
-Database -> $statTable
-which stat to add
-
-*/
 	
 if($team == "FCHS"){	
 	if($statTable == "football_stats"){

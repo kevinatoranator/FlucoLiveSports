@@ -24,7 +24,7 @@ include '../include/database.php';
 	$info13 = $infoArray[13];
 	$info14 = $infoArray[14];
 	$completed = 0;
-	$season = 2024;
+	$season = 2025;
 	$sql = "";
 	
 	enum SPORTTYPE{
@@ -37,6 +37,10 @@ include '../include/database.php';
 	$gameType = SPORTTYPE::Half;
 	
 	$pbp = "$team $action$player";
+	
+	if($player == null){
+		$pbp = "$action$team";
+	}
 	
 	if($table == "soccer"){
 		if($action == "Shot by " and $defense != ""){
@@ -60,14 +64,37 @@ include '../include/database.php';
 	}else if($table =="field_hockey"){
 		$gameType = SPORTTYPE::Quarter;
 		if($action == "Shot on goal by " and $defense != ""){
-			$pbp = "$team Shot on goal by $player (Block by $defense)";
+			$pbp .= " (Block by $defense)";
 		}else if($action == "Shot on goal by "){
-			$pbp = "$team Shot on goal by $player (Save by $goalie)";
+			$pbp .= " (Save by $goalie)";
 		}else if($action == "Goal scored by " and $assister != ""){
-			$pbp = "$team Goal scored by $player (Assisted by $assister)";
+			$pbp .=  " (Assisted by $assister)";
 		}
 	}else if($table =="batball"){
-		$pbp = "$team $player$action";
+		if($action == " strikes out looking" or $action == " strikes out swinging" or $action == " flies out" or $action == " pops out" or $action == " grounds out" or $action == " lines out" 
+		or $action == " sacrifice fly" or $action == " sacrifice bunt" or $action == " walks" or $action == " hit by pitch" 
+		or $action == " singles" or $action == " doubles" or $action == " triples" or $action == " homers"){
+			$pbp = "$team $player$action ($info11)";
+		}else{
+			$pbp = "$team $player$action";
+		}
+	}else if($table =="volleyball"){
+		$gameType = SPORTTYPE::Set;
+		
+		$homesetscore = $scores[$period-1];
+		$awaysetscore = $scores[$period+4];
+		if(($team == $home and ($action == "Kill by " or $action == "Service ace by " or $action == "Block by ")) or ($team != $home and ($action == "Attack error by " or $action == "Service error by "))){
+			$homesetscore++;
+		}else{
+			$awaysetscore++;
+		}
+		$pbp = "$team $action$player";
+		
+		if($action == "Kill by " and $assister != ""){
+			$pbp .=  " (Assisted by $assister)";
+		}
+		
+		$pbp .= " | $homesetscore-$awaysetscore";
 	}else if($table =="basketball"){
 		$gameType = SPORTTYPE::Quarter;
 		if($action == "Timeout"){
@@ -102,6 +129,8 @@ include '../include/database.php';
 		$sql = "INSERT INTO $tablePBP (text, inning, game_id) VALUES ('$pbp', '$period', (SELECT id FROM schedule where id='$gameID'))";
 	}else if($gameType == SPORTTYPE::Quarter){//quarter
 		$sql = "INSERT INTO $tablePBP (text, quarter, time, game_id) VALUES ('$pbp', '$period', '$time', (SELECT id FROM schedule where id='$gameID'))";
+	}else if($gameType == SPORTTYPE::Set){//set
+		$sql = "INSERT INTO $tablePBP (text, set_, game_id) VALUES ('$pbp', '$period', (SELECT id FROM schedule where id='$gameID'))";
 	}
 	
 	if($action != "pitch"){
@@ -119,10 +148,20 @@ include '../include/database.php';
 
 	*/
 	$points = 0;
-	if($action == "Goal scored by " or $action == " scores" or $action == " homers"){
-		$points += 1;
+	if($action == "Extra point GOOD by " or $action == "Goal scored by " or $action == "Kill by " or $action == "Attack error by " or $action == "Service ace by " or $action == "Service error by " or $action == "Block by " or $action == "Free throw by " or $action == " scores" or $action == " homers"){
+		$points = 1;
+	}else if($action == "Safety by " or $action == "Jumper by " or $action == "Layup by " or $action == "Dunk by "){
+		$points = 2;
+	}else if($action == "Field goal GOOD by " or $action == "3 Pointer by "){
+		$points = 3;
+	}else if($action == "Touchdown by " or $action == "Touchdown reception by "){
+		$points = 6;
 	}
+	
+	
+	
 	if($points > 0){
+		$scoreteam = $team;
 		if($gameType == SPORTTYPE::Half){
 			if($team == $home){
 				if($period == 1){
@@ -142,8 +181,11 @@ include '../include/database.php';
 					$scores[5] += $points;
 				}
 			}
-		}else if($gameType == SPORTTYPE::Quarter){
-			if($team == $home){
+		}else if($gameType == SPORTTYPE::Quarter or $gameType == SPORTTYPE::Set){
+			if($action == "Attack error by " or $action == "Service error by "){
+				$scoreteam = $oppteam;
+			}
+			if($scoreteam == $home){
 				if($period == 1){
 					$scores[0] += $points;
 				}else if($period == 2){
@@ -232,9 +274,9 @@ include '../include/database.php';
 			}else if($scores[6] >= 25 and $scores[6] > $scores[1] + 1){
 				$aTotal += 1;
 			}
-			if($scores[2] >= 25 and $scores[2] > $scores[7] + 1){
+			if(($scores[2] >= 25 and $scores[2] > $scores[7] + 1) or (($scores[2] >= 15 && $scores[2] > $scores[7] + 1) && $info11 == "jv")){
 				$hTotal += 1;
-			}else if($scores[7] >= 25 and $scores[7] > $scores[2] + 1){
+			}else if(($scores[7] >= 25 and $scores[7] > $scores[2] + 1) or (($scores[7] >= 15 && $scores[7] > $scores[2] + 1) && $info11 == "jv")){
 				$aTotal += 1;
 			}
 			if($scores[3] >= 25 and $scores[3] > $scores[8] + 1){
@@ -288,8 +330,21 @@ include '../include/database.php';
 	$playerID = getPlayerID($db, $team, $player, $sportID, $season);
 	$assisterID = getPlayerID($db, $team, $assister, $sportID, $season);
 	$defenseID = getPlayerID($db, $oppteam, $defense, $sportID, $season);			
-	$goalieID = getPlayerID($db, $oppteam, $goalie, $sportID, $season); //Also goalie
+	$goalieID = getPlayerID($db, $oppteam, $goalie, $sportID, $season);
+	
+	if($table == "football"){
+		$qbID = getPlayerID($db, $team, $goalie, $sportID, $season);
+		$sql = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$qbID' AND s.id='$gameID'";
+		$query = $db->prepare($sql);
+		$query->execute();
 			
+		if($query->rowCount() == 0  and $qbID != 0){//Create player stats if doesn't exist
+			$sql = "INSERT INTO $tableStats (player, game) VALUES ('$qbID', '$gameID')";
+			$query = $db->prepare($sql);
+			$query->execute();
+	}
+	}
+	
 	//Get player's stats
 	$sql = "SELECT * FROM $tableStats AS stat JOIN roster_player AS p ON stat.player=p.id JOIN schedule AS s ON stat.game=s.id WHERE p.id='$playerID' AND s.id='$gameID'";
 	$query = $db->prepare($sql);
@@ -746,7 +801,7 @@ include '../include/database.php';
 				$query = $db->prepare($sqls);
 				$query->execute();
 			}
-		}	
+		}
 	}
 	
 	
@@ -796,6 +851,127 @@ include '../include/database.php';
 			$stat = "blocks = blocks + 1";
 		}else if($action == "Defensive rebound by " or $action == "Offensive rebound by "){
 			$stat = "rebounds = rebounds + 1";
+		}
+		
+		if($stat != ''){
+			$sqls = "UPDATE $tableStats SET $stat WHERE game='$gameID' AND player='$playerID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}	
+	}
+	
+	/*
+	#########################
+	#						#
+	#	   FOOTBALL			#
+	#						#
+	#########################
+	*/
+	
+	
+	
+	else if($table == "football"){
+		$stat = '';
+		$qbstat = '';
+		
+		if($action == "Reception by " or $action == "Touchdown reception by "){
+			/*if($yards > $longest_reception){ // , longest_reception='$longest_reception'
+				$longest_reception = $yards;
+			}*/
+			$stat = "targets = targets + 1, receptions = receptions + 1, total_reception_yards = total_reception_yards + '$assister'";
+			$qbstat = "pass_attempts = pass_attempts + 1, pass_completions= pass_completions + 1, total_passing_yards = total_passing_yards + '$assister'";
+			if($action == "Touchdown reception by "){
+				$stat .= ", reception_touchdowns= reception_touchdowns + 1";
+				$qbstat .= ", passing_touchdowns= passing_touchdowns + 1";
+			}
+
+			if($qbID != 0){
+				$sqls = "UPDATE $tableStats SET $qbstat WHERE game='$gameID' AND player='$qbID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}			
+		}else if($action == "Incomplete pass to "){
+			$stat = "targets = targets + 1";
+			$qbstat = "pass_attempts = pass_attempts + 1";
+			
+			if($qbID != 0){
+				$sqls = "UPDATE $tableStats SET $qbstat WHERE game='$gameID' AND player='$qbID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Run by " or $action == "Touchdown by "){
+
+			/*if($yards > $longest_carry){
+				$longest_carry = $yards;
+			}*/
+			$stat = "carries = carries + 1, total_carry_yards = total_carry_yards + '$assister'";
+			if($action == "Touchdown by "){
+				$stat .= ", rushing_touchdowns= rushing_touchdowns + 1";
+			}
+					
+		}else if($action == "Sack by "){
+			$stat = "sacks = sacks + 1";
+			if($qbID != 0){
+				$sqls = "UPDATE $tableStats SET sacks_taken = sacks_taken + 1 WHERE game='$gameID' AND player='$qbID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Interception by "){
+			$stat = "interceptions = interceptions + 1";
+			if($qbID != 0){
+				$sqls = "UPDATE $tableStats SET pass_attempts = pass_attempts + 1, thrown_interceptions = thrown_interceptions + 1 WHERE game='$gameID' AND player='$qbID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}
+		
+		if($assister < 0 and ($action == "Run by " or $action == "Reception by ") and $defenseID != 0){
+			$sqls = "UPDATE $tableStats SET tackle_for_loss = tackle_for_loss + 1 WHERE game='$gameID' AND player='$defenseID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}else if($action == "Fumble by "  and $defenseID != 0){
+			$sqls = "UPDATE $tableStats SET forced_fumbles = forced_fumbles + 1 WHERE game='$gameID' AND player='$defenseID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}
+
+					
+
+		
+		if($stat != ''){
+			$sqls = "UPDATE $tableStats SET $stat WHERE game='$gameID' AND player='$playerID'";
+			$query = $db->prepare($sqls);
+			$query->execute();
+		}	
+	}
+	
+	/*
+	#########################
+	#						#
+	#	   VOLLEYBALL		#
+	#						#
+	#########################
+	*/
+	
+	
+	else if($table == "volleyball"){
+		$stat = '';
+		
+		if($action == "Kill by "){
+			$stat = "kills = kills + 1";
+			if($assisterID != 0){
+				$sqls = "UPDATE $tableStats SET assists = assists + 1 WHERE game='$gameID' AND player='$assisterID'";
+				$query = $db->prepare($sqls);
+				$query->execute();
+			}
+		}else if($action == "Service ace by "){
+			$stat = "aces = aces + 1";
+		}else if($action == "Block by "){
+			$stat = "blocks = blocks + 1";
+		}else if($action == "Attack error by "){
+			$stat = "attack_errors = attack_errors + 1";
+		}else if($action == "Service error by "){
+			$stat = "service_errors = service_errors + 1";
 		}
 		
 		if($stat != ''){

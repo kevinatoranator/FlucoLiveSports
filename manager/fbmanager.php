@@ -40,6 +40,7 @@ Game Info:<div id="gameInfo"></div>
 <button id="timerControl">Start</button>
 <button id="timerReset">Reset</button></div>
 <br>
+<div id="yardline" class="hidden">Side: <span id = "side"></span> | Yard Line: <span id = "yl"></span> | Down: <span id = "down"></span> | YTG: <span id = "ytg"></span>  | Poss: <span id = "poss"></span> <button id="ylUpdate">Update</button><br><br></div>
 <div id="qb" class="flex justify-between hidden"><div>Home QB:<span id="homeqb"></span></div><div>Away QB:<span id="awayqb"></span></div></div>
 <br>
 <br>

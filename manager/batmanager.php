@@ -36,9 +36,11 @@ Game Info:<div id="gameInfo"></div>
 
 <br>
 <br>
-<div id="timing" class="hidden">Inning: <span id = "period"></span> <span id = "side"></span> | <button id="strike">Strike</button> <button id="ball">Ball</button> <button id="foul">Foul</button></div><br>
+<div id="timing" class="hidden">Inning: <span id = "period"></span> <span id = "side"></span> | <button id="strike">Strike</button> <button id="strikel">Strike L</button> <button id="ball">Ball</button> <button id="foul">Foul</button></div><br>
 <br>
 <div id="pitching" class="flex justify-between hidden"></div>
+<br>
+<div id="info" class="justify-between hidden"></div>
 <br>
 <br>
 <div id="manager"></div>

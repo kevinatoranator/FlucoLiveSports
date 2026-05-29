@@ -24,7 +24,6 @@ var liveinfo = ["", "", "", "", "", "", "", "", ""];
 var strikes = 0;
 var balls = 0;
 var outs = 0;
-var pitches = 1;
 var batter = "";
 
 const SPORTTYPE = {
@@ -56,8 +55,8 @@ window.onload=function(){
 				document.getElementById("timing").classList.remove("hidden");
 				liveinfo[1] = 0;
 				liveinfo[2] = 0;
-				liveinfo[3] = 0;
 				document.getElementById("strike").addEventListener('click', strike);
+				document.getElementById("strikel").addEventListener('click', strikel);
 				document.getElementById("ball").addEventListener('click', ball);
 				document.getElementById("foul").addEventListener('click', foul);
 				if(formattedTime == "Bot"){
@@ -69,8 +68,12 @@ window.onload=function(){
 				suv.periodSet(lastPeriod, gameType);
 				document.getElementById("pitching").innerHTML = `${home} Pitcher:<div id="homepitcher"></div>${away} Pitcher:<div id="awaypitcher"></div>`;
 				document.getElementById("pitching").classList.remove("hidden");
+				document.getElementById("info").innerHTML = `At bat: ${liveinfo[5]}, ${liveinfo[0]}<br> 1B: ${liveinfo[6]}<br> 2B: ${liveinfo[7]}<br> 3B: ${liveinfo[8]}<br> Outs: ${liveinfo[1]}<br>`;
+				document.getElementById("info").classList.remove("hidden");
 				document.getElementById("complete").classList.remove("hidden");
-				document.getElementById("completeBtn").addEventListener('click', suv.complete);
+				document.getElementById("completeBtn").addEventListener('click', function(){
+					var infoArray = [sportID, home, away, suv.sumArrayRange(scores, 0, scores.length/2), suv.sumArrayRange(scores, scores.length/2, scores.length)];
+					suv.complete(table, gameID, infoArray)});
 				loadGame();
 				play();				
 				}
@@ -98,6 +101,24 @@ function loadGame(){
 				table = dataArray.table;
 				level = dataArray.level;
 				completed = parseInt(dataArray.completed);
+				var info = dataArray.info;
+				if(typeof info !== 'undefined' || info !== null){
+					formattedTime = info["game_time"];
+					lastPeriod = info["period"];
+					liveinfo[0] = info["info_1"];
+					liveinfo[1] = info["info_2"];
+					outs = liveinfo[1];
+					liveinfo[2] = info["info_3"];
+					strikes = liveinfo[2];
+					liveinfo[3] = info["info_4"];
+					balls = liveinfo[3];
+					liveinfo[4] = info["info_5"];
+					liveinfo[5] = info["info_6"];
+					liveinfo[6] = info["info_7"];
+					liveinfo[7] = info["info_8"];
+					liveinfo[8] = info["info_9"];
+					document.getElementById("info").innerHTML = `At bat: ${liveinfo[5]}, ${liveinfo[0]}<br> 1B: ${liveinfo[6]}<br> 2B: ${liveinfo[7]}<br> 3B: ${liveinfo[8]}<br> Outs: ${liveinfo[1]}<br>`;
+				}
 				
 				gameInfoText += dataArray.sport + "</br>";
 				gameInfoText += `Home: ${dataArray.home}</br>`;
@@ -175,6 +196,14 @@ function submitPlay(){
 	}
 	if(playSelect == " strikes out looking" || playSelect == " strikes out swinging" || playSelect == " flies out" || playSelect == " pops out" || playSelect == " grounds out" || playSelect == " lines out" 
 		|| playSelect == " sacrifice fly" || playSelect == " sacrifice bunt" || playSelect == " out at first" || playSelect == " out at second" || playSelect == " out at third" || playSelect == " out at home"){
+		if(playSelect == " strikes out looking"){
+			liveinfo[0] += `L`;
+		}else if(playSelect == " strikes out swinging"){
+			liveinfo[0] += `K`;
+		}else if( playSelect == " flies out" || playSelect == " pops out" || playSelect == " grounds out" || playSelect == " lines out" 
+		|| playSelect == " sacrifice fly" || playSelect == " sacrifice bunt"){
+			liveinfo[0] += `P`;
+		}
 		outs += 1;
 		if(outs > 2){
 			if(formattedTime == "Top"){
@@ -190,18 +219,18 @@ function submitPlay(){
 			liveinfo[8] = "";
 			if(formattedTime == "Mid"){
 				document.getElementById("side").innerHTML= "<select name = 'sides' id = 'sides'><option value='Top'>Top</option><option value='Bot' selected>Bot</option></select>";
-			}else{
-				document.getElementById("side").innerHTML= "<select name = 'sides' id = 'sides'><option value='Top'>Top</option><option value='Bot'>Bot</option></select>";
-				lastPeriod++;
-				suv.periodSet(lastPeriod, gameType);
 			}
 		}
 				
 		strikes = 0;
 		balls = 0;
-		pitches = 0;
 				
 	}else if(playSelect == " walks" || playSelect == " hit by pitch"){
+		if(playSelect == " walks"){
+			liveinfo[0] += `B`;
+		}else{
+			liveinfo[0] += `H`;
+		}
 		if(liveinfo[6] != "" && liveinfo[7] != ""){
 			liveinfo[8] = liveinfo[7];
 		}
@@ -211,7 +240,6 @@ function submitPlay(){
 		liveinfo[6] = playerSelect;
 		strikes = 0;
 		balls = 0;
-		pitches = 0;
 	}else if(playSelect == " to second"){
 		if(playerSelect == liveinfo[6]){
 			liveinfo[6] = "";
@@ -233,11 +261,26 @@ function submitPlay(){
 			liveinfo[8] = "";
 		}
 	}else if(playSelect == " singles"){
+		liveinfo[0] += `P`;
+		if(liveinfo[6] != "" && liveinfo[7] != ""){
+			liveinfo[8] = liveinfo[7];
+		}
+		if(liveinfo[6] != ""){
+			liveinfo[7] = liveinfo[6];
+		}
 		liveinfo[6] = playerSelect;
 	}else if(playSelect == " doubles"){
+		liveinfo[0] += `P`;
+		if(liveinfo[6] != ""){
+			liveinfo[8] = liveinfo[6];
+		}
 		liveinfo[7] = playerSelect;
+		liveinfo[6] = "";
 	}else if(playSelect == " triples"){
+		liveinfo[0] += `P`;
 		liveinfo[8] = playerSelect;
+	}else if(playSelect == " homers"){
+		liveinfo[0] += `P`;
 	}
 	if(playSelect == " out at first" || playSelect == " out at second" || playSelect == " out at third" || playSelect == " out at home"){
 		if(playerSelect == liveinfo[6]){
@@ -248,12 +291,16 @@ function submitPlay(){
 			liveinfo[8] = "";
 		}
 	}
-	liveinfo[0] = "";
+	var pitchCount = liveinfo[0];
+	if(batter == playerSelect){
+		liveinfo[0] = "";
+	}
 	liveinfo[1] = outs;
 	liveinfo[2] = strikes;
 	liveinfo[3] = balls;
 	lastPeriod = $("#periods :selected").val();
-	var infoArray = [playSelect, teamSelect, oppTeam, playerSelect, lastPeriod, formattedTime, sportID, pitcher, assister, defense, batter];
+	document.getElementById("info").innerHTML = `At bat: ${liveinfo[5]}, ${liveinfo[0]}<br> 1B: ${liveinfo[6]}<br> 2B: ${liveinfo[7]}<br> 3B: ${liveinfo[8]}<br> Outs: ${liveinfo[1]}<br>`;
+	var infoArray = [playSelect, teamSelect, oppTeam, playerSelect, lastPeriod, formattedTime, sportID, pitcher, assister, defense, batter, pitchCount, "", "", ""];
 	console.log(infoArray);
 	console.log(home);
 	$.ajax({
@@ -283,7 +330,13 @@ function submitPlay(){
 		success: function(data){
 			console.log(data);
 			}
-		});	
+		});
+
+	if(formattedTime == "End"){
+		document.getElementById("side").innerHTML= "<select name = 'sides' id = 'sides'><option value='Top'>Top</option><option value='Bot'>Bot</option></select>";
+		lastPeriod++;
+		suv.periodSet(lastPeriod, gameType);
+	}
 }
 
 function scoreTableText(scoreArray){
@@ -402,11 +455,11 @@ function scoreTableManualText(scoreArray){
 }
 
 function eventAdder(){
-	for(var i = 1; i <= gameType; i++){
+	for(var i = 1; i <= gameType+1; i++){
 		var idName = 'awayPeriod' + i + 'Score';
 		document.getElementById(idName).addEventListener('input', supdate, false);
 	}
-	for(var i = 1; i <= gameType; i++){
+	for(var i = 1; i <= gameType+1; i++){
 		var idName = 'homePeriod' + i + 'Score';
 		document.getElementById(idName).addEventListener('input', supdate, false);
 	}
@@ -450,7 +503,18 @@ function strike(){
 		strikes++;
 	}
 	liveinfo[2] = strikes;
-	liveinfo[0] += `P${pitches}: strike,`;
+	liveinfo[0] += `K`;
+	
+	pitch();
+	console.log("Strike: " + strikes);
+}
+function strikel(){
+	if(strikes < 3){
+		strikes++;
+	}
+	liveinfo[2] = strikes;
+	liveinfo[0] += `L`;
+	
 	pitch();
 	console.log("Strike: " + strikes);
 }
@@ -459,7 +523,7 @@ function ball(){
 		balls++;
 	}
 	liveinfo[3] = balls;
-	liveinfo[0] += `P${pitches}: ball,`;
+	liveinfo[0] += `B`;
 	pitch();
 	console.log("Ball: " + balls);
 }
@@ -469,12 +533,11 @@ function foul(){
 		strikes++;
 	}
 	liveinfo[2] = strikes;
-	liveinfo[0] += `P${pitches}: foul,`;
+	liveinfo[0] += `F`;
 	pitch();
 	console.log("Strike: " + strikes);
 }
 function pitch(){
-	pitches++;
 	var teamSelect = $("input[name='team']:checked").val();
 	var oppTeam = $("input[name='team']:not(:checked)").val();
 	lastPeriod = $("#periods :selected").val();
@@ -485,7 +548,8 @@ function pitch(){
 	if(teamSelect == home){
 		liveinfo[4] = $("#awaypitchersel :selected").val();
 	}
-	var infoArray = ["pitch", teamSelect, oppTeam, "", "", "", sportID, liveinfo[4], "", "", batter];
+	document.getElementById("info").innerHTML = `At bat: ${liveinfo[5]}, ${liveinfo[0]}<br> 1B: ${liveinfo[6]}<br> 2B: ${liveinfo[7]}<br> 3B: ${liveinfo[8]}<br> Outs: ${liveinfo[1]}<br>`;
+	var infoArray = ["pitch", teamSelect, oppTeam, "", "", "", sportID, liveinfo[4], "", "", batter, "", "", ""];
 	$.ajax({
 			url: "livegame.php",
 			data: {table: table,

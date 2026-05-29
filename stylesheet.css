@@ -13,7 +13,8 @@
         --fg: black;
         --red: #ff5050;
         --blue: #0000cd;
-        --green: #50da50;
+        --green: #C7EA46;
+		--purple: #B666D2;
         --gray: gray;
         --yellow: #f2be02;
         background-color: var(--bg);
@@ -31,7 +32,8 @@
         --blue: #9090ff;
         --yellow: #FFDF00;
 		--red: #ff5050;
-		--green: #50da50;
+		--green: #C7EA46;
+		--purple: #E4A0F7;
     }
 
     .label{
@@ -49,8 +51,13 @@
 		color: #ff5050;
 	}
 	.green{
-		color: #50da50;
+		color: #C7EA46;
 	}
+
+	.purple{
+		color: #B666D2;
+	}
+	
 	
 	.sport{
 		background-color: blue;

@@ -5,90 +5,90 @@ const SPORTTYPE = {
 	Set: 5
 }
 
-export function updateScore(score, scores, gameType, gameID, table){
+export function updateScore(score, scores, gameType, gameID, table, hTotal = 0, aTotal = 0){
 	if(gameType == SPORTTYPE.Half){
 		if(score.name.includes("home")){
 			if(score.name.includes("1")){
-				scores[0] = score.value;
+				scores[0] = parseInt(parseInt(score.value));
 			}else if(score.name.includes("2")){
-				scores[1] = score.value;
+				scores[1] = parseInt(score.value);
 			}else if(score.name.includes("3")){
-				scores[2] = score.value;
+				scores[2] = parseInt(score.value);
 			}
 			
 		}else if(score.name.includes("away")){
 			if(score.name.includes("1")){
-				scores[3] = score.value;
+				scores[3] = parseInt(score.value);
 			}else if(score.name.includes("2")){
-				scores[4] = score.value;
+				scores[4] = parseInt(score.value);
 			}else if(score.name.includes("3")){
-				scores[5] = score.value;
+				scores[5] = parseInt(score.value);
 			}
 		}
 	}else if(gameType == SPORTTYPE.Quarter || gameType == SPORTTYPE.Set){
 		if(score.name.includes("home")){
 			if(score.name.includes("1")){
-				scores[0] = score.value;
+				scores[0] = parseInt(score.value);
 			}else if(score.name.includes("2")){
-				scores[1] = score.value;
+				scores[1] = parseInt(score.value);
 			}else if(score.name.includes("3")){
-				scores[2] = score.value;
+				scores[2] = parseInt(score.value);
 			}else if(score.name.includes("4")){
-				scores[3] = score.value;
+				scores[3] = parseInt(score.value);
 			}else if(score.name.includes("5")){
-				scores[4] = score.value;
+				scores[4] = parseInt(score.value);
 			}
 			
 		}else if(score.name.includes("away")){
 			if(score.name.includes("1")){
-				scores[5] = score.value;
+				scores[5] = parseInt(score.value);
 			}else if(score.name.includes("2")){
-				scores[6] = score.value;
+				scores[6] = parseInt(score.value);
 			}else if(score.name.includes("3")){
-				scores[7] = score.value;
+				scores[7] = parseInt(score.value);
 			}else if(score.name.includes("4")){
-				scores[8] = score.value;
+				scores[8] = parseInt(score.value);
 			}else if(score.name.includes("5")){
-				scores[9] = score.value;
+				scores[9] = parseInt(score.value);
 			}
 		}
 	}else if(gameType == SPORTTYPE.Inning){
 		if(score.name.includes("home")){
 			if(score.name.includes("1")){
-				scores[0] = score.value;
+				scores[0] = parseInt(score.value);
 			}else if(score.name.includes("2")){
-				scores[1] = score.value;
+				scores[1] = parseInt(score.value);
 			}else if(score.name.includes("3")){
-				scores[2] = score.value;
+				scores[2] = parseInt(score.value);
 			}else if(score.name.includes("4")){
-				scores[3] = score.value;
+				scores[3] = parseInt(score.value);
 			}else if(score.name.includes("5")){
-				scores[4] = score.value;
+				scores[4] = parseInt(score.value);
 			}else if(score.name.includes("6")){
-				scores[5] = score.value;
+				scores[5] = parseInt(score.value);
 			}else if(score.name.includes("7")){
-				scores[6] = score.value;
+				scores[6] = parseInt(score.value);
 			}else if(score.name.includes("8")){
-				scores[7] = score.value;
+				scores[7] = parseInt(score.value);
 			}
 			
 		}else if(score.name.includes("away")){
 			if(score.name.includes("1")){
-				scores[8] = score.value;
+				scores[8] = parseInt(score.value);
 			}else if(score.name.includes("2")){
-				scores[9] = score.value;
+				scores[9] = parseInt(score.value);
 			}else if(score.name.includes("3")){
-				scores[10] = score.value;
+				scores[10] = parseInt(score.value);
 			}else if(score.name.includes("4")){
-				scores[11] = score.value;
+				scores[11] = parseInt(score.value);
 			}else if(score.name.includes("5")){
-				scores[12] = score.value;
+				scores[12] = parseInt(score.value);
 			}else if(score.name.includes("6")){
-				scores[13] = score.value;
+				scores[13] = parseInt(score.value);
 			}else if(score.name.includes("7")){
-				scores[14] = score.value;
+				scores[14] = parseInt(score.value);
 			}else if(score.name.includes("8")){
-				scores[15] = score.value;
+				scores[15] = parseInt(score.value);
 			}
 		}
 	}
@@ -97,7 +97,9 @@ export function updateScore(score, scores, gameType, gameID, table){
 			url: "update.php",
 			data: {gameID: gameID,
 			table: table,
-			scores: scores},
+			scores: scores,
+			hTotal: hTotal,
+			aTotal: aTotal},
 			success: function(data){
 				var dataArray = $.parseJSON(data);
 				console.log(dataArray);
@@ -118,6 +120,72 @@ export function periodSet(lastPeriod, gameType){
 	}
 	toAdd += "</select>";
 	document.getElementById("period").innerHTML = toAdd;
+}
+
+export function sideSet(side, home, away){
+	var toAdd = "";
+	toAdd += "<select name = 'sides' id = 'sides'>";
+	if(side == home){
+		toAdd += `<option value="${home}" selected>${home}</option>`;
+		toAdd += `<option value="${away}">${away}</option>`;
+	}else{
+		toAdd += `<option value="${home}">${home}</option>`;
+		toAdd += `<option value="${away}" selected>${away}</option>`;
+	}
+
+	toAdd += "</select>";
+	document.getElementById("side").innerHTML = toAdd;
+}
+
+export function ylSet(yardline){
+	var toAdd = "";
+	toAdd += "<select name = 'yls' id = 'yls'>";
+	for(var i = 1; i <= 50; i++){
+		if(i == yardline){
+			toAdd += `<option value="${i}" selected>${i}</option>`;
+		}else{
+			toAdd += `<option value="${i}">${i}</option>`;
+		}
+	}
+	toAdd += "</select>";
+	document.getElementById("yl").innerHTML = toAdd;
+}export function downSet(down){
+	var toAdd = "";
+	toAdd += "<select name = 'downs' id = 'downs'>";
+	for(var i = 1; i <= 4; i++){
+		if(i == down){
+			toAdd += `<option value="${i}" selected>${i}</option>`;
+		}else{
+			toAdd += `<option value="${i}">${i}</option>`;
+		}
+	}
+	toAdd += "</select>";
+	document.getElementById("down").innerHTML = toAdd;
+}export function ytgSet(ytg){
+	var toAdd = "";
+	toAdd += "<select name = 'ytgs' id = 'ytgs'>";
+	for(var i = 1; i <= 40; i++){
+		if(i == ytg){
+			toAdd += `<option value="${i}" selected>${i}</option>`;
+		}else{
+			toAdd += `<option value="${i}">${i}</option>`;
+		}
+	}
+	toAdd += "</select>";
+	document.getElementById("ytg").innerHTML = toAdd;
+}export function possSet(poss, home, away){
+	var toAdd = "";
+	toAdd += "<select name = 'posss' id = 'posss'>";
+	if(poss == home){
+		toAdd += `<option value="${home}" selected>${home}</option>`;
+		toAdd += `<option value="${away}">${away}</option>`;
+	}else{
+		toAdd += `<option value="${home}">${home}</option>`;
+		toAdd += `<option value="${away}" selected>${away}</option>`;
+	}
+
+	toAdd += "</select>";
+	document.getElementById("poss").innerHTML = toAdd;
 }
 
 
@@ -208,10 +276,11 @@ export function complete(table, gameID, infoArray){
 
 export function soloSelect(team, pgid, playerList){
 	var toAdd = "";
-	toAdd += `<select name = ${pgid}sel' id = '${pgid}sel'>`;
+	toAdd += `<select name = '${pgid}sel' id = '${pgid}sel'>`;
 	for(const [key, value] of Object.entries(playerList[team])){
 		toAdd += `<option value="${key}">${key}</option>`;
 	}
+	toAdd += `<option value = "${team}">${team}</option>`;
 	toAdd += "<option value = 'None'>None</option></select>";
 	if(document.getElementById(pgid) != null){
 		document.getElementById(pgid).innerHTML = toAdd;	

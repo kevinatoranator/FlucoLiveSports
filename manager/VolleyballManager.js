@@ -118,7 +118,7 @@ function play(){
 			success: function(data){
 				var dataArray = $.parseJSON(data)
 				console.log(lastPeriod + serve);
-				document.getElementById("manager").innerHTML = "<button id='submit'>Submit</button><br><br><div class=\"flex justify-between\">Batter: <div id=\"teamSelect\"></div><div id=\"rosterSelect\"></div><div id=\"play\"></div><div id=\"bonusSelect\"></div></div><br>";
+				document.getElementById("manager").innerHTML = "<button id='submit'>Submit</button><br><br><div class=\"flex justify-between\">Player: <div id=\"teamSelect\"></div><div id=\"rosterSelect\"></div><div id=\"play\"></div><div id=\"bonusSelect\"></div></div><br>";
 				document.getElementById("teamSelect").innerHTML += `<input type="radio" id=${away} name="team" value=${away} ><label for=${away} >${away}</label><br><input type="radio" id=${home} name="team" value=${home} ><label for=${home} >${home}</label><br>`;
 				document.getElementById(home).addEventListener('click', teamSelection);
 				document.getElementById(away).addEventListener('click', teamSelection);
@@ -149,7 +149,7 @@ function submitPlay(){
 	}
 	
 	lastPeriod = $("#periods :selected").val();
-	var infoArray = [playSelect, teamSelect, oppTeam, playerSelect, lastPeriod, serve, sportID, pitcher, assister, defense, batter];
+	var infoArray = [playSelect, teamSelect, oppTeam, playerSelect, lastPeriod, serve, sportID, "", assister, defense, level, "", "", "", ""];
 	console.log(infoArray);
 	console.log(home);
 	$.ajax({
@@ -319,34 +319,35 @@ function eventAdder(){
 }
 
 function supdate(){
-	suv.updateScore(this, scores, gameType, gameID, table);
+	suv.updateScore(this, scores, gameType, gameID, table, hTotal, aTotal);
 	hTotal = 0;
 	aTotal = 0;
-	if(scores[0] >= 25 && scores[0] > scores[5] + 1){
+	if(parseInt(scores[0]) >= 25 && parseInt(scores[0]) > parseInt(scores[5]) + 1){
 			hTotal += 1;
-		}else if(scores[5] >= 25 && scores[5] > scores[0] + 1){
+		}else if(parseInt(scores[5]) >= 25 && parseInt(scores[5]) > parseInt(scores[0]) + 1){
 			aTotal += 1;
 		}
-		if(scores[1] >= 25 && scores[1] > scores[6] + 1){
+		if(parseInt(scores[1]) >= 25 && parseInt(scores[1]) > parseInt(scores[6]) + 1){
 			hTotal += 1;
-		}else if(scores[6] >= 25 && scores[6] > scores[1] + 1){
+		}else if(parseInt(scores[6]) >= 25 && parseInt(scores[6]) > parseInt(scores[1]) + 1){
 			aTotal += 1;
 		}
-		if(scores[2] >= 25 && scores[2] > scores[7] + 1){
+		if((parseInt(scores[2]) >= 25 && parseInt(scores[2]) > parseInt(scores[7]) + 1) || ((parseInt(scores[2]) >= 15 && parseInt(scores[2]) > parseInt(scores[7]) + 1) && level == "jv")){
 			hTotal += 1;
-		}else if(scores[7] >= 25 && scores[7] > scores[2] + 1){
+		}else if(parseInt(scores[7]) >= 25 && parseInt(scores[7]) > parseInt(scores[2]) + 1 || ((parseInt(scores[7]) >= 15 && parseInt(scores[7]) > parseInt(scores[2]) + 1) && level == "jv")){
 			aTotal += 1;
 		}
-		if(scores[3] >= 25 && scores[3] > scores[8] + 1){
+		if(parseInt(scores[3]) >= 25 && parseInt(scores[3]) > parseInt(scores[8]) + 1){
 			hTotal += 1;
-		}else if(scores[8] >= 25 && scores[8] > scores[3] + 1){
+		}else if(parseInt(scores[8]) >= 25 && parseInt(scores[8]) > parseInt(scores[3]) + 1){
 			aTotal += 1;
 		}
-		if(scores[4] >= 25 && scores[4] > scores[9] + 1){
+		if(parseInt(scores[4]) >= 15 && parseInt(scores[4]) > parseInt(scores[9]) + 1){
 			hTotal += 1;
-		}else if(scores[9] >= 25 && scores[9] > scores[4] + 1){
+		}else if(parseInt(scores[9]) >= 15 && parseInt(scores[9]) > parseInt(scores[4]) + 1){
 			aTotal += 1;
 		}
+		suv.updateScore(this, scores, gameType, gameID, table, hTotal, aTotal);
 	document.getElementById("scoreTable").innerHTML = scoreTableText(scores);
 	document.getElementById("scoreTableManual").innerHTML = scoreTableManualText(scores);
 	eventAdder();
@@ -373,7 +374,12 @@ function bonusAction(play){
 	var opp = $("input[name='team']:not(:checked)").val();
 	var playerSelect = $("input[name='player']:checked").val();
 	if(teamSelect != undefined){
-		
+		if(play == "Kill by "){
+			document.getElementById("bonusSelect").innerHTML += "<b>Assist</b><br>";
+			for(const [key, value] of Object.entries(playerList[teamSelect])){
+				document.getElementById("bonusSelect").innerHTML += `<input type="radio" id="${key}" name="assistPlayer" value="${key}" ><label for="${key}" >${key}</label><br>`;
+			}
+		}
 	}
 }
 

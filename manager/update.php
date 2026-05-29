@@ -3,7 +3,7 @@ include '../include/database.php';
 
 	$table = $_GET['table'];
 	$gameID = $_GET['gameID'];
-	$scoreArray = $_GET['scores'];
+	$scoreArray = $_GET['scores'];		
 	$sql = "";
 	
 	
@@ -29,33 +29,9 @@ include '../include/database.php';
 			away_quarter1 = '$scoreArray[5]', away_quarter2 = '$scoreArray[6]', away_quarter3 = '$scoreArray[7]', away_quarter4 = '$scoreArray[8]', away_ot = '$scoreArray[9]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
 		
 	}else if($table == "volleyball"){
-		$hTotal = 0;
-		$aTotal = 0;
-		if($scoreArray[0] >= 25 and $scoreArray[0] > $scoreArray[5] + 1){
-			$hTotal += 1;
-		}else if($scoreArray[5] >= 25 and $scoreArray[5] > $scoreArray[0] + 1){
-			$aTotal += 1;
-		}
-		if($scoreArray[1] >= 25 and $scoreArray[1] > $scoreArray[6] + 1){
-			$hTotal += 1;
-		}else if($scoreArray[6] >= 25 and $scoreArray[6] > $scoreArray[1] + 1){
-			$aTotal += 1;
-		}
-		if($scoreArray[2] >= 25 and $scoreArray[2] > $scoreArray[7] + 1){
-			$hTotal += 1;
-		}else if($scoreArray[7] >= 25 and $scoreArray[7] > $scoreArray[2] + 1){
-			$aTotal += 1;
-		}
-		if($scoreArray[3] >= 25 and $scoreArray[3] > $scoreArray[8] + 1){
-			$hTotal += 1;
-		}else if($scoreArray[8] >= 25 and $scoreArray[8] > $scoreArray[3] + 1){
-			$aTotal += 1;
-		}
-		if($scoreArray[4] >= 25 and $scoreArray[4] > $scoreArray[9] + 1){
-			$hTotal += 1;
-		}else if($scoreArray[9] >= 25 and $scoreArray[9] > $scoreArray[4] + 1){
-			$aTotal += 1;
-		}
+
+		$hTotal = $_GET['hTotal'];
+		$aTotal = $_GET['aTotal'];
 		
 		$sql = "UPDATE $table SET home_set1 = '$scoreArray[0]', home_set2 = '$scoreArray[1]', home_set3 = '$scoreArray[2]', home_set4 = '$scoreArray[3]', home_set5 = '$scoreArray[4]', home_total = '$hTotal', 
 			away_set1 = '$scoreArray[5]', away_set2 = '$scoreArray[6]', away_set3 = '$scoreArray[7]', away_set4 = '$scoreArray[8]', away_set5 = '$scoreArray[9]', away_total = '$aTotal' WHERE schedule_id='$gameID'";
