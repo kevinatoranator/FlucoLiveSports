@@ -102,7 +102,7 @@ function loadGame(){
 				level = dataArray.level;
 				completed = parseInt(dataArray.completed);
 				var info = dataArray.info;
-				if(typeof info !== 'undefined' || info !== null){
+				if(typeof info !== 'undefined' && info !== null){
 					formattedTime = info["game_time"];
 					lastPeriod = info["period"];
 					liveinfo[0] = info["info_1"];
